@@ -1,6 +1,5 @@
-#include <QCoreApplication>
 #include "cameralibrary.h"
-#include "socketclient.h"
+#include "camerathread.h"
 #include <stdio.h>
 
 /*
@@ -8,13 +7,11 @@
  */
 void initializeCameraLV()
 {
+    //clearError();  // Reset global error flag
+
     char detFile[] = "";
     ui_error = Initialize(detFile);
     checkError(ui_error, "Initialize");
-
-    // Initialize data buffers
-    camData = new long[262144];
-    imageBuffer = new long[262144];
 
     setupCamera();
     //setFrameSizeLV(1, 512, 1, 512, 1, 1);  // Initialize frame size to full frame
@@ -56,8 +53,7 @@ void acquireSingleFullFrameLV(float expTime)
         checkError(ui_error, "GetMostRecentImage");
 
         // Copy data array in image buffer for external use
-        std::copy(camData, camData + imageDim.size, imageBuffer);
-        //outString = "Acquistion complete!\n";
+        //std::copy(camData, camData + imageDim.size, imageBuffer);
     }
     else
     {
@@ -70,8 +66,9 @@ void acquireSingleFullFrameLV(float expTime)
 /*
  * Acquire a single sub frame from the camera.
  */
-void acquireSingleSubFrameLV(float expTime, char *outString)
+void acquireSingleSubFrameLV(float expTime)
 {
+    //clearError();
     ui_error = SetShutter(1, 0, 27, 27);  // Set shutter to auto
     checkError(ui_error, "SetShutter");
 
@@ -101,16 +98,11 @@ void acquireSingleSubFrameLV(float expTime, char *outString)
 
         ui_error = GetMostRecentImage(camData, imageDim.size);
         checkError(ui_error, "GetMostRecentImage");
-
-        // Copy data array in image buffer for external use
-        std::copy(camData, camData + imageDim.size, imageBuffer);
-        outString = "Acquistion complete!\n";
     }
 
     else
     {
-        outString = "Cannot start camera acquisition...";
-        //printf("Cannot start camera acquisition...\n");
+        printf("Cannot start camera acquisition...\n");
     }
 }
 
@@ -122,6 +114,7 @@ void acquireSingleSubFrameLV(float expTime, char *outString)
  */
 void acquireFullFrameLV(float expTime)
 {
+    //clearError();
     ui_error = SetShutter(1, 0, 27, 27);  // Set shutter to auto
     checkError(ui_error, "SetShutter");
 
@@ -129,95 +122,48 @@ void acquireFullFrameLV(float expTime)
     checkError(ui_error, "SetExposureTime");
 
     //setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin)
-    setFrameSizeLV(1, 512, 1, 512, 1, 1);
+    setFrameSizeLV(1, 512, 1, 512, 1, 1);  // Set to full camera readout
 
-    /*
-     * Create the data buffer and start acquisition
-     * Wait for the an event, get data
-     * Repeat until global stop flag set
-     */
+    // Start camera acquisition thread
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        b_gblstopFlag = false;
-        //long * camData = new long[imageDim.size];
-        StartAcquisition();
-
-        /*
-         * Loop over WaitForAcquisition
-         * Sequence aborted by setting stop flag
-         */
-        while (!b_gblstopFlag)
-        {
-            ui_error = WaitForAcquisition();
-            checkError(ui_error, "WaitForAcquisition");
-
-            ui_error = GetMostRecentImage(camData, imageDim.size);
-            checkError(ui_error, "GetMostRecentImage");
-
-            // Copy data array in image buffer for external use
-            std::copy(camData, camData + imageDim.size, imageBuffer);
-        }
-
-        ui_error = AbortAcquisition();
-        checkError(ui_error, "AbortAcquisition");
-
-        //if(camData) delete[] camData;
+        camThread = new CameraThread();
+        camThread->startCameraThread(imageDim.size, camData);
     }
     else
     {
-        //outString = "Cannot start camera acquisition...";
         printf("Cannot start camera acquisition...\n");
     }
+    printf("Returning from wrapper\n");
 }
 
 
 /*
  * Acquire continuous sub frames from the camera.
- * Differs from full frame as shutter is set to always open
+ * Differs from full frame as shutter is set to always open.
+ * Set frame size prior to calling.
  */
 void acquireSubFrameLV(float expTime)
 {
+    //clearError();
     ui_error = SetShutter(1, 1, 27, 27);  // Set to always open
     checkError(ui_error, "SetShutter");
 
     ui_error = SetExposureTime(expTime);
     checkError(ui_error, "SetExposureTime");
 
-    //setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin)
-    //setFrameSizeLV(1, 32, 1, 32, 1, 1);
-
-
+    // Start camera acquisition thread
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        b_gblstopFlag = false;
-        //long * camData = new long[imageDim.size];
-        StartAcquisition();
-
-        /*
-         * Loop over WaitForAcquisition
-         * Sequence aborted by setting stop flag
-         */
-        while (!b_gblstopFlag)
-        {
-            ui_error = WaitForAcquisition();
-            checkError(ui_error, "WaitForAcquisition");
-
-            ui_error = GetMostRecentImage(camData, imageDim.size);
-            checkError(ui_error, "GetMostRecentImage");
-
-            // Copy data array in image buffer for external use
-            std::copy(camData, camData + imageDim.size, imageBuffer);
-        }
-
-        ui_error = AbortAcquisition();
-        checkError(ui_error, "AbortAcquisition");
-
-        //if(camData) delete[] camData;
+        camThread = new CameraThread();
+        camThread->startCameraThread(imageDim.size, camData);
     }
-
-    else printf("Cannot start camera acquisition...\n");
+    else
+    {
+        printf("Cannot start camera acquisition...\n");
+    }
 }
 
 
@@ -255,10 +201,10 @@ void acquireClosedLoopLV(float expTime)
             checkError(ui_error, "GetMostRecentImage");
 
             // Copy data array in image buffer for external use
-            std::copy(camData, camData + imageDim.size, imageBuffer);
+            //std::copy(camData, camData + imageDim.size, imageBuffer);
 
             // Centroid image and send out values
-            centroid(imageBuffer);
+            //centroid(imageBuffer);
 
             // For testing
             if (controlVals.even)
@@ -298,7 +244,7 @@ void acquireClosedLoopLV(float expTime)
  */
 void getCameraDataLV(long *dataOut)
 {
-    std::copy(imageBuffer, imageBuffer + imageDim.size, dataOut);
+    std::copy(camData, camData + (long) imageDim.size, dataOut);
 }
 
 
@@ -307,6 +253,11 @@ void getCameraDataLV(long *dataOut)
  */
 void abortAcquisitionLV()
 {
+    if (camThread->isRunning())
+    {
+        camThread->abortCameraThread();
+    }
+
     b_gblstopFlag = true;
 }
 
@@ -341,7 +292,7 @@ void shutdownCameraLV()
 
     // Free data array memory
     if(camData) delete[] camData;
-    if(imageBuffer) delete[] imageBuffer;
+    //if(imageBuffer) delete[] imageBuffer;
 }
 
 
@@ -390,6 +341,21 @@ bool checkError(unsigned int _ui_err, const char* _cp_func)
   }
   return b_ret;
 }
+
+
+///*
+// * Clear global error flag
+// */
+//void clearError()
+//{
+//    if (b_gblerrorFlag)
+//    {
+//        printf("Error encountered... \t restarting camera\n");
+//        shutdownCameraLV();
+//        initializeCameraLV();
+//        b_gblerrorFlag = false;
+//    }
+//}
 
 
 

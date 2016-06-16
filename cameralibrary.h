@@ -13,14 +13,8 @@
 
 #include <iostream>
 #include "ATMCD32D.h"
-
-
-/*
- * Comment out when running labview import wizard
- * Wizard cannot manage cimg but doesn't need to know about it
- */
-//#include "CImg.h"
-//using namespace cimg_library;
+#include "camerathread.h"
+#include "socketclient.h"
 
 
 /*
@@ -53,13 +47,14 @@ struct ControlValues{
     bool even;
 } controlVals;
 
+
 /*
  * Functions for labview interface
  */
 extern "C" {
 void CAMERALIBRARYSHARED_EXPORT initializeCameraLV();
 void CAMERALIBRARYSHARED_EXPORT acquireSingleFullFrameLV(float expTime);
-void CAMERALIBRARYSHARED_EXPORT acquireSingleSubFrameLV(float expTime, char *outString);
+void CAMERALIBRARYSHARED_EXPORT acquireSingleSubFrameLV(float expTime);
 void CAMERALIBRARYSHARED_EXPORT acquireFullFrameLV(float expTime);
 void CAMERALIBRARYSHARED_EXPORT acquireSubFrameLV(float expTime);
 void CAMERALIBRARYSHARED_EXPORT acquireClosedLoopLV(float expTime);
@@ -86,7 +81,7 @@ bool checkError(unsigned int _ui_error, const char* _cp_func);
 unsigned int ui_error;
 bool b_gblerrorFlag = false;
 bool b_gblstopFlag = false;
-static long *camData;
-static long *imageBuffer;
+static long *camData = new long[262144];
+CameraThread *camThread;
 
 #endif // CAMERALIBRARY_H

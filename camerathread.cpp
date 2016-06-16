@@ -1,8 +1,15 @@
+/*
+ * Class for reading camera. Requires camera initialization and setup prior to calling.
+ * Creates win32 event for Andor callback.
+ * Reads camera data into local buffer, copies into image buffer.
+ */
+
 #include "camerathread.h"
 
 CameraThread::CameraThread(QObject *parent) : QThread(parent)
 {
-    // Create win32 event handle
+    // Create copy data buffer and win32 event handle
+    this->copyData = new long[262144];
     this->camEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
     this->abort = false;
 }
@@ -21,11 +28,14 @@ CameraThread::~CameraThread()
 /*
  * Sets camera thread properties and starts the acquistion loop
  */
-void CameraThread::startCameraThread(int imageSize)
+void CameraThread::startCameraThread(int imageSize, long *imageBuffer)
 {
     this->imageSize = imageSize;
-    this->camData2 = new long[this->imageSize];
-    this->start();
+    this->camData = new long[this->imageSize];
+
+    //TODO: Ensure imageBuffer is correct size???
+    this->copyData = imageBuffer;
+    this->start();  // Starts thread
 }
 
 
@@ -54,14 +64,16 @@ void CameraThread::run()
 
     while (!this->abort)
     {
-        win_error = WaitForSingleObject(this->camEvent, 1000);
+        win_error = WaitForSingleObject(this->camEvent, 2500);
 
         // Object triggered, check what happened
         if (win_error == WAIT_OBJECT_0)
         {
             // Camera triggered event, get data
             mutex.lock();
-            GetMostRecentImage(camData2, this->imageSize);
+            ResetEvent(this->camEvent);
+            GetMostRecentImage(camData, this->imageSize);
+            std::copy(camData, camData + (long) this->imageSize, copyData);
             mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)
