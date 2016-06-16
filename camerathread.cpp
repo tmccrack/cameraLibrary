@@ -51,6 +51,7 @@ void CameraThread::run()
     checkError(and_error, "SetDriverEvent");
     and_error = StartAcquisition();
     checkError(and_error, "StartAcquisition");
+    int image_counter = 0;
 
     while (!this->abort)
     {
@@ -62,7 +63,10 @@ void CameraThread::run()
             // Camera triggered event, get data
             mutex.lock();
             GetMostRecentImage(camData2, this->imageSize);
+            ResetEvent(this->camEvent);
             mutex.unlock();
+            printf("%d", image_counter);
+            image_counter += 1;
         }
         else if (win_error == WAIT_TIMEOUT)
         {
