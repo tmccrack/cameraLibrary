@@ -4,9 +4,8 @@
 #include <QtCore>
 #include <QObject>
 #include <QThread>
-#include <QWaitCondition>
-#include <QWinEventNotifier>
 #include <windows.h>
+#include <iostream>
 #include "ATMCD32D.h"
 
 class CameraThread : public QThread
@@ -15,7 +14,7 @@ class CameraThread : public QThread
 public:
     CameraThread(QObject *parent = 0);
     ~CameraThread();
-    void startCameraThread(int imageSize);
+    void startCameraThread(int imageSize, long *imageBuffer);
     void abortCameraThread();
 
 protected:
@@ -26,18 +25,14 @@ private:
     bool b_gblerrorFlag;
     unsigned int and_error; // Andor error
     DWORD win_error;  // Windows event error
-    static long *imageBuffer;
     QMutex mutex;
-    QWaitCondition condition;
     HANDLE camEvent;
-    QWinEventNotifier *notifier;
     bool abort;
     int imageSize;
+    long *camData;
+    long *copyData;
 
 private slots:
-    void camEventSignaled(HANDLE h);
 };
-
-static long *camData2;
 
 #endif // CAMERATHREAD_H
