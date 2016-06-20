@@ -18,7 +18,7 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/rel
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/debug/ -lcameraLibrary
 else:unix: LIBS += -L$$PWD/../build-cameraLibrary/ -lcameraLibrary
 
-INCLUDEPATH += $$PWD/../cameraLibrary\
+INCLUDEPATH += $$PWD/../src\
         $$PWD/../include
-DEPENDPATH += $$PWD/../cameraLibrary\
+DEPENDPATH += $$PWD/../src\
         $$PWD/../include
