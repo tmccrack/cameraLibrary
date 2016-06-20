@@ -14,7 +14,7 @@
 #include <iostream>
 #include "ATMCD32D.h"
 #include "camerathread.h"
-#include "socketclient.h"
+
 
 
 /*
@@ -80,8 +80,9 @@ bool checkError(unsigned int _ui_error, const char* _cp_func);
  */
 unsigned int ui_error;
 bool b_gblerrorFlag = false;
-bool b_gblstopFlag = false;
+bool b_gblAcquireFlag = false;
 static long *camData = new long[262144];
 CameraThread *camThread;
+QMutex mutex;
 
 #endif // CAMERALIBRARY_H

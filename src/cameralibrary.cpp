@@ -1,5 +1,6 @@
 #include "cameralibrary.h"
 #include "camerathread.h"
+#include "socketclient.h"
 #include <stdio.h>
 
 /*
@@ -14,9 +15,14 @@ void initializeCameraLV()
     checkError(ui_error, "Initialize");
 
     setupCamera();
-    //setFrameSizeLV(1, 512, 1, 512, 1, 1);  // Initialize frame size to full frame
+    // Initialize camera thread
+    camThread = new CameraThread();
 
-    if (!b_gblerrorFlag) printf("Camera initialized\n");
+    if (!b_gblerrorFlag)
+    {
+        printf("Camera initialized\n");
+        b_gblAcquireFlag = false;
+    }
 }
 
 
@@ -40,7 +46,7 @@ void acquireSingleFullFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        //long * camData = new long[imageDim.size];
+        b_gblAcquireFlag = true;
         StartAcquisition();
 
         ui_error = WaitForAcquisition();
@@ -48,6 +54,7 @@ void acquireSingleFullFrameLV(float expTime)
 
         ui_error = AbortAcquisition();
         checkError(ui_error, "AbortAcquisition");
+        b_gblAcquireFlag = false;
 
         ui_error = GetMostRecentImage(camData, imageDim.size);
         checkError(ui_error, "GetMostRecentImage");
@@ -87,7 +94,7 @@ void acquireSingleSubFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        //long * camData = new long[imageDim.size];
+        b_gblAcquireFlag = true;
         StartAcquisition();
 
         ui_error = WaitForAcquisition();
@@ -95,6 +102,7 @@ void acquireSingleSubFrameLV(float expTime)
 
         ui_error = AbortAcquisition();
         checkError(ui_error, "AbortAcquisition");
+        b_gblAcquireFlag = false;
 
         ui_error = GetMostRecentImage(camData, imageDim.size);
         checkError(ui_error, "GetMostRecentImage");
@@ -103,6 +111,7 @@ void acquireSingleSubFrameLV(float expTime)
     else
     {
         printf("Cannot start camera acquisition...\n");
+        b_gblAcquireFlag = false;
     }
 }
 
@@ -128,12 +137,14 @@ void acquireFullFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        camThread = new CameraThread();
+        b_gblAcquireFlag = true;
+
         camThread->startCameraThread(imageDim.size, camData);
     }
     else
     {
         printf("Cannot start camera acquisition...\n");
+        b_gblAcquireFlag = false;
     }
     printf("Returning from wrapper\n");
 }
@@ -157,12 +168,14 @@ void acquireSubFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
-        camThread = new CameraThread();
+        b_gblAcquireFlag = true;
+
         camThread->startCameraThread(imageDim.size, camData);
     }
     else
     {
         printf("Cannot start camera acquisition...\n");
+        b_gblAcquireFlag = false;
     }
 }
 
@@ -177,61 +190,59 @@ void acquireClosedLoopLV(float expTime)
 
     if (!b_gblerrorFlag)
     {
-        // Create socket client and connect
-        SocketClient sClient;
-        sClient.Connect();
+//        // Create socket client and connect
+//        SocketClient sClient;
+//        sClient.Connect();
 
-        printf("Starting acquisition...\n");
-        b_gblstopFlag = false;
-        StartAcquisition();
+//        printf("Starting acquisition...\n");
+//        b_gblAcquireFlag = false;
+//        StartAcquisition();
 
-        /*
-         * Loop over WaitForAcquisition
-         * Sequence aborted by setting stop flag
-         */
-        controlVals.even = FALSE;
-        int counter = 0;
-        //while (!b_gblstopFlag)
-        while (counter < 1000)
-        {
-            ui_error = WaitForAcquisition();
-            checkError(ui_error, "WaitForAcquisition");
+//        /*
+//         * Loop over WaitForAcquisition
+//         * Sequence aborted by setting stop flag
+//         */
+//        controlVals.even = FALSE;
+//        int counter = 0;
+//        //while (!b_gblAcquireFlag)
+//        while (counter < 1000)
+//        {
+//            ui_error = WaitForAcquisition();
+//            checkError(ui_error, "WaitForAcquisition");
 
-            ui_error = GetMostRecentImage(camData, imageDim.size);
-            checkError(ui_error, "GetMostRecentImage");
+//            ui_error = GetMostRecentImage(camData, imageDim.size);
+//            checkError(ui_error, "GetMostRecentImage");
 
-            // Copy data array in image buffer for external use
-            //std::copy(camData, camData + imageDim.size, imageBuffer);
+//            // Copy data array in image buffer for external use
+//            //std::copy(camData, camData + imageDim.size, imageBuffer);
 
-            // Centroid image and send out values
-            //centroid(imageBuffer);
+//            // Centroid image and send out values
+//            //centroid(imageBuffer);
 
-            // For testing
-            if (controlVals.even)
-            {
-                sClient.sendData(5.0, 5.0);
-                controlVals.even = FALSE;
-            }
-            else {
-                sClient.sendData(0.0, 0.0);
-                controlVals.even = TRUE;
-            }
-            counter += 1;
+//            // For testing
+//            if (controlVals.even)
+//            {
+//                sClient.sendData(5.0, 5.0);
+//                controlVals.even = FALSE;
+//            }
+//            else {
+//                sClient.sendData(0.0, 0.0);
+//                controlVals.even = TRUE;
+//            }
+//            counter += 1;
 
-            // For used
-            //sClient.sendData(controlVals.x, controlVals.y);
-        }
+//            // For used
+//            //sClient.sendData(controlVals.x, controlVals.y);
+//        }
 
-        // Abort Andor acquisition and check error
-        ui_error = AbortAcquisition();
-        checkError(ui_error, "AbortAcquisition");
+//        // Abort Andor acquisition and check error
+//        ui_error = AbortAcquisition();
+//        checkError(ui_error, "AbortAcquisition");
 
-        // Close socket client
-        sClient.sendData(0.0, 0.0);
-        sClient.Close();
-        printf("Closing connection\n");
-
-        //if(camData) delete[] camData;
+//        // Close socket client
+//        sClient.sendData(0.0, 0.0);
+//        sClient.Close();
+//        printf("Closing connection\n");
     }
 
     else printf("Cannot start camera acquisition...\n");
@@ -240,11 +251,19 @@ void acquireClosedLoopLV(float expTime)
 
 
 /*
- * Copy latest camera data into array provided from labview
+ * Copy latest camera data into array provided from labview if acquiring
+ * If not acquiring, do nothing
  */
 void getCameraDataLV(long *dataOut)
 {
-    std::copy(camData, camData + (long) imageDim.size, dataOut);
+    b_gblAcquireFlag = true;
+    if (b_gblAcquireFlag)
+    {
+        mutex.lock();
+        std::copy(camData, camData + (long) imageDim.size, dataOut);
+        mutex.unlock();
+
+    }
 }
 
 
@@ -256,9 +275,10 @@ void abortAcquisitionLV()
     if (camThread->isRunning())
     {
         camThread->abortCameraThread();
+        camThread->wait();
     }
 
-    b_gblstopFlag = true;
+    b_gblAcquireFlag = false;
 }
 
 
@@ -287,12 +307,18 @@ void setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vb
  */
 void shutdownCameraLV()
 {
+    if (b_gblAcquireFlag)
+    {
+        camThread->abortCameraThread();
+        camThread->wait();
+        b_gblAcquireFlag = false;
+    }
+
     ui_error = ShutDown();
     checkError(ui_error, "ShutDown");
 
     // Free data array memory
     if(camData) delete[] camData;
-    //if(imageBuffer) delete[] imageBuffer;
 }
 
 
