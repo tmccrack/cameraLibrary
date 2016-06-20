@@ -24,29 +24,4 @@ private:
 
 };
 
-class CameraThread : public QThread
-{
-    Q_OBJECT
-public:
-    CameraThread(QObject *parent = 0);
-    ~CameraThread();
-
-    void startCameraThread(void *eventHandle);
-
-protected:
-    void run() Q_DECL_OVERRIDE;
-
-private:
-    QMutex mutex;
-    QWaitCondition condition;
-    HANDLE camEvent;
-    bool abort;
-
-private slots:
-    void camEventSignaled(HANDLE h);
-
-
-
-};
-
 #endif // SOCKETCLIENT_H
