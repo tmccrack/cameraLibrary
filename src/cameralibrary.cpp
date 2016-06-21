@@ -307,6 +307,13 @@ void setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vb
     imageDim.vdim = (imageDim.vend - imageDim.vstart + 1) / imageDim.vbin;
     imageDim.size = imageDim.hdim * imageDim.vdim;
 
+    // Check that provided frame size is valid
+    checkFrameSize();
+
+    if (b_gblAcquireFlag)
+    {
+        abortAcquisitionLV();
+    }
     ui_error = SetImage(imageDim.hbin, imageDim.vbin, imageDim.hstart, imageDim.hend, imageDim.vstart, imageDim.vend);
     checkError(ui_error, "SetImage");
 }
