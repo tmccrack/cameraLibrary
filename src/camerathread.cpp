@@ -35,7 +35,12 @@ void CameraThread::startCameraThread(int imageSize, long *imageBuffer)
 
     //TODO: Ensure imageBuffer is correct size???
     this->copyData = imageBuffer;
-    this->start();  // Starts thread
+
+    // Set abort flag to false and start thread
+    mutex.lock();
+    this->abort = false;
+    mutex.unlock();
+    this->start();
 }
 
 
@@ -49,6 +54,11 @@ void CameraThread::abortCameraThread()
     mutex.unlock();
 }
 
+bool CameraThread::isItRunning()
+{
+    return this->isRunning();
+}
+
 
 /*
  * Main function for camera thread.
@@ -59,6 +69,7 @@ void CameraThread::run()
     // Pass Andor API event handle and start acquistion
     and_error = SetDriverEvent(this->camEvent);
     checkError(and_error, "SetDriverEvent");
+
     and_error = StartAcquisition();
     checkError(and_error, "StartAcquisition");
 
