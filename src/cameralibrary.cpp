@@ -305,11 +305,12 @@ void setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vb
     imageDim.vbin = vbin;
     imageDim.hdim = (imageDim.hend - imageDim.hstart + 1) / imageDim.hbin;
     imageDim.vdim = (imageDim.vend - imageDim.vstart + 1) / imageDim.vbin;
-    imageDim.size = imageDim.hdim * imageDim.vdim;
 
     // Check that provided frame size is valid
+    // Calculate total image size
     checkFrameSize();
 
+    // Check if acquiring before setting new image dimensions
     if (b_gblAcquireFlag)
     {
         abortAcquisitionLV();
@@ -317,6 +318,10 @@ void setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vb
     ui_error = SetImage(imageDim.hbin, imageDim.vbin, imageDim.hstart, imageDim.hend, imageDim.vstart, imageDim.vend);
     checkError(ui_error, "SetImage");
 }
+
+/*
+ * TODO: Implement getter to check frame size in case it changes from specified.
+ */
 
 
 /*
@@ -414,13 +419,36 @@ bool checkError(unsigned int _ui_err, const char* _cp_func)
 
 /*
  * Check that provided frame size is valid for camera
+ * If frame dimensions invalid, set that direction to full width of chip
  */
 void checkFrameSize()
 {
-    /*
-     * TODO: check frame dimensions and set to valid values if invalid
-     * TODO: notify user of invalid values
-     */
+    // Horizontal
+    if ((imageDim.hdim > 512) ||
+            (imageDim.hstart < 1) || (imageDim.hstart > 512) ||
+            (imageDim.hend < 1) || (imageDim.hend > 512)
+        )
+    {
+        imageDim.hstart = 1;
+        imageDim.hend = 512;
+        imageDim.hdim = 512;
+        imageDim.hdim = (imageDim.hend - imageDim.hstart + 1) / imageDim.hbin;
+    }
+
+    // Vertical
+    if ((imageDim.vdim > 512) ||
+            (imageDim.vstart < 1) || (imageDim.vstart > 512) ||
+            (imageDim.vend < 1) || (imageDim.vend > 512)
+        )
+    {
+        imageDim.vstart = 1;
+        imageDim.vend = 512;
+        imageDim.vdim = 512;
+        imageDim.vdim = (imageDim.vend - imageDim.vstart + 1) / imageDim.vbin;
+    }
+
+    // Recalculate total size and set flag
+    imageDim.size = imageDim.hdim * imageDim.vdim;
 }
 
 
