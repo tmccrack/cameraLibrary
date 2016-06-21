@@ -28,6 +28,7 @@ bool GetInput(long *buffer)
     printf("Acquire sub frame image - 2\n");
     printf("Retrieve current image buffer - 3\n");
     printf("Abort acquistion - 4\n");
+    printf("Check if running - 5\n");
     printf("Shutdown camera - Any other key\n");
     std::cin >> i_input;
     printf("\n\n");
@@ -58,6 +59,13 @@ bool GetInput(long *buffer)
     {
         abortAcquisitionLV();
         return TRUE;
+    }
+    else if (i_input == 5)
+    {
+        if (isItRunning()) printf("Thread is running\n");
+        else printf("Thread NOT running\n");
+        return TRUE;
+
     }
     else    return FALSE;
 }
