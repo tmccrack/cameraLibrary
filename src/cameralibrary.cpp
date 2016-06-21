@@ -21,7 +21,9 @@ void initializeCameraLV()
     if (!b_gblerrorFlag)
     {
         printf("Camera initialized\n");
+        mutex.lock();
         b_gblAcquireFlag = false;
+        mutex.unlock();
     }
 }
 
@@ -58,13 +60,9 @@ void acquireSingleFullFrameLV(float expTime)
 
         ui_error = GetMostRecentImage(camData, imageDim.size);
         checkError(ui_error, "GetMostRecentImage");
-
-        // Copy data array in image buffer for external use
-        //std::copy(camData, camData + imageDim.size, imageBuffer);
     }
     else
     {
-        //outString = "Cannot start camera acquisition...";
         printf("Cannot start camera acquisition...\n");
     }
 }
@@ -137,14 +135,18 @@ void acquireFullFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
+        mutex.lock();
         b_gblAcquireFlag = true;
+        mutex.unlock();
 
         camThread->startCameraThread(imageDim.size, camData);
     }
     else
     {
         printf("Cannot start camera acquisition...\n");
+        mutex.lock();
         b_gblAcquireFlag = false;
+        mutex.unlock();
     }
     printf("Returning from wrapper\n");
 }
@@ -168,14 +170,18 @@ void acquireSubFrameLV(float expTime)
     if (!b_gblerrorFlag)
     {
         printf("Starting acquisition...\n");
+        mutex.lock();
         b_gblAcquireFlag = true;
+        mutex.unlock();
 
         camThread->startCameraThread(imageDim.size, camData);
     }
     else
     {
         printf("Cannot start camera acquisition...\n");
+        mutex.lock();
         b_gblAcquireFlag = false;
+        mutex.unlock();
     }
 }
 
@@ -256,7 +262,6 @@ void acquireClosedLoopLV(float expTime)
  */
 void getCameraDataLV(long *dataOut)
 {
-    b_gblAcquireFlag = true;
     if (b_gblAcquireFlag)
     {
         mutex.lock();
@@ -278,7 +283,12 @@ void abortAcquisitionLV()
         camThread->wait();
     }
 
+    mutex.lock();
     b_gblAcquireFlag = false;
+    mutex.unlock();
+
+    ui_error = SetShutter(1, 2, 27, 27);  // Close shutter
+    checkError(ui_error, "SetShutter");
 }
 
 
@@ -309,10 +319,19 @@ void shutdownCameraLV()
 {
     if (b_gblAcquireFlag)
     {
-        camThread->abortCameraThread();
-        camThread->wait();
+        if (camThread->isRunning())
+        {
+            camThread->abortCameraThread();
+            camThread->wait();
+        }
+
+        mutex.lock();
         b_gblAcquireFlag = false;
+        mutex.unlock();
     }
+
+    ui_error = SetShutter(1, 2, 27, 27);  // Close shutter
+    checkError(ui_error, "SetShutter");
 
     ui_error = ShutDown();
     checkError(ui_error, "ShutDown");
@@ -438,3 +457,8 @@ void centroid(long *imageBuffer)
 }
 
 
+
+bool isItRunning()
+{
+    return camThread->isItRunning();
+}
