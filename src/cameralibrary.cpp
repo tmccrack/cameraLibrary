@@ -17,6 +17,7 @@ void initializeCameraLV()
     setupCamera();
     // Initialize camera thread
     camThread = new CameraThread();
+    closedThread = new ClosedLoopCameraThread();
 
     if (!b_gblerrorFlag)
     {
@@ -196,62 +197,20 @@ void acquireClosedLoopLV(float expTime)
 
     if (!b_gblerrorFlag)
     {
-//        // Create socket client and connect
-//        SocketClient sClient;
-//        sClient.Connect();
+        printf("Starting closed loop acquisition...\n");
+        mutex.lock();
+        b_gblAcquireFlag = true;
+        mutex.unlock();
 
-//        printf("Starting acquisition...\n");
-//        b_gblAcquireFlag = false;
-//        StartAcquisition();
-
-//        /*
-//         * Loop over WaitForAcquisition
-//         * Sequence aborted by setting stop flag
-//         */
-//        controlVals.even = FALSE;
-//        int counter = 0;
-//        //while (!b_gblAcquireFlag)
-//        while (counter < 1000)
-//        {
-//            ui_error = WaitForAcquisition();
-//            checkError(ui_error, "WaitForAcquisition");
-
-//            ui_error = GetMostRecentImage(camData, imageDim.size);
-//            checkError(ui_error, "GetMostRecentImage");
-
-//            // Copy data array in image buffer for external use
-//            //std::copy(camData, camData + imageDim.size, imageBuffer);
-
-//            // Centroid image and send out values
-//            //centroid(imageBuffer);
-
-//            // For testing
-//            if (controlVals.even)
-//            {
-//                sClient.sendData(5.0, 5.0);
-//                controlVals.even = FALSE;
-//            }
-//            else {
-//                sClient.sendData(0.0, 0.0);
-//                controlVals.even = TRUE;
-//            }
-//            counter += 1;
-
-//            // For used
-//            //sClient.sendData(controlVals.x, controlVals.y);
-//        }
-
-//        // Abort Andor acquisition and check error
-//        ui_error = AbortAcquisition();
-//        checkError(ui_error, "AbortAcquisition");
-
-//        // Close socket client
-//        sClient.sendData(0.0, 0.0);
-//        sClient.Close();
-//        printf("Closing connection\n");
+        closedThread->startCameraThread(imageDim.hdim, imageDim.vdim, camData);
     }
-
-    else printf("Cannot start camera acquisition...\n");
+    else
+    {
+        printf("Cannot start camera acquisition...\n");
+        mutex.lock();
+        b_gblAcquireFlag = false;
+        mutex.unlock();
+    }
 
 }
 
@@ -281,6 +240,12 @@ void abortAcquisitionLV()
     {
         camThread->abortCameraThread();
         camThread->wait();
+    }
+
+    if (closedThread->isRunning())
+    {
+        closedThread->abortCameraThread();
+        closedThread->wait();
     }
 
     mutex.lock();
@@ -464,35 +429,8 @@ void coolerPower()
 
 
 /*
- * Find the x, y centroid from the provided image buffer
- * and set the appropriate x, y values in the controlVal struct.
+ * Temporary function
  */
-void centroid(long *imageBuffer)
-{
-    float sum = 0;
-    float dummy_x = 0;
-    float dummy_y = 0;
-    float sum_x = 0;
-    float sum_y = 0;
-    for (int i = 0; i < imageDim.hdim; i++)
-    {
-        dummy_x = 0;
-        dummy_y = 0;
-        for (int j = 0; j < imageDim.vdim; j++)
-        {
-            sum += imageBuffer[i + j];
-            dummy_x += imageBuffer[i + j * imageDim.hdim];
-            dummy_y += imageBuffer[i * imageDim.vdim + j];
-        }
-        sum_x += (i + 1) * dummy_x;
-        sum_y += (i + 1) * dummy_y;
-    }
-    controlVals.x = sum_x / sum;
-    controlVals.y = sum_y / sum;
-}
-
-
-
 bool isItRunning()
 {
     return camThread->isItRunning();

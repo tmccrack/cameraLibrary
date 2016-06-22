@@ -35,20 +35,6 @@ struct ImageDim{
 
 
 /*
- * Struct for control loop values
- */
-struct ControlValues{
-    float x;
-    float y;
-    float kp;
-    float ki;
-    float kd;
-    float gain;
-    bool even;
-} controlVals;
-
-
-/*
  * Functions for labview interface
  */
 extern "C" {
@@ -62,6 +48,7 @@ void CAMERALIBRARYSHARED_EXPORT getCameraDataLV(long *dataOut);
 void CAMERALIBRARYSHARED_EXPORT setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
 void CAMERALIBRARYSHARED_EXPORT abortAcquisitionLV();
 void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
+bool CAMERALIBRARYSHARED_EXPORT isItRunning();
 }
 
 
@@ -82,7 +69,8 @@ unsigned int ui_error;
 bool b_gblerrorFlag = false;
 bool b_gblAcquireFlag = false;
 static long *camData = new long[262144];
-CameraThread *camThread;
+static CameraThread *camThread;
+static ClosedLoopCameraThread *closedThread;
 QMutex mutex;
 
 #endif // CAMERALIBRARY_H
