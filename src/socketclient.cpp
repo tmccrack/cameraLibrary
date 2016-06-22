@@ -1,16 +1,16 @@
-#include <QCoreApplication>
-#include "socketclient.h"
 #include <iostream>
+#include "socketclient.h"
 
 
 /*
  * Constructor for socket client class
  */
-SocketClient::SocketClient(QString host, int port)
+SocketClient::SocketClient(QObject *parent) : QObject(parent)
 {
-    this->socket = new QTcpSocket;
-    this->port = port;
-    this->host = host;
+    socket = new QTcpSocket(this);
+    host = "172.29.46.109";
+    port = 6666;
+    connected = false;
 }
 
 
@@ -26,16 +26,17 @@ SocketClient::~SocketClient()
 /*
  * Function to connect to specified client
  */
-void SocketClient::Connect()
+void SocketClient::openConnection()
 {
     //connect
+    //socket = new QTcpSocket(this);
 
     socket->connectToHost(host, port);
 
     if(socket->waitForConnected(3000))
     {
         qDebug() << "Connected";
-        this->connected = true;
+        connected = true;
     }
     else
     {
@@ -49,7 +50,7 @@ void SocketClient::Connect()
  */
 void SocketClient::sendData(float x, float y)
 {
-    if(this->connected)
+    if(connected)
     {
         QByteArray data = QByteArray::number(x) + QByteArray::QByteArray(";") + QByteArray::number(y);
         socket->write(data, 15);
@@ -70,12 +71,32 @@ void SocketClient::sendData(float x, float y)
 /*
  * Close connection with client
  */
-void SocketClient::Close()
+void SocketClient::closeConnection()
 {
-    if(this->connected)
+    if(connected)
     {
+        // Close frees ports on other side, disconnectFrom waits for
+        //socket->disconnectFromHost();
         socket->close();
+        connected = false;
         qDebug() << "Connection closed";
     }
 
+}
+
+/*
+ * Return connection state
+ */
+bool SocketClient::isConnected()
+{
+    // Multiple states possible, only care about if connected
+    if (socket->state() == QTcpSocket::ConnectedState)
+    {
+        return true;
+    }
+    else
+    {
+        connected = false;
+        return false;
+    }
 }

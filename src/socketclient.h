@@ -5,22 +5,24 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QDebug>
-#include <QThread>
-#include <QWaitCondition>
-#include <windows.h>
-#include "ATMCD32D.h"
 
-class SocketClient
+class SocketClient : public QObject
 {
+    Q_OBJECT
+
 public:
-    SocketClient();
-    void Connect();
+    SocketClient(QObject *parent = 0);
+    ~SocketClient();
+    void openConnection();
     void sendData(float x, float y);
-    void Close();
+    void closeConnection();
+    bool isConnected();
 
 private:
     QTcpSocket *socket;
-    bool connected = false;
+    QString host;
+    int port;
+    bool connected;
 
 };
 
