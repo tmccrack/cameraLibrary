@@ -2,20 +2,35 @@
 #include "socketclient.h"
 #include <iostream>
 
-SocketClient::SocketClient()
+
+/*
+ * Constructor for socket client class
+ */
+SocketClient::SocketClient(QString host, int port)
+{
+    this->socket = new QTcpSocket;
+    this->port = port;
+    this->host = host;
+}
+
+
+/*
+ * Destructor for the socket client class
+ */
+SocketClient::~SocketClient()
 {
 
 }
 
+
+/*
+ * Function to connect to specified client
+ */
 void SocketClient::Connect()
 {
+    //connect
 
-    QString cRIO = "172.29.46.109";
-    QString tester = "localhost";
-
-    //connecte
-    socket = new QTcpSocket;
-    socket->connectToHost(cRIO, 6667);
+    socket->connectToHost(host, port);
 
     if(socket->waitForConnected(3000))
     {
@@ -26,15 +41,12 @@ void SocketClient::Connect()
     {
         qDebug() << "Cannot connect";
     }
-
-    // sent data
-
-    // got data
-
-    // closed connection
-
 }
 
+
+/*
+ * Function to send data to specified client
+ */
 void SocketClient::sendData(float x, float y)
 {
     if(this->connected)
@@ -54,6 +66,10 @@ void SocketClient::sendData(float x, float y)
 
 }
 
+
+/*
+ * Close connection with client
+ */
 void SocketClient::Close()
 {
     if(this->connected)
@@ -63,17 +79,3 @@ void SocketClient::Close()
     }
 
 }
-
-
-//int main(int argc, char *argv[])
-//{
-//    QCoreApplication a(argc, argv);
-
-//    SocketClient client;
-//    client.Connect();
-//    client.sendData(float(1.333333333), float(5.66346514565));
-//    client.Close();
-
-//    return a.exec();
-//}
-
