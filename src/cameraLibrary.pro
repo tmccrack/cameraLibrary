@@ -15,11 +15,12 @@ TEMPLATE = lib
 DEFINES += CAMERALIBRARY_LIBRARY
 
 SOURCES += cameralibrary.cpp \
-    socketclient.cpp
+    socketclient.cpp \
+    camerathread.cpp
 
 HEADERS += cameralibrary.h\
-        #CImg.h
-    socketclient.h
+    socketclient.h \
+    camerathread.h
 
 unix {
     target.path = /usr/lib
