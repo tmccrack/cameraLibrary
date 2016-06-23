@@ -48,7 +48,6 @@ void CAMERALIBRARYSHARED_EXPORT getCameraDataLV(long *dataOut);
 void CAMERALIBRARYSHARED_EXPORT setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
 void CAMERALIBRARYSHARED_EXPORT abortAcquisitionLV();
 void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
-bool CAMERALIBRARYSHARED_EXPORT isItRunning();
 }
 
 
