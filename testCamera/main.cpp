@@ -1,5 +1,7 @@
 #include <QCoreApplication>
-#include "cameralibrary.h"
+//#include "cameralibrary.h"
+#include <iostream>
+#include "socketclient.h"
 
 bool GetInput(long *buffer);
 
@@ -7,7 +9,6 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     long *buffer = new long[262144];
-
     initializeCameraLV();
 
     while(GetInput(buffer))
@@ -15,9 +16,13 @@ int main(int argc, char *argv[])
 
     }
     shutdownCameraLV();
+
+
     printf("Shutting down\n\n");
     return a.exec();
 }
+
+
 
 bool GetInput(long *buffer)
 {
@@ -29,21 +34,33 @@ bool GetInput(long *buffer)
     printf("Retrieve current image buffer - 3\n");
     printf("Abort acquistion - 4\n");
     printf("Check if running - 5\n");
+    printf("Send data - 6\n");
     printf("Shutdown camera - Any other key\n");
     std::cin >> i_input;
     printf("\n\n");
 
+    /*
+     * Full frame
+     */
     if(i_input == 1)
     {
        acquireFullFrameLV(1.0);
        return TRUE;
     }
+
+    /*
+     * Sub frame
+     */
     else if(i_input == 2)
     {
         setFrameSizeLV(240, 272, 240, 273, 1, 1);
         acquireSubFrameLV(0.10);
         return TRUE;
     }
+
+    /*
+     * Get image buffer
+     */
     else if (i_input == 3)
     {
         getCameraDataLV(buffer);
@@ -55,11 +72,19 @@ bool GetInput(long *buffer)
         printf("\n");
         return TRUE;
     }
+
+    /*
+     * Abort
+     */
     else if (i_input == 4)
     {
         abortAcquisitionLV();
         return TRUE;
     }
+
+    /*
+     * Is thread running?
+     */
     else if (i_input == 5)
     {
         if (isItRunning()) printf("Thread is running\n");
@@ -67,29 +92,23 @@ bool GetInput(long *buffer)
         return TRUE;
 
     }
+
+    /*
+     * Send data over socket
+     */
+    else if (i_input == 6)
+    {
+        sClient = new SocketClient();
+        sClient->openConnection();
+        if (sClient->isConnected())
+        {
+            sClient->sendData(0.0, 1.0);
+            sClient->closeConnection();
+            printf("Data sent...\n");
+        }
+        else printf("Cannot connect socket...\n");
+        return TRUE;
+
+    }
     else    return FALSE;
 }
-
-//void DisplayImage(WORD * _lp_data, int _i_xPx, int _i_yPx)
-//{
-//  //Using third party Package 'CIm'g
-
-//  //Create a CImg Object the width and height of the sensor, 2 Dimensional, one color chanel per pixel, pixels defaulted to 0(black)
-//  CImg<float> img(_i_xPx,_i_yPx,1,1,0);
-
-//  //fill the img window in black
-//  img.fill(0);
-
-//  int i_counter = 0;
-//  for(int y = 0; y < _i_yPx;++y)
-//  {
-//    for(int x = 0; x < _i_xPx; x++)
-//    {
-//      unsigned char _ucp_grayScale[] = {255,255,255};         //define the colour white
-//      float f_intensity = _lp_data[i_counter]/65536;   //Calculate pixel intensity
-//      img.draw_point(x,y,_ucp_grayScale,f_intensity);           //Draw Pixel
-//      i_counter++;
-//    }
-//  }
-//  img.display("Image");
-//}
