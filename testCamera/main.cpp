@@ -1,5 +1,5 @@
 #include <QCoreApplication>
-//#include "cameralibrary.h"
+#include "cameralibrary.h"
 #include <iostream>
 #include "socketclient.h"
 
@@ -90,7 +90,6 @@ bool GetInput(long *buffer)
         if (isItRunning()) printf("Thread is running\n");
         else printf("Thread NOT running\n");
         return TRUE;
-
     }
 
     /*
@@ -98,7 +97,7 @@ bool GetInput(long *buffer)
      */
     else if (i_input == 6)
     {
-        sClient = new SocketClient();
+        SocketClient *sClient = new SocketClient();
         sClient->openConnection();
         if (sClient->isConnected())
         {
@@ -110,5 +109,6 @@ bool GetInput(long *buffer)
         return TRUE;
 
     }
+
     else    return FALSE;
 }
