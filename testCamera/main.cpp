@@ -97,11 +97,15 @@ bool GetInput(long *buffer)
      */
     else if (i_input == 6)
     {
+        float a, b;
+        printf("Enter two numbers: \n");
+        std::cin >> a;
+        std::cin >> b;
         SocketClient *sClient = new SocketClient();
         sClient->openConnection();
         if (sClient->isConnected())
         {
-            sClient->sendData(0.0, 1.0);
+            sClient->sendData(a, b);
             sClient->closeConnection();
             printf("Data sent...\n");
         }
