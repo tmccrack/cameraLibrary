@@ -9,10 +9,12 @@ CONFIG += console
 CONFIG -= app_bundle
 TEMPLATE = app
 
-SOURCES += main.cpp
+SOURCES += main.cpp\
+    ../src/socketclient.cpp
 
 HEADERS += \
-    cameralibrary.h
+    cameralibrary.h\
+    ../src/socketclient.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/release/ -lcameraLibrary
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/debug/ -lcameraLibrary
