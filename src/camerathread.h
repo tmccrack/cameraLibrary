@@ -52,6 +52,7 @@ public:
     ClosedLoopCameraThread(QObject *parent = 0);
     ~ClosedLoopCameraThread();
     void startCameraThread(int xPix, int yPix, long *imageBuffer);
+    void abortCameraThread();
 
 protected:
     void run() Q_DECL_OVERRIDE;

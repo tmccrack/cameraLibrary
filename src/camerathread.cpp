@@ -200,11 +200,20 @@ void ClosedLoopCameraThread::run()
             ResetEvent(camEvent);
             GetMostRecentImage(camData, imageSize);
             centroid(camData);
-            if (controlVals.even) sClient->sendData(5.0, 5.0);
-            else sClient->sendData(0.0, 0.0);
+            mutex.unlock();
+            if (controlVals.even)
+            {
+                sClient->sendData(5.0, 5.0);
+                controlVals.even = false;
+                printf("even\n");
+            }
+            else
+            {
+                sClient->sendData(0.0, 0.0);
+                controlVals.even = true;
+            }
             //sClient->sendData(controlVals.x, controlVals.y);
             std::copy(camData, camData + (long) imageSize, copyData);
-            mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)
         {
@@ -214,7 +223,7 @@ void ClosedLoopCameraThread::run()
         {
             // Error, abort acquisition loop
             mutex.lock();
-            this->abort = true;
+            abort = true;
             mutex.unlock();
             printf("Error in image acquisition\n");
         }
@@ -273,6 +282,16 @@ void ClosedLoopCameraThread::centroid(long *imageBuffer)
     controlVals.y = sum_y / sum;
 }
 
+
+/*
+ * Function to set abort flag
+ */
+void ClosedLoopCameraThread::abortCameraThread()
+{
+    mutex.lock();
+    abort = true;
+    mutex.unlock();
+}
 
 
 bool ClosedLoopCameraThread::checkError(unsigned int _ui_err, const char* _cp_func)
