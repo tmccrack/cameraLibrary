@@ -177,6 +177,13 @@ void ClosedLoopCameraThread::run()
     checkError(and_error, "StartAcquisition");
 
     sClient->openConnection();
+    if (!sClient->isConnected())
+    {
+        mutex.lock();
+        abort = true;
+        mutex.unlock();
+    }
+
 
     /*
      * TODO: Connect SocketClient signals to ClosedLoopThread slots indicating connection issues
