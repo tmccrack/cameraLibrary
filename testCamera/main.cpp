@@ -1,7 +1,6 @@
 #include <QCoreApplication>
 #include "cameralibrary.h"
 #include <iostream>
-#include "socketclient.h"
 
 bool GetInput(long *buffer);
 
@@ -59,9 +58,19 @@ bool GetInput(long *buffer)
     }
 
     /*
+     * Sub frame
+     */
+    else if(i_input == 3)
+    {
+        setFrameSizeLV(240, 272, 240, 273, 1, 1);
+        acquireClosedLoopLV(0.001);
+        return TRUE;
+    }
+
+    /*
      * Get image buffer
      */
-    else if (i_input == 3)
+    else if (i_input == 4)
     {
         getCameraDataLV(buffer);
         getCameraDataLV(buffer);
@@ -76,32 +85,10 @@ bool GetInput(long *buffer)
     /*
      * Abort
      */
-    else if (i_input == 4)
+    else if (i_input == 5)
     {
         abortAcquisitionLV();
         return TRUE;
-    }
-
-    /*
-     * Send data over socket
-     */
-    else if (i_input == 6)
-    {
-        float a, b;
-        printf("Enter two numbers: \n");
-        std::cin >> a;
-        std::cin >> b;
-        SocketClient *sClient = new SocketClient();
-        sClient->openConnection();
-        if (sClient->isConnected())
-        {
-            sClient->sendData(a, b);
-            sClient->closeConnection();
-            printf("Data sent...\n");
-        }
-        else printf("Cannot connect socket...\n");
-        return TRUE;
-
     }
 
     else    return FALSE;
