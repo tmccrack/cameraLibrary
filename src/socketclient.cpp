@@ -52,11 +52,14 @@ void SocketClient::sendData(float x, float y)
 {
     if(connected)
     {
-        QByteArray data = QByteArray::number(x) + QByteArray::QByteArray(";") + QByteArray::number(y);
-        socket->write(data, 15);
+        QByteArray data = QByteArray::number(x, 'f') + QByteArray::QByteArray(";") + QByteArray::number(y, 'f');
+        socket->write(QByteArray::number(data.size()), 2);
+        socket->flush();
+        socket->waitForBytesWritten(1);
+        socket->write(data, data.size());
         socket->flush();
         //printf("data sent\n");
-        //socket->waitForBytesWritten(1);
+        //
         //socket->waitForReadyRead(3000);
         //qDebug() << socket->readAll();
     }
