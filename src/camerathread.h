@@ -64,7 +64,6 @@ private:
     DWORD win_error;  // Windows event error
     int port;
     QString *host;
-    SocketClient *sClient;
     QMutex mutex;
     HANDLE camEvent;
     bool abort;

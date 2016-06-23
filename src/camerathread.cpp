@@ -129,7 +129,6 @@ bool CameraThread::checkError(unsigned int _ui_err, const char* _cp_func)
 ClosedLoopCameraThread::ClosedLoopCameraThread(QObject *parent) : CameraThread(parent)
 {
     // Create socket client, copy data buffer, and win32 event handle
-    sClient = new SocketClient(this);
     copyData = new long[262144];
     camEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
     abort = false;
@@ -169,13 +168,7 @@ void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBu
 void ClosedLoopCameraThread::run()
 {
 
-    // Pass Andor API event handle and start acquistion
-    and_error = SetDriverEvent(camEvent);
-    checkError(and_error, "SetDriverEvent");
-
-    and_error = StartAcquisition();
-    checkError(and_error, "StartAcquisition");
-
+    SocketClient *sClient = new SocketClient;
     sClient->openConnection();
     if (!sClient->isConnected())
     {
@@ -184,6 +177,12 @@ void ClosedLoopCameraThread::run()
         mutex.unlock();
     }
 
+    // Pass Andor API event handle and start acquistion
+    and_error = SetDriverEvent(camEvent);
+    checkError(and_error, "SetDriverEvent");
+
+    and_error = StartAcquisition();
+    checkError(and_error, "StartAcquisition");
 
     /*
      * TODO: Connect SocketClient signals to ClosedLoopThread slots indicating connection issues
