@@ -54,11 +54,6 @@ void CameraThread::abortCameraThread()
     mutex.unlock();
 }
 
-bool CameraThread::isItRunning()
-{
-    return this->isRunning();
-}
-
 
 /*
  * Main function for camera thread.

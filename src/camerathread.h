@@ -22,7 +22,6 @@ public:
     ~CameraThread();
     void startCameraThread(int imageSize, long *imageBuffer);
     void abortCameraThread();
-    bool isItRunning();
 
 protected:
     void run() Q_DECL_OVERRIDE;

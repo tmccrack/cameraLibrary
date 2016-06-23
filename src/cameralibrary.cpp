@@ -426,12 +426,3 @@ void coolerPower()
      * TODO: program coolerPower()
      */
 }
-
-
-/*
- * Temporary function
- */
-bool isItRunning()
-{
-    return camThread->isItRunning();
-}

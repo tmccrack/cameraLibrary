@@ -83,16 +83,6 @@ bool GetInput(long *buffer)
     }
 
     /*
-     * Is thread running?
-     */
-    else if (i_input == 5)
-    {
-        if (isItRunning()) printf("Thread is running\n");
-        else printf("Thread NOT running\n");
-        return TRUE;
-    }
-
-    /*
      * Send data over socket
      */
     else if (i_input == 6)
