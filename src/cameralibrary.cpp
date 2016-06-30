@@ -21,7 +21,7 @@ void initializeCameraLV()
 
     if (!b_gblerrorFlag)
     {
-        printf("Camera initialized\n");
+        printf("Camera initialized...\n");
         mutex.lock();
         b_gblAcquireFlag = false;
         mutex.unlock();
@@ -149,7 +149,6 @@ void acquireFullFrameLV(float expTime)
         b_gblAcquireFlag = false;
         mutex.unlock();
     }
-    printf("Returning from wrapper\n");
 }
 
 
@@ -323,6 +322,7 @@ void shutdownCameraLV()
  */
 void setupCamera()
 {
+    printf("Setting up camera...\n");
     ui_error = SetReadMode(4);  // Image
     checkError(ui_error, "SetReadMode");
 
@@ -343,6 +343,9 @@ void setupCamera()
 
     ui_error = SetNumberAccumulations(1);  // Do not accumulate images onboard camera
     checkError(ui_error, "SetNumberAccumulations");
+
+    ui_error = SetDMAParameters(1, 0.001f);
+    checkError(ui_error, "SetDMAParameters");
 }
 
 
