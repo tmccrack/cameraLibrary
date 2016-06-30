@@ -205,7 +205,6 @@ void ClosedLoopCameraThread::run()
             {
                 sClient->sendData(5.0, 5.0);
                 controlVals.even = false;
-                printf("even\n");
             }
             else
             {
