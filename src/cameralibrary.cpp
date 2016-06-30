@@ -122,12 +122,17 @@ void acquireSingleSubFrameLV(float expTime)
  */
 void acquireFullFrameLV(float expTime)
 {
-    //clearError();
-    ui_error = SetShutter(1, 0, 27, 27);  // Set shutter to auto
-    checkError(ui_error, "SetShutter");
+    // Verify camera is not acquiring first
+    if (b_gblAcquireFlag)
+    {
+        abortAcquisitionLV();
+    }
 
     ui_error = SetExposureTime(expTime);
     checkError(ui_error, "SetExposureTime");
+
+    ui_error = SetShutter(1, 0, 27, 27);  // Set shutter to auto
+    checkError(ui_error, "SetShutter");    
 
     //setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin)
     setFrameSizeLV(1, 512, 1, 512, 1, 1);  // Set to full camera readout
@@ -159,12 +164,17 @@ void acquireFullFrameLV(float expTime)
  */
 void acquireSubFrameLV(float expTime)
 {
-    //clearError();
-    ui_error = SetShutter(1, 1, 27, 27);  // Set to always open
-    checkError(ui_error, "SetShutter");
+    // Verify camera is not acquiring first
+    if (b_gblAcquireFlag)
+    {
+        abortAcquisitionLV();
+    }
 
     ui_error = SetExposureTime(expTime);
     checkError(ui_error, "SetExposureTime");
+
+    ui_error = SetShutter(1, 1, 27, 27);  // Set to always open
+    checkError(ui_error, "SetShutter");
 
     // Start camera acquisition thread
     if (!b_gblerrorFlag)
@@ -188,11 +198,17 @@ void acquireSubFrameLV(float expTime)
 
 void acquireClosedLoopLV(float expTime)
 {
-    ui_error = SetShutter(1, 1, 27, 27);  // Set to always open
-    checkError(ui_error, "SetShutter");
+    // Verify camera is not acquiring first
+    if (b_gblAcquireFlag)
+    {
+        abortAcquisitionLV();
+    }
 
     ui_error = SetExposureTime(expTime);
     checkError(ui_error, "SetExposureTime");
+
+    ui_error = SetShutter(1, 1, 27, 27);  // Set to always open
+    checkError(ui_error, "SetShutter");    
 
     if (!b_gblerrorFlag)
     {
