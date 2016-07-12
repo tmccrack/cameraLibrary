@@ -31,7 +31,7 @@ CameraThread::~CameraThread()
 void CameraThread::startCameraThread(int imageSize, long *imageBuffer)
 {
     this->imageSize = imageSize;
-    camData = new long[this->imageSize];
+    camData = new long[imageSize];
 
     //TODO: Ensure imageBuffer is correct size???
     copyData = imageBuffer;
@@ -144,7 +144,7 @@ ClosedLoopCameraThread::~ClosedLoopCameraThread()
     wait();  // Wait for run() to finish
 }
 
-void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer)
+void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, float *x, float *y)
 {
     controlVals.xDim = xPix;
     controlVals.yDim = yPix;
@@ -152,6 +152,8 @@ void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBu
     imageSize = controlVals.xDim * controlVals.yDim;
     camData = new long[imageSize];
     copyData = imageBuffer;
+    copyX = x;
+    copyY = y;
 
     // Set abort flag to false and start thread
     mutex.lock();
@@ -212,7 +214,13 @@ void ClosedLoopCameraThread::run()
                 controlVals.even = true;
             }
             //sClient->sendData(controlVals.x, controlVals.y);
+
+            // Copy data into accessible buffers
+            mutex.lock();
             std::copy(camData, camData + (long) imageSize, copyData);
+            *copyX = controlVals.x;
+            *copyY = controlVals.y;
+            mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)
         {
