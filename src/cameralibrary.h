@@ -48,6 +48,7 @@ void CAMERALIBRARYSHARED_EXPORT getCameraDataLV(long *dataOut);
 void CAMERALIBRARYSHARED_EXPORT setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
 void CAMERALIBRARYSHARED_EXPORT abortAcquisitionLV();
 void CAMERALIBRARYSHARED_EXPORT getTemperatureLV(int *temperature, unsigned int *status);
+void CAMERALIBRARYSHARED_EXPORT setTemperatureLV(int setTemp);
 void CAMERALIBRARYSHARED_EXPORT getCorrectionValueLV(float *x, float *y);
 void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
 }
@@ -58,7 +59,6 @@ void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
  */
 void setupCamera();
 void checkFrameSize();
-void coolerPower(double setTemp);
 void centroid(long *imageBuffer);
 bool checkError(unsigned int _ui_error, const char* _cp_func);
 

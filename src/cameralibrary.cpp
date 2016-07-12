@@ -330,6 +330,21 @@ void getTemperatureLV(int *temperature, unsigned int *status)
     *status = GetTemperature(temperature);
 }
 
+/*
+ * Set temperature on Andor and power on if not already
+ */
+void setTemperatureLV(int setTemp)
+{
+    ui_error = SetTemperature(setTemp);
+    checkError(ui_error, "SetTemperature");
+
+    if (!b_gblCoolerPower)
+    {
+        ui_error = CoolerON();
+        checkError(ui_error, "CoolerON");
+        b_gblCoolerPower = true;
+    }
+}
 
 /*
  * Shutdown camera
@@ -460,21 +475,4 @@ void checkFrameSize()
 
     // Recalculate total size and set flag
     imageDim.size = imageDim.hdim * imageDim.vdim;
-}
-
-
-/*
- * Set temperature on Andor and power on if not already
- */
-void coolerPower(double setTemp)
-{
-    ui_error = SetTemperature(setTemp);
-    checkError(ui_error, "SetTemperature");
-
-    if (!b_gblCoolerPower)
-    {
-        ui_error = CoolerON();
-        checkError(ui_error, "CoolerON");
-        b_gblCoolerPower = true;
-    }
 }
