@@ -20,6 +20,7 @@ public:
 
 private:
     QTcpSocket *socket;
+    QByteArray *data;
     QString host;
     int port;
     bool connected;

@@ -7,7 +7,8 @@
  */
 SocketClient::SocketClient(QObject *parent) : QObject(parent)
 {
-    socket = new QTcpSocket(this);
+    socket = new QTcpSocket;
+    //data = new QByteArray;
     host = "172.29.46.109";
     port = 6666;
     connected = false;
@@ -52,12 +53,15 @@ void SocketClient::sendData(float x, float y)
 {
     if(connected)
     {
-        QByteArray data = QByteArray::number(x, 'f') + QByteArray::QByteArray(";") + QByteArray::number(y, 'f');
-        socket->write(QByteArray::number(data.size()), 2);
+        data->append(QByteArray::number(x, 'f'));
+        data->append(";");
+        data->append(QByteArray::number(y, 'f'));
+        socket->write(QByteArray::number(data->size()), 2);
         socket->flush();
         socket->waitForBytesWritten(1);
-        socket->write(data, data.size());
+        socket->write(*data, data->size());
         socket->flush();
+        data->clear();
         //printf("data sent\n");
         //
         //socket->waitForReadyRead(3000);
