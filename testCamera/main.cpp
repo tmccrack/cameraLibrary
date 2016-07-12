@@ -8,7 +8,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     long *buffer = new long[262144];
+    printf("Initializing...\n");
     initializeCameraLV();
+    setTemperatureLV(0);
 
     while(GetInput(buffer))
     {
@@ -34,6 +36,7 @@ bool GetInput(long *buffer)
     printf("Retrieve current image buffer - 4\n");
     printf("Abort acquistion - 5\n");
     printf("Send data over socket - 6\n");
+    printf("Get temperature - 7\n");
     printf("Shutdown camera - Any other key\n");
     std::cin >> i_input;
     printf("\n\n");
@@ -72,7 +75,6 @@ bool GetInput(long *buffer)
      */
     else if (i_input == 4)
     {
-        getCameraDataLV(buffer);
         getCameraDataLV(buffer);
         for (int i = 0; i < 200; i++)
         {
@@ -119,8 +121,17 @@ bool GetInput(long *buffer)
         delete sock;
         return true;
     }
+    else if (i_input == 7)
+    {
+        int *temp;
+        unsigned int *status;
+        getTemperatureLV(temp, status);
+        printf("Current temperature: %d\n", *temp);
+        printf("Temp status flag: %d\n", *status);
+        return true;
+    }
 
 
 
-    else    return FALSE;
+    else    return false;
 }
