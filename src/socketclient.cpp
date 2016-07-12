@@ -62,10 +62,6 @@ void SocketClient::sendData(float x, float y)
         socket->write(*data, data->size());
         socket->flush();
         data->clear();
-        //printf("data sent\n");
-        //
-        //socket->waitForReadyRead(3000);
-        //qDebug() << socket->readAll();
     }
     else
     {
