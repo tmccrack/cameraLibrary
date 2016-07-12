@@ -47,6 +47,7 @@ void CAMERALIBRARYSHARED_EXPORT acquireClosedLoopLV(float expTime);
 void CAMERALIBRARYSHARED_EXPORT getCameraDataLV(long *dataOut);
 void CAMERALIBRARYSHARED_EXPORT setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
 void CAMERALIBRARYSHARED_EXPORT abortAcquisitionLV();
+void CAMERALIBRARYSHARED_EXPORT getTemperatureLV(int *temperature, unsigned int *status);
 void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
 }
 
@@ -56,7 +57,7 @@ void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
  */
 void setupCamera();
 void checkFrameSize();
-void coolerPower();
+void coolerPower(double setTemp);
 void centroid(long *imageBuffer);
 bool checkError(unsigned int _ui_error, const char* _cp_func);
 
@@ -67,6 +68,7 @@ bool checkError(unsigned int _ui_error, const char* _cp_func);
 unsigned int ui_error;
 bool b_gblerrorFlag = false;
 bool b_gblAcquireFlag = false;
+bool b_gblCoolerPower = false;
 static long *camData = new long[262144];
 static CameraThread *camThread;
 static ClosedLoopCameraThread *closedThread;

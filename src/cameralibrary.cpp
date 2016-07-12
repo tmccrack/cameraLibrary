@@ -303,6 +303,16 @@ void setFrameSizeLV(int hstart, int hend, int vstart, int vend, int hbin, int vb
  * TODO: Implement getter to check frame size in case it changes from specified.
  */
 
+/*
+ * Check status of temperature control and CCD temp
+ * Call with temperature and status pointers
+ * Must assess status in labview
+ */
+void getTemperatureLV(int *temperature, unsigned int *status)
+{
+    *status = GetTemperature(temperature);
+}
+
 
 /*
  * Shutdown camera
@@ -437,11 +447,17 @@ void checkFrameSize()
 
 
 /*
- * Check the TEC on the Andor camera
+ * Set temperature on Andor and power on if not already
  */
-void coolerPower()
+void coolerPower(double setTemp)
 {
-    /*
-     * TODO: program coolerPower()
-     */
+    ui_error = SetTemperature(setTemp);
+    checkError(ui_error, "SetTemperature");
+
+    if (!b_gblCoolerPower)
+    {
+        ui_error = CoolerON();
+        checkError(ui_error, "CoolerON");
+        b_gblCoolerPower = true;
+    }
 }
