@@ -3,14 +3,13 @@
 #include <iostream>
 
 bool GetInput(long *buffer);
+void Init();
+bool Inited = FALSE;
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     long *buffer = new long[262144];
-    printf("Initializing...\n");
-    initializeCameraLV();
-    setTemperatureLV(0);
 
     while(GetInput(buffer))
     {
@@ -23,7 +22,13 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-
+void Init()
+{
+    printf("Initializing...\n");
+    initializeCameraLV();
+    setTemperatureLV(0);
+    Inited = TRUE;
+}
 
 bool GetInput(long *buffer)
 {
@@ -46,8 +51,17 @@ bool GetInput(long *buffer)
      */
     if(i_input == 1)
     {
-       acquireFullFrameLV(1.0);
-       return TRUE;
+        if (Inited)
+        {
+            acquireFullFrameLV(1.0);
+            return TRUE;
+        }
+        else
+        {
+            Init();
+            acquireFullFrameLV(1.0);
+            return TRUE;
+        }
     }
 
     /*
@@ -55,9 +69,19 @@ bool GetInput(long *buffer)
      */
     else if(i_input == 2)
     {
-        setFrameSizeLV(240, 272, 240, 273, 1, 1);
-        acquireSubFrameLV(0.10);
-        return TRUE;
+        if (Inited)
+        {
+            setFrameSizeLV(240, 272, 240, 273, 1, 1);
+            acquireSubFrameLV(0.10);
+            return TRUE;
+        }
+        else
+        {
+            Init();
+            setFrameSizeLV(240, 272, 240, 273, 1, 1);
+            acquireSubFrameLV(0.10);
+            return TRUE;
+        }
     }
 
     /*
@@ -65,9 +89,19 @@ bool GetInput(long *buffer)
      */
     else if(i_input == 3)
     {
-        setFrameSizeLV(240, 272, 240, 273, 1, 1);
-        acquireClosedLoopLV(0.000);
-        return TRUE;
+        if (Inited)
+        {
+            setFrameSizeLV(240, 272, 240, 273, 1, 1);
+            acquireClosedLoopLV(0.000);
+            return TRUE;
+        }
+        else
+        {
+            Init();
+            setFrameSizeLV(240, 272, 240, 273, 1, 1);
+            acquireClosedLoopLV(0.000);
+            return TRUE;
+        }
     }
 
     /*
@@ -75,13 +109,28 @@ bool GetInput(long *buffer)
      */
     else if (i_input == 4)
     {
-        getCameraDataLV(buffer);
-        for (int i = 0; i < 200; i++)
+        if (Inited)
         {
-            printf("%i ", buffer[i]);
+            getCameraDataLV(buffer);
+            for (int i = 0; i < 200; i++)
+            {
+                printf("%i ", buffer[i]);
+            }
+            printf("\n");
+            return TRUE;
         }
-        printf("\n");
-        return TRUE;
+        else
+        {
+            Init();
+            getCameraDataLV(buffer);
+            for (int i = 0; i < 200; i++)
+            {
+                printf("%i ", buffer[i]);
+            }
+            printf("\n");
+            return TRUE;
+        }
+
     }
 
     /*
@@ -100,27 +149,35 @@ bool GetInput(long *buffer)
     {
         int i = 0;
         bool a = false;
+        float x = 0.000;
+        float y = 5.000;
         SocketClient *sock = new SocketClient;
         sock->openConnection();
-        while (i<10000)
+        if (sock->isConnected())
         {
-            if (a)
+            while (i<10000)
             {
-                sock->sendData(5.0000, 5.0000);
-                a = false;
+                if (a)
+                {
+                    sock->sendData(y,y);
+                    a = false;
+                }
+                else
+                {
+                    sock->sendData(x, x);
+                    a = true;
+                }
+                i++;
             }
-            else
-            {
-                sock->sendData(0.0000, 0.0000);
-                a = true;
-            }
-            i++;
+            sock->sendData(0.0000, 0.0000);
+            sock->closeConnection();
+            delete sock;
+            return true;
         }
-        sock->sendData(0.0000, 0.0000);
-        sock->closeConnection();
-        delete sock;
-        return true;
+        else printf("Issue connecting");
+
     }
+
     else if (i_input == 7)
     {
         int *temp;
