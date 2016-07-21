@@ -8,7 +8,7 @@
 SocketClient::SocketClient(QObject *parent) : QObject(parent)
 {
     socket = new QTcpSocket;
-    //data = new QByteArray;
+    data = new QByteArray;
     host = "172.29.46.109";
     port = 6666;
     connected = false;
