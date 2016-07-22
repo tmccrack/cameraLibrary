@@ -185,6 +185,7 @@ void ClosedLoopCameraThread::run()
 
     and_error = StartAcquisition();
     checkError(and_error, "StartAcquisition");
+    qDebug() << "Starting acquisition from thread";
 
     /*
      * TODO: Connect SocketClient signals to ClosedLoopThread slots indicating connection issues
@@ -200,9 +201,8 @@ void ClosedLoopCameraThread::run()
             // Camera triggered event, get data
             mutex.lock();
             ResetEvent(camEvent);
-            GetMostRecentImage(camData, imageSize);
             centroid(camData);
-            mutex.unlock();
+
             if (controlVals.even)
             {
                 sClient->sendData(5.0, 5.0);
@@ -216,15 +216,17 @@ void ClosedLoopCameraThread::run()
             //sClient->sendData(controlVals.x, controlVals.y);
 
             // Copy data into accessible buffers
-            mutex.lock();
             std::copy(camData, camData + (long) imageSize, copyData);
-            *copyX = controlVals.x;
-            *copyY = controlVals.y;
+            // TODO: The below does not work
+            //*copyX = controlVals.x;
+            //*copyY = controlVals.y;
             mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)
         {
             // Timeout, do nothing
+            ResetEvent(camEvent);
+            qDebug() << "Timeout, resetting event";
         }
         else
         {
