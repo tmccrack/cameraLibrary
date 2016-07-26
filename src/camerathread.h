@@ -20,7 +20,7 @@ class CameraThread : public QThread
 public:
     CameraThread(QObject *parent = 0);
     ~CameraThread();
-    void startCameraThread(int imageSize, long *imageBuffer);
+    void startCameraThread(int imageDimension, long *imageBuffer);
     void abortCameraThread();
 
 protected:
@@ -51,7 +51,7 @@ class ClosedLoopCameraThread: public CameraThread
 public:
     ClosedLoopCameraThread(QObject *parent = 0);
     ~ClosedLoopCameraThread();
-    void startCameraThread(int xPix, int yPix, long *imageBuffer, float *x, float *y);
+    void startCameraThread(int xPix, int yPix, long *imageBuffer, double *controlBuffer);
     void abortCameraThread();
 
 protected:
@@ -71,7 +71,7 @@ private:
     int imageSize;
     long *camData;
     long *copyData;
-    float *copyX, *copyY;
+    double *copyControl;
 
     /*
      * Struct for control loop values

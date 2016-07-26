@@ -212,12 +212,11 @@ void acquireClosedLoopLV(float expTime)
 
     if (!b_gblerrorFlag)
     {
-        printf("Starting closed loop acquisition...\n");
         mutex.lock();
         b_gblAcquireFlag = true;
         mutex.unlock();
 
-        closedThread->startCameraThread(imageDim.hdim, imageDim.vdim, camData, controlX, controlY);
+        closedThread->startCameraThread(imageDim.hdim, imageDim.vdim, camData, controlData);
     }
     else
     {
@@ -245,20 +244,21 @@ void getCameraDataLV(long *dataOut)
     }
 }
 
-void getControlValuesLV(float *x, float *y)
+void getControlsValueLV(double *controlValsOut)
 {
+    //float x, y;
     if (b_gblAcquireFlag)
     {
         mutex.lock();
-        x = controlX;
-        y = controlY;
+        std::copy(controlData, controlData + sizeof(double), controlValsOut);
         mutex.unlock();
     }
     else
     {
         mutex.lock();
-        *x = -100;
-        *y = -100;
+        //x = -100;
+        //y = -100;
+        mutex.unlock();
     }
 }
 

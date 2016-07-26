@@ -28,9 +28,9 @@ CameraThread::~CameraThread()
 /*
  * Sets camera thread properties and starts the acquistion loop
  */
-void CameraThread::startCameraThread(int imageSize, long *imageBuffer)
+void CameraThread::startCameraThread(int imageDimension, long *imageBuffer)
 {
-    this->imageSize = imageSize;
+    imageSize = imageDimension;
     camData = new long[imageSize];
 
     //TODO: Ensure imageBuffer is correct size???
@@ -130,9 +130,9 @@ ClosedLoopCameraThread::ClosedLoopCameraThread(QObject *parent) : CameraThread(p
 {
     // Create socket client, copy data buffer, and win32 event handle
     copyData = new long[262144];
+    copyControl = new double[2];
     camEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
     abort = false;
-    //controlVals = new ControlValues;
 }
 
 ClosedLoopCameraThread::~ClosedLoopCameraThread()
@@ -142,18 +142,23 @@ ClosedLoopCameraThread::~ClosedLoopCameraThread()
     mutex.unlock();
 
     wait();  // Wait for run() to finish
+
+    // Free up allocated memory;
+    if (camData) delete[] camData;
+    if (copyData) delete[] copyData;
+    if (copyControl) delete[] copyControl;
 }
 
-void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, float *x, float *y)
+void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, double *controlBuffer)
 {
     controlVals.xDim = xPix;
     controlVals.yDim = yPix;
 
     imageSize = controlVals.xDim * controlVals.yDim;
+    qDebug() << "Image size for CL: " << imageSize;
     camData = new long[imageSize];
     copyData = imageBuffer;
-    copyX = x;
-    copyY = y;
+    copyControl = controlBuffer;
 
     // Set abort flag to false and start thread
     mutex.lock();
@@ -185,7 +190,6 @@ void ClosedLoopCameraThread::run()
 
     and_error = StartAcquisition();
     checkError(and_error, "StartAcquisition");
-    qDebug() << "Starting acquisition from thread";
 
     /*
      * TODO: Connect SocketClient signals to ClosedLoopThread slots indicating connection issues
@@ -201,32 +205,39 @@ void ClosedLoopCameraThread::run()
             // Camera triggered event, get data
             mutex.lock();
             ResetEvent(camEvent);
+            GetMostRecentImage(camData, imageSize);
             centroid(camData);
 
             if (controlVals.even)
             {
-                sClient->sendData(5.0, 5.0);
+                controlVals.x = 4.95;
+                controlVals.y = 5.0;
+                sClient->sendData(controlVals.x, controlVals.y);
                 controlVals.even = false;
+
             }
             else
             {
-                sClient->sendData(0.0, 0.0);
+                controlVals.x = 0.025;
+                controlVals.y = 0.00;
+                sClient->sendData(controlVals.x, controlVals.y);
                 controlVals.even = true;
             }
             //sClient->sendData(controlVals.x, controlVals.y);
 
+
             // Copy data into accessible buffers
             std::copy(camData, camData + (long) imageSize, copyData);
+
             // TODO: The below does not work
-            //*copyX = controlVals.x;
-            //*copyY = controlVals.y;
+            std::copy(&controlVals.x, &controlVals.x + sizeof(double), copyControl);
+            std::copy(&controlVals.y, &controlVals.y + sizeof(double), copyControl + sizeof(double));
             mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)
         {
             // Timeout, do nothing
             ResetEvent(camEvent);
-            qDebug() << "Timeout, resetting event";
         }
         else
         {
