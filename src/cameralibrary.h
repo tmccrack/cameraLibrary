@@ -50,6 +50,7 @@ void CAMERALIBRARYSHARED_EXPORT abortAcquisitionLV();
 void CAMERALIBRARYSHARED_EXPORT getTemperatureLV(int *temperature, unsigned int *status);
 void CAMERALIBRARYSHARED_EXPORT setTemperatureLV(int setTemp);
 void CAMERALIBRARYSHARED_EXPORT getControlsValueLV(double *controlValsOut);
+void CAMERALIBRARYSHARED_EXPORT setMirrorValueLV(float x, float y);
 void CAMERALIBRARYSHARED_EXPORT shutdownCameraLV();
 }
 

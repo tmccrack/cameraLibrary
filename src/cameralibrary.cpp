@@ -476,3 +476,15 @@ void checkFrameSize()
     // Recalculate total size and set flag
     imageDim.size = imageDim.hdim * imageDim.vdim;
 }
+
+void setMirrorValue(float x, float y)
+{
+    if (b_gblAcquireFlag)
+    {
+
+    }
+    else
+    {
+
+    }
+}
