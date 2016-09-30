@@ -52,6 +52,7 @@ public:
     ClosedLoopCameraThread(QObject *parent = 0);
     ~ClosedLoopCameraThread();
     void startCameraThread(int xPix, int yPix, long *imageBuffer, double *controlBuffer);
+    void moveMirror(float x, float y);
     void abortCameraThread();
 
 protected:

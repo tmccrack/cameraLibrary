@@ -275,6 +275,20 @@ void ClosedLoopCameraThread::run()
 
 
 /*
+ * Function to manually move mirror
+ *
+ */
+void ClosedLoopCameraThread::moveMirror(float x, float y)
+{
+    SocketClient *sClient = new SocketClient;
+    sClient->openConnection();
+    sClient->sendData(x, y);
+    sClient->closeConnection();
+
+}
+
+
+/*
  * Find the x, y centroid from the provided image buffer
  * and set the appropriate x, y values in the controlVal struct.
  */
