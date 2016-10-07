@@ -5,20 +5,25 @@
 bool GetInput(long *buffer);
 void Init();
 bool Inited = FALSE;
+double *contVals = new double[2];
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     long *buffer = new long[262144];
 
+
     while(GetInput(buffer))
     {
 
     }
+    Init();
     shutdownCameraLV();
 
 
     printf("Shutting down\n\n");
+    if (contVals) delete[] contVals;
+    if (buffer) delete[] buffer;
     return a.exec();
 }
 
@@ -26,7 +31,7 @@ void Init()
 {
     printf("Initializing...\n");
     initializeCameraLV();
-    setTemperatureLV(0);
+    //setTemperatureLV(0);
     Inited = TRUE;
 }
 
@@ -41,7 +46,7 @@ bool GetInput(long *buffer)
     printf("Retrieve current image buffer - 4\n");
     printf("Abort acquistion - 5\n");
     printf("Send data over socket - 6\n");
-    printf("Get temperature - 7\n");
+    printf("Get control values - 7\n");
     printf("Shutdown camera - Any other key\n");
     std::cin >> i_input;
     printf("\n\n");
@@ -51,37 +56,18 @@ bool GetInput(long *buffer)
      */
     if(i_input == 1)
     {
-        if (Inited)
-        {
-            acquireFullFrameLV(1.0);
-            return TRUE;
-        }
-        else
-        {
-            Init();
-            acquireFullFrameLV(1.0);
-            return TRUE;
-        }
-    }
+        acquireFullFrameLV(1.0);
+        return TRUE;
+     }
 
     /*
      * Sub frame
      */
     else if(i_input == 2)
     {
-        if (Inited)
-        {
-            setFrameSizeLV(240, 272, 240, 273, 1, 1);
-            acquireSubFrameLV(0.10);
-            return TRUE;
-        }
-        else
-        {
-            Init();
-            setFrameSizeLV(240, 272, 240, 273, 1, 1);
-            acquireSubFrameLV(0.10);
-            return TRUE;
-        }
+        setFrameSizeLV(240, 272, 240, 273, 1, 1);
+        acquireSubFrameLV(0.10);
+        return TRUE;
     }
 
     /*
@@ -89,19 +75,9 @@ bool GetInput(long *buffer)
      */
     else if(i_input == 3)
     {
-        if (Inited)
-        {
-            setFrameSizeLV(240, 272, 240, 273, 1, 1);
-            acquireClosedLoopLV(0.000);
-            return TRUE;
-        }
-        else
-        {
-            Init();
-            setFrameSizeLV(240, 272, 240, 273, 1, 1);
-            acquireClosedLoopLV(0.000);
-            return TRUE;
-        }
+        setFrameSizeLV(240, 272, 240, 273, 1, 1);
+        acquireClosedLoopLV(0.000);
+        return TRUE;
     }
 
     /*
@@ -109,28 +85,15 @@ bool GetInput(long *buffer)
      */
     else if (i_input == 4)
     {
-        if (Inited)
-        {
-            getCameraDataLV(buffer);
-            for (int i = 0; i < 200; i++)
-            {
-                printf("%i ", buffer[i]);
-            }
-            printf("\n");
-            return TRUE;
-        }
-        else
-        {
-            Init();
-            getCameraDataLV(buffer);
-            for (int i = 0; i < 200; i++)
-            {
-                printf("%i ", buffer[i]);
-            }
-            printf("\n");
-            return TRUE;
-        }
+        if (!Inited)    Init();
 
+        getCameraDataLV(buffer);
+        for (int i = 0; i < 200; i++)
+        {
+            printf("%i ", buffer[i]);
+        }
+        printf("\n");
+        return TRUE;
     }
 
     /*
@@ -166,6 +129,8 @@ bool GetInput(long *buffer)
                 {
                     sock->sendData(x, x);
                     a = true;
+
+
                 }
                 i++;
             }
@@ -178,14 +143,21 @@ bool GetInput(long *buffer)
 
     }
 
-    else if (i_input == 7)
+//    else if (i_input == 7)
+//    {
+//        if (!Inited)    Init();
+//        int *temp;
+//        unsigned int *status;
+//        getTemperatureLV(temp, status);
+//        printf("Current temperature: %d\n", *temp);
+//        printf("Temp status flag: %d\n", *status);
+//        return true;
+//    }
+
+    else if (i_input==7)
     {
-        int *temp;
-        unsigned int *status;
-        getTemperatureLV(temp, status);
-        printf("Current temperature: %d\n", *temp);
-        printf("Temp status flag: %d\n", *status);
-        return true;
+        getControlsValueLV(contVals);
+        printf("X: %f \t\t Y: %f", contVals[0], contVals[1]);
     }
 
 

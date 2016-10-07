@@ -485,6 +485,10 @@ void setMirrorValue(float x, float y)
     }
     else
     {
-
+        if (x > 10.0) x = 10.0;
+        if (x < 0.0) x = 0.0;
+        if (y > 10.0) y = 10.0;
+        if (y < 0.0) y = 0.0;
+        closedThread->moveMirror(x, y);
     }
 }
