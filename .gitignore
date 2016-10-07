@@ -1,4 +1,1 @@
-FPGA\ Bitfiles/
-mirrorInterface-loops.vi
-mirrorInterface-loops-empty.vi
-startTargetVI.vi
+build*/
