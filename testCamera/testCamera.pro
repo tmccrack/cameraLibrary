@@ -13,12 +13,14 @@ SOURCES += main.cpp\
     ../src/socketclient.cpp
 
 HEADERS += \
-    cameralibrary.h\
-    ../src/socketclient.h
+    $$PWD/../src/cameralibrary.h\
+    $$PWD/../src/socketclient.h
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/release/ -lcameraLibrary
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-cameraLibrary/debug/ -lcameraLibrary
-else:unix: LIBS += -L$$PWD/../build-cameraLibrary/ -lcameraLibrary
+win32:CONFIG(release): LIBS += -L$$PWD/../build-cameraLibrary/release/ -lcameraLibrary
+else:win32:CONFIG(debug): LIBS += -L$$PWD/../build-cameraLibrary/debug/ -lcameraLibrary
+else:unix: LIBS += -L$$PWD/../build-cameraLibrary/release/ -lcameraLibrary
+
+win32|unix: LIBS += -L$$PWD/../lib/ -latmcd32m
 
 INCLUDEPATH += $$PWD/../src\
         $$PWD/../include
