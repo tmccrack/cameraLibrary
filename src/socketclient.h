@@ -13,7 +13,8 @@ class SocketClient : public QObject
 public:
     SocketClient(QObject *parent = 0);
     ~SocketClient();
-    void openConnection();
+    void openConnection(QString conn_type);
+    void reopenConnection();
     void sendData(float x, float y);
     void closeConnection();
     bool isConnected();
