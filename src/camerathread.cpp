@@ -149,7 +149,7 @@ ClosedLoopCameraThread::~ClosedLoopCameraThread()
     if (copyControl) delete[] copyControl;
 }
 
-void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, float *controlBuffer)
+void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, float set_x, float set_y, long *imageBuffer, float *controlBuffer)
 {
     controlVals.xDim = xPix;
     controlVals.yDim = yPix;
@@ -159,15 +159,16 @@ void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBu
      * TODO: check if set point has been called, if not, set
      *
      */
-    controlVals.kp = -0.1;
-    controlVals.ki = -0.01;
-    controlVals.kd = 0.01;
+    controlVals.kp = -0.05;
+    controlVals.ki = -0.005;
+    controlVals.kd = 0.005;
     controlVals.pre_error_x = 0.0;
     controlVals.pre_error_y = 0.0;
     controlVals._dt = 0.01;
     float ANGLE = 315.0;
     controlVals.x_rot = cos(ANGLE * PI / 180.0);
     controlVals.y_rot = sin(ANGLE * PI / 180.0);
+    setTargetCoordinates(set_x, set_y);
 
     imageSize = controlVals.xDim * controlVals.yDim;
     camData = new long[imageSize];

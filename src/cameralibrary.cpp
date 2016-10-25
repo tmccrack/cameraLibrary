@@ -216,7 +216,7 @@ void acquireClosedLoopLV(float expTime)
         b_gblAcquireFlag = true;
         mutex.unlock();
 
-        closedThread->startCameraThread(imageDim.hdim, imageDim.vdim, camData, controlData);
+        closedThread->startCameraThread(imageDim.hdim, imageDim.vdim, 16.0, 16.0, camData, controlData);
     }
     else
     {

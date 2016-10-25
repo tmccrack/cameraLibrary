@@ -55,7 +55,7 @@ class ClosedLoopCameraThread: public CameraThread
 public:
     ClosedLoopCameraThread(QObject *parent = 0);
     ~ClosedLoopCameraThread();
-    void startCameraThread(int xPix, int yPix, long *imageBuffer, float *controlBuffer);
+    void startCameraThread(int xPix, int yPix, float set_x, float set_y, long *imageBuffer, float *controlBuffer);
     void setTargetCoordinates(float x, float y);
     void abortCameraThread();
 
