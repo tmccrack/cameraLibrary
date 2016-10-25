@@ -130,7 +130,7 @@ ClosedLoopCameraThread::ClosedLoopCameraThread(QObject *parent) : CameraThread(p
 {
     // Create socket client, copy data buffer, and win32 event handle
     copyData = new long[262144];
-    copyControl = new double[2];
+    copyControl = new float[6];
     camEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
     abort = false;
 }
@@ -149,16 +149,30 @@ ClosedLoopCameraThread::~ClosedLoopCameraThread()
     if (copyControl) delete[] copyControl;
 }
 
-void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, double *controlBuffer)
+void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBuffer, float *controlBuffer)
 {
     controlVals.xDim = xPix;
     controlVals.yDim = yPix;
 
+    // Initialize control loop values
+    /*
+     * TODO: check if set point has been called, if not, set
+     *
+     */
+    controlVals.kp = -0.1;
+    controlVals.ki = -0.01;
+    controlVals.kd = 0.01;
+    controlVals.pre_error_x = 0.0;
+    controlVals.pre_error_y = 0.0;
+    controlVals._dt = 0.01;
+    float ANGLE = 315.0;
+    controlVals.x_rot = cos(ANGLE * PI / 180.0);
+    controlVals.y_rot = sin(ANGLE * PI / 180.0);
+
     imageSize = controlVals.xDim * controlVals.yDim;
-    qDebug() << "Image size for CL: " << imageSize;
     camData = new long[imageSize];
     copyData = imageBuffer;
-    copyControl = controlBuffer;
+    controlVals.caus = controlBuffer;
 
     // Set abort flag to false and start thread
     mutex.lock();
@@ -170,13 +184,23 @@ void ClosedLoopCameraThread::startCameraThread(int xPix, int yPix, long *imageBu
 
 
 /*
+ * Setpoint of control loop
+ */
+void ClosedLoopCameraThread::setTargetCoordinates(float x, float y)
+{
+    controlVals.set_point_x = x;
+    controlVals.set_point_y = y;
+}
+
+
+/*
  * Reimplementation of run function for closed loop thread
  */
 void ClosedLoopCameraThread::run()
 {
 
     SocketClient *sClient = new SocketClient;
-    sClient->openConnection();
+    sClient->openConnection("Closed");
     if (!sClient->isConnected())
     {
         mutex.lock();
@@ -190,6 +214,7 @@ void ClosedLoopCameraThread::run()
 
     and_error = StartAcquisition();
     checkError(and_error, "StartAcquisition");
+    //int ind = 0;
 
     /*
      * TODO: Connect SocketClient signals to ClosedLoopThread slots indicating connection issues
@@ -207,32 +232,35 @@ void ClosedLoopCameraThread::run()
             ResetEvent(camEvent);
             GetMostRecentImage(camData, imageSize);
             centroid(camData);
+            controlLoop();
 
-            if (controlVals.even)
-            {
-                controlVals.x = 4.95;
-                controlVals.y = 5.0;
-                sClient->sendData(controlVals.x, controlVals.y);
-                controlVals.even = false;
+//            if (controlVals.even)
+//            {
+//                controlVals.y = 5.0;
+//                //sClient->sendData(controlVals.x, controlVals.y);
+//                controlVals.even = false;
 
-            }
-            else
-            {
-                controlVals.x = 0.025;
-                controlVals.y = 0.00;
-                sClient->sendData(controlVals.x, controlVals.y);
-                controlVals.even = true;
-            }
-            //sClient->sendData(controlVals.x, controlVals.y);
+//            }
+//            else
+//            {
+//                controlVals.x = 0.025;
+//                controlVals.y = 0.00;
+//                //sClient->sendData(controlVals.x, controlVals.y);
+//                controlVals.even = true;
+//            }
+            sClient->sendData(controlVals.caus[5], controlVals.caus[4]);
 
 
             // Copy data into accessible buffers
             std::copy(camData, camData + (long) imageSize, copyData);
 
-            // TODO: The below does not work
-            std::copy(&controlVals.x, &controlVals.x + sizeof(double), copyControl);
-            std::copy(&controlVals.y, &controlVals.y + sizeof(double), copyControl + sizeof(double));
+            // Update control loop values
+            controlVals.pre_error_x = controlVals.caus[4];
+            controlVals.pre_error_y = controlVals.caus[5];
+
             mutex.unlock();
+            //qDebug() << ind;
+            //ind++;
         }
         else if (win_error == WAIT_TIMEOUT)
         {
@@ -258,33 +286,19 @@ void ClosedLoopCameraThread::run()
         /*
          * TODO: recenter mirror stage on exit???
          */
-        sClient->sendData(0.0, 0.0);  // set to zero voltage
+        //sClient->sendData(0.0, 0.0);  // set to zero voltage
         sClient->closeConnection();
     }
     else
     {
         // Something failed, try to reopen and zero voltage
-        sClient->openConnection();
-        sClient->sendData(0.0, 0.0);
+        sClient->openConnection("Closed");
+        //sClient->sendData(0.0, 0.0);
         sClient->closeConnection();
     }
 
 
     printf("Acquistion ended\n");
-}
-
-
-/*
- * Function to manually move mirror
- *
- */
-void ClosedLoopCameraThread::moveMirror(float x, float y)
-{
-    SocketClient *sClient = new SocketClient;
-    sClient->openConnection();
-    sClient->sendData(x, y);
-    sClient->closeConnection();
-
 }
 
 
@@ -299,22 +313,51 @@ void ClosedLoopCameraThread::centroid(long *imageBuffer)
     float dummy_y = 0;
     float sum_x = 0;
     float sum_y = 0;
+    int offs = 0;
     for (int i = 0; i < controlVals.xDim; i++)
     {
         dummy_x = 0;
         dummy_y = 0;
         for (int j = 0; j < controlVals.yDim; j++)
         {
-            sum += imageBuffer[i + j];
-            dummy_x += imageBuffer[i + j * controlVals.xDim];
-            dummy_y += imageBuffer[i * controlVals.yDim + j];
+            offs = i * controlVals.xDim;
+            sum += imageBuffer[offs + j];
+            dummy_x += imageBuffer[i + j * controlVals.yDim];
+            dummy_y += imageBuffer[offs + j];
         }
         sum_x += (i + 1) * dummy_x;
         sum_y += (i + 1) * dummy_y;
     }
-    controlVals.x = sum_x / sum;
-    controlVals.y = sum_y / sum;
+    controlVals.caus[0] = sum_x / sum;
+    controlVals.caus[1] = sum_y / sum;
+    //qDebug() << "Cent values: " << controlVals.caus[0] << "\t" << controlVals.caus[1];
 }
+
+
+/*
+ * Function to implement PID control loop
+ * Includes transformation axes
+ */
+void ClosedLoopCameraThread::controlLoop()
+{
+    err_x = controlVals.caus[0] - controlVals.set_point_x;
+    err_y = controlVals.caus[1] - controlVals.set_point_y;
+
+    // Transform error
+    controlVals.caus[2] = (err_x * controlVals.x_rot - err_y * controlVals.y_rot);
+    controlVals.caus[3] = (err_x * controlVals.y_rot + err_y * controlVals.x_rot);
+
+    // PID x
+    controlVals.caus[4] = (controlVals.caus[2] * controlVals.kp) +  // Proportional
+            (controlVals.caus[2] * controlVals._dt * controlVals.ki) + // Integral
+            ((controlVals.caus[2] - controlVals.pre_error_x) * controlVals.kd);  // Derivative
+
+    // PID y
+    controlVals.caus[5] = (controlVals.caus[3] * controlVals.kp) +  // Proportional
+            (controlVals.caus[3] * controlVals._dt * controlVals.ki) + // Integral
+            ((controlVals.caus[3] - controlVals.pre_error_y) * controlVals.kd);  // Derivative
+}
+
 
 
 /*
@@ -328,6 +371,9 @@ void ClosedLoopCameraThread::abortCameraThread()
 }
 
 
+/*
+ * Function to handle Andor error flags
+ */
 bool ClosedLoopCameraThread::checkError(unsigned int _ui_err, const char* _cp_func)
 {
   bool b_ret;
@@ -342,3 +388,21 @@ bool ClosedLoopCameraThread::checkError(unsigned int _ui_err, const char* _cp_fu
   }
   return b_ret;
 }
+
+/*
+ * Function to manually move mirror
+ *
+ */
+void moveMirror(float x, float y)
+{
+    SocketClient *sClient = new SocketClient;
+    qDebug() << "Opening connection";
+    sClient->openConnection("Single");
+    qDebug() << "Sending data";
+
+    sClient->sendData(x, y);
+    qDebug() << "Closing connection";
+
+    sClient->closeConnection();
+}
+

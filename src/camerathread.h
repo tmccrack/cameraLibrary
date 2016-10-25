@@ -5,9 +5,13 @@
 #include <QObject>
 #include <QThread>
 #include <windows.h>
+#include <math.h>
 #include <iostream>
 #include "socketclient.h"
 #include "ATMCD32D.h"
+
+#define PI 3.14159265
+#define ROTATION 45.0 * PI / 180.0;
 
 
 /*
@@ -51,8 +55,8 @@ class ClosedLoopCameraThread: public CameraThread
 public:
     ClosedLoopCameraThread(QObject *parent = 0);
     ~ClosedLoopCameraThread();
-    void startCameraThread(int xPix, int yPix, long *imageBuffer, double *controlBuffer);
-    void moveMirror(float x, float y);
+    void startCameraThread(int xPix, int yPix, long *imageBuffer, float *controlBuffer);
+    void setTargetCoordinates(float x, float y);
     void abortCameraThread();
 
 protected:
@@ -61,6 +65,7 @@ protected:
 private:
     bool checkError(unsigned int _ui_error, const char* _cp_func);
     void centroid(long *imageBuffer);
+    void controlLoop();
     bool b_gblerrorFlag;
     unsigned int and_error; // Andor error
     DWORD win_error;  // Windows event error
@@ -72,7 +77,8 @@ private:
     int imageSize;
     long *camData;
     long *copyData;
-    double *copyControl;
+    float *copyControl;
+    float err_x, err_y;
 
     /*
      * Struct for control loop values
@@ -80,15 +86,29 @@ private:
     struct ControlValues{
         int xDim;
         int yDim;
-        float x;
-        float y;
+        float *caus = new float[6];
+//        float x;  caus[0]
+//        float y;  caus[1]
+//        float x_update;  caus[2]
+//        float y_update;  caus[3]
+//        float error_x;  caus[4]
+//        float error_y;  caus[5]
+        float pre_error_x;
+        float pre_error_y;
+        float set_point_x;
+        float set_point_y;
         float kp;
         float ki;
         float kd;
-        float gain;
+        float _dt;
+        float x_rot;
+        float y_rot;
         bool even;
+
     } controlVals;
 
 };
+
+void moveMirror(float x, float y);
 
 #endif // CAMERATHREAD_H

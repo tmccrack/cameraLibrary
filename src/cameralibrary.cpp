@@ -242,23 +242,31 @@ void getCameraDataLV(long *dataOut)
         mutex.unlock();
 
     }
+
+    else qDebug() << "Error: not acquiring!";
 }
 
-void getControlsValueLV(double *controlValsOut)
+
+
+/*
+ * Get control data from thread
+ */
+void getControlValuesLV(float *controlBuffer)
 {
-    //float x, y;
     if (b_gblAcquireFlag)
     {
         mutex.lock();
-        std::copy(controlData, controlData + sizeof(double), controlValsOut);
+        std::copy(controlData, controlData + 6, controlBuffer);
         mutex.unlock();
     }
+
     else
     {
-        mutex.lock();
-        //x = -100;
-        //y = -100;
-        mutex.unlock();
+        qDebug() << "Error: not acquiring!!";
+        for (int i = 0; i < 6; i++)
+        {
+            controlBuffer[i] = -100 - i;
+        }
     }
 }
 
@@ -286,6 +294,15 @@ void abortAcquisitionLV()
 
     ui_error = SetShutter(1, 2, 27, 27);  // Close shutter
     checkError(ui_error, "SetShutter");
+}
+
+
+/*
+ * Set target pixel coordinates in sub-frame
+ */
+void setTargetValueLV(float x, float y)
+{
+    closedThread->setTargetCoordinates(x, y);
 }
 
 
@@ -359,6 +376,15 @@ void shutdownCameraLV()
             camThread->wait();
         }
 
+        if (closedThread->isRunning())
+        {
+            closedThread->abortCameraThread();
+            closedThread->wait();
+        }
+    }
+
+    else
+    {
         mutex.lock();
         b_gblAcquireFlag = false;
         mutex.unlock();
@@ -372,6 +398,22 @@ void shutdownCameraLV()
 
     // Free data array memory
     if(camData) delete[] camData;
+}
+
+void setMirrorValueLV(float x, float y)
+{
+    if (b_gblAcquireFlag)
+    {
+
+    }
+    else
+    {
+        if (x > 10.0) x = 10.0;
+        if (x < 0.0) x = 0.0;
+        if (y > 10.0) y = 10.0;
+        if (y < 0.0) y = 0.0;
+        moveMirror(x, y);
+    }
 }
 
 
@@ -477,18 +519,4 @@ void checkFrameSize()
     imageDim.size = imageDim.hdim * imageDim.vdim;
 }
 
-void setMirrorValue(float x, float y)
-{
-    if (b_gblAcquireFlag)
-    {
 
-    }
-    else
-    {
-        if (x > 10.0) x = 10.0;
-        if (x < 0.0) x = 0.0;
-        if (y > 10.0) y = 10.0;
-        if (y < 0.0) y = 0.0;
-        closedThread->moveMirror(x, y);
-    }
-}
