@@ -12,9 +12,7 @@
 #endif
 
 #include <iostream>
-#include "ATMCD32D.h"
-#include "camerathread.h"
-
+#include "camera.h"
 
 
 /*

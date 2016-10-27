@@ -17,11 +17,13 @@ DEFINES += CAMERALIBRARY_LIBRARY
 
 SOURCES += cameralibrary.cpp \
     socketclient.cpp \
-    camerathread.cpp
+    camerathread.cpp \
+    camera.cpp
 
 HEADERS += cameralibrary.h\
     socketclient.h \
-    camerathread.h
+    camerathread.h \
+    camera.h
 
 unix {
     target.path = /usr/lib
