@@ -4,6 +4,7 @@
 #include <QtCore>
 #include <QObject>
 #include <QThread>
+#include <QMutex>
 #include <windows.h>
 #include <math.h>
 #include <iostream>
@@ -22,9 +23,9 @@ class CameraThread : public QThread
     Q_OBJECT
 
 public:
-    CameraThread(QObject *parent = 0);
+    CameraThread(QObject *parent = 0, int image_size = 0, long *image_buffer = 0);
     ~CameraThread();
-    void startCameraThread(int imageDimension, long *imageBuffer);
+    void startCameraThread();
     void abortCameraThread();
 
 protected:
@@ -36,12 +37,11 @@ private:
     unsigned int and_error; // Andor error
     DWORD win_error;  // Windows event error
     QMutex mutex;
-    HANDLE camEvent;
+    HANDLE cam_event;
     bool abort;
-    int imageSize;
-    long *camData;
-    long *copyData;
-
+    int image_size;
+    long *cam_data;
+    long *copy_data;
 };
 
 

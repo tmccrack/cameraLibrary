@@ -6,12 +6,17 @@
 
 #include "camerathread.h"
 
-CameraThread::CameraThread(QObject *parent) : QThread(parent)
+CameraThread::CameraThread(QObject *parent, int image_size, long *image_buffer) : QThread(parent)
 {
     // Create copy data buffer and win32 event handle
-    copyData = new long[262144];
-    camEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
-    abort = false;
+    image_size = image_size;
+    copy_data = new long[262144];
+    cam_data = new long[image_size];
+    cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
+
+    //TODO: Ensure imageBuffer is correct size???
+    copy_data = image_buffer;
+    abort = true;
 }
 
 
@@ -28,21 +33,22 @@ CameraThread::~CameraThread()
 /*
  * Sets camera thread properties and starts the acquistion loop
  */
-void CameraThread::startCameraThread(int imageDimension, long *imageBuffer)
+void CameraThread::startCameraThread()
 {
-    imageSize = imageDimension;
-    camData = new long[imageSize];
+    if (isRunning())
+    {
+        mutex.lock();
+        abort = true;
+        mutex.unlock();
 
-    //TODO: Ensure imageBuffer is correct size???
-    copyData = imageBuffer;
+        wait();
 
-    // Set abort flag to false and start thread
-    mutex.lock();
-    abort = false;
-    mutex.unlock();
-    start();
+        mutex.lock();
+        abort = false;
+        mutex.unlock();
+        start();
+    }
 }
-
 
 /*
  * Function to set abort flag
@@ -62,7 +68,7 @@ void CameraThread::abortCameraThread()
 void CameraThread::run()
 {
     // Pass Andor API event handle and start acquistion
-    and_error = SetDriverEvent(camEvent);
+    and_error = SetDriverEvent(cam_event);
     checkError(and_error, "SetDriverEvent");
 
     and_error = StartAcquisition();
@@ -70,16 +76,16 @@ void CameraThread::run()
 
     while (!abort)
     {
-        win_error = WaitForSingleObject(this->camEvent, 2500);
+        win_error = WaitForSingleObject(cam_event, 2500);
 
         // Object triggered, check what happened
         if (win_error == WAIT_OBJECT_0)
         {
             // Camera triggered event, get data
             mutex.lock();
-            ResetEvent(camEvent);
-            GetMostRecentImage(camData, imageSize);
-            std::copy(camData, camData + (long) imageSize, copyData);
+            ResetEvent(cam_event);
+            GetMostRecentImage(cam_data, image_size);
+            std::copy(cam_data, cam_data + (long) image_size, copy_data);
             mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)

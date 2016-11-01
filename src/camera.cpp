@@ -1,24 +1,34 @@
 #include "camera.h"
 
 
-Camera::Camera(QObject *parent, string camera_name, char *argv[])
+Camera::Camera(QObject *parent, QString cam_name)
 {
-    camera_name = camera_name;
-
-    if (argv[0] = 'fake') realcam = false;
-    else realcam = true;
+    if (cam_name == "")
+    {
+        realcam = false;
+        camera_name = "NULL";
+    }
+    else
+    {
+        realcam = true;
+        camera_name = cam_name;
+    }
+    b_gblerrorFlag = false;  // Clear error flag
 
     initializeCamera();
 }
 
-Camera::startCamera()
+void Camera::startCamera()
 {
-// start thread, pass array buffer
+
+    t_cam_thread = new CameraThread(this, s_imageDim.size, cam_data);
+    t_cam_thread->startCameraThread();
 }
 
-Camera::stopCamera()
+void Camera::stopCamera()
 {
     // check if thread running, abort and delete array
+    if (t_cam_thread->isRunning()) t_cam_thread->abortCameraThread();
 }
 
 
@@ -30,7 +40,7 @@ ImageDimension Camera::getImageDims()
     return s_imageDim;
 }
 
-Camera::setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin)
+void Camera::setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin)
 {
     s_imageDim.h_start = hstart;
     s_imageDim.h_end = hend;
@@ -41,7 +51,7 @@ Camera::setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int v
     setImageProperties();
 }
 
-Camera::setImageDims(ImageDim imageParameters)
+void Camera::setImageDims(ImageDimension imageParameters)
 {
     s_imageDim = imageParameters;
     setImageProperties();
@@ -53,17 +63,17 @@ Camera::setImageDims(ImageDim imageParameters)
  */
 ExposureProperties Camera::getExposureParams()
 {
-    return s_imageProp;
+    return s_expProp;
 }
 
-Camera::setExposureParams(float exposure, int em_gain)
+void Camera::setExposureParams(float exposure, int em_gain)
 {
     s_expProp.exp_time = exposure;
     s_expProp.em_gain = em_gain;
     setExposureProperties();
 }
 
-Camera::setExposureParams(ExposureProperties expParameters)
+void Camera::setExposureParams(ExposureProperties expParameters)
 {
     s_expProp = expParameters;
     setImageProperties();
@@ -75,10 +85,10 @@ Camera::setExposureParams(ExposureProperties expParameters)
  */
 ReadProperties Camera::getImageParams()
 {
-    return readProp;
+    return s_readProp;
 }
 
-Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
+void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
 {
     s_readProp.read_mode = read_mode;
     s_readProp.acq_mode = acq_mode;
@@ -87,7 +97,7 @@ Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int outpu
     setReadProperties();
 }
 
-Camera::setReadParams(ReadProperties readParameters)
+void Camera::setReadParams(ReadProperties readParameters)
 {
     s_readProp = readParameters;
     setReadProperties();
@@ -102,7 +112,7 @@ TimingProperties Camera::getTimingParams()
     return s_timingProp;
 }
 
-Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
+void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
 {
     s_timingProp.h_shift = h_shift;
     s_timingProp.v_shift = v_shift;
@@ -111,7 +121,7 @@ Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_
     setTimingProperties();
 }
 
-Camera::setTimingParams(TimingProperties timingParameters)
+void Camera::setTimingParams(TimingProperties timingParameters)
 {
     s_timingProp = timingParameters;
     setTimingProperties();
@@ -126,7 +136,7 @@ ShutterProperties Camera::getShutterParams()
     return s_shutterProp;
 }
 
-Camera::setShutterParams(int mode, int open, int close)
+void Camera::setShutterParams(int mode, int open, int close)
 {
     s_shutterProp.mode = mode;
     s_shutterProp.open_time = open;
@@ -134,7 +144,7 @@ Camera::setShutterParams(int mode, int open, int close)
     setShutterProperties();
 }
 
-Camera::setShutterParams(ShutterProperties shutterParameters)
+void Camera::setShutterParams(ShutterProperties shutterParameters)
 {
     s_shutterProp = shutterParameters;
     setShutterProperties();
@@ -144,23 +154,23 @@ Camera::setShutterParams(ShutterProperties shutterParameters)
 /*
  * Retrieve current camera data buffer
  */
-Camera::getCameraData(long *buffer)
+void Camera::getCameraData(long *buffer)
 {
-    copy(camData, camData + (long) s_imageDim.size, buffer);
+    copy(cam_data, cam_data + (long) s_imageDim.size, buffer);
 }
 
 
 /*
  * Return array temperature
  */
-Camera::getTemperature(int *temperature)
+void Camera::getArrayTemp(int *temperature)
 {
     *temperature = array_temp;
 }
 
 
 
-Camera::setTemperature(int temperature)
+void Camera::setArrayTemp(int temperature)
 {
     /*
      * TODO:
@@ -174,10 +184,11 @@ Camera::setTemperature(int temperature)
 /*
  * Camera initialization
  */
-Camera::initializeCamera()
+void Camera::initializeCamera()
 {
+    cam_data = new long[262144];  // Initialize camera data buffer
     char det_file[] = "";
-    ui_error = Initialize(detFile);
+    ui_error = Initialize(det_file);
     checkError(ui_error, "Initialize");
 
     if (camera_name == "FTT")
@@ -193,7 +204,7 @@ Camera::initializeCamera()
         s_timingProp.h_shift = 0;
         s_timingProp.v_shift = 0;
         s_timingProp.dma_images = 1;
-        s_timingProp.dma_accum_time = 0.001;
+        s_timingProp.dma_accum_time = float(0.001);
         setTimingProperties();
 
         // Set shutter parameters
@@ -212,7 +223,7 @@ Camera::initializeCamera()
         s_imageDim.v_end = 512;
         setImageProperties();
     }
-    else if (camera_name = "ExpM")
+    else if (camera_name == "ExpM")
     {
 
     }
@@ -223,7 +234,7 @@ Camera::initializeCamera()
 /*
  * Internal function to set image properties
  */
-Camera::setImageProperties()
+void Camera::setImageProperties()
 {
     // Calculate frame size
     s_imageDim.h_dim = s_imageDim.h_end - s_imageDim.h_start + 1;
@@ -256,7 +267,7 @@ Camera::setImageProperties()
     // Recalculate total size and set flag
     s_imageDim.size = s_imageDim.h_dim * s_imageDim.v_dim;
 
-    if (realcom)
+    if (realcam)
     {
         ui_error = SetImage(s_imageDim.h_bin,
                             s_imageDim.v_bin,
@@ -268,7 +279,25 @@ Camera::setImageProperties()
     }
 }
 
-Camera::setReadProperties()
+void Camera::setExposureProperties()
+{
+    if (realcam)
+    {
+        // Check gain levels and set
+        ui_error = GetEMGainRange(s_expProp.em_gain_low, s_expProp.em_gain_high);
+        checkError(ui_error, "GetEMGainRange");
+        if (s_expProp.em_gain > *(s_expProp.em_gain_high)) s_expProp.em_gain = *(s_expProp.em_gain_high);
+        else if (s_expProp.em_gain < *(s_expProp.em_gain_low)) s_expProp.em_gain = *(s_expProp.em_gain_low);
+        ui_error = SetEMCCDGain(s_expProp.em_gain);
+        checkError(ui_error, "SetEMCCDGain");
+
+        ui_error = SetExposureTime(s_expProp.exp_time);
+        checkError(ui_error, "SetExposureTime");
+    }
+}
+
+
+void Camera::setReadProperties()
 {
     // Program camera read properties
     if (realcam)
@@ -292,7 +321,7 @@ Camera::setReadProperties()
 
 }
 
-Camera::setTimingProperties()
+void Camera::setTimingProperties()
 {
     // Program camera timing properties
     if (realcam)
@@ -300,7 +329,7 @@ Camera::setTimingProperties()
         ui_error = SetVSSpeed(s_timingProp.v_shift);  // Fastest vertical shift speed
         checkError(ui_error, "SetVSSpeed");
 
-        ui_error = SetHSSpeed(0, s_timingProp.h_shift)  // Fastest horizontal shift speed
+        ui_error = SetHSSpeed(0, s_timingProp.h_shift);  // Fastest horizontal shift speed
         checkError(ui_error, "SetHSSpeed");
 
         ui_error = SetNumberAccumulations(s_timingProp.dma_images);  // Do not accumulate images onboard camera
@@ -311,7 +340,7 @@ Camera::setTimingProperties()
     }
 }
 
-Camera::setShutterProperties()
+void Camera::setShutterProperties()
 {
     // Program shutter properties
     if (realcam)
@@ -324,7 +353,26 @@ Camera::setShutterProperties()
     }
 }
 
-Camera::setCooler(int temperature)
+void Camera::setCooler(int temperature)
 {
     if (realcam) SetTemperature(temperature);
+}
+
+
+/*
+ * Error handler for camera API
+ */
+bool Camera::checkError(unsigned int _ui_err, const char* _cp_func)
+{
+  bool b_ret;
+
+  if(_ui_err == DRV_SUCCESS) {
+    b_ret = true;
+  }
+  else {
+      printf("ERROR - %s -- %i\n\n",_cp_func,_ui_err);
+      b_gblerrorFlag = true;
+      b_ret = false;
+  }
+  return b_ret;
 }

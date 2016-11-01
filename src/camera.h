@@ -8,64 +8,6 @@
 
 using namespace std;
 
-class Camera : public QObject
-{
-    Q_OBJECT
-public:
-    explicit Camera(QObject *parent = 0, string camera_name, char *argv[]);
-    startCamera();
-    stopCamera();
-    getTemperature(int *temperature);
-    setTemperature(int temperature);
-    getCameraData(long *buffer);
-
-    ImageDimension getImageDims();
-    setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
-    setImageDims(ImageDim imageParameters);
-    ExposureProperties getExposureParams();
-    setExposureParams(float exposure, int em_gain);
-    setExposureParams(ExposureProperties expParameters);
-    ReadProperties getImageParams();
-    setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp);
-    setReadParams(ReadProperties readParameters);
-    TimingProperties getTimingParams();
-    setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time);
-    setTimingParams(TimingProperties timingParameters);
-    ShutterProperties getShutterParams();
-    setShutterParams(int mode, int open, int close);
-    setShutterParams(ShutterProperties shutterParameters);
-
-
-signals:
-
-public slots:
-
-private:
-    initializeCamera();
-    setImageProperties();
-    setExposureProperties();
-    setReadProperties();
-    setTimingProperties();
-    setShutterProperties();
-
-    ImageDimension s_imageDim;
-    ExposureProperties s_expProp;
-    ReadProperties s_readProp;
-    TimingProperties s_timingProp;
-    ShutterProperties s_shutterProp;
-
-
-
-    setCooler(int temperature);
-
-    QString camera_name;
-    CameraThread t_camThread;
-    unsigned int ui_error;
-    int array_temp;
-    bool realcam;
-
-};
-
 struct TimingProperties{
     int h_shift;
     int v_shift;
@@ -95,6 +37,8 @@ struct ImageDimension{
 struct ExposureProperties{
     float exp_time;
     int em_gain;
+    int *em_gain_high;
+    int *em_gain_low;
 };
 
 struct ShutterProperties{
@@ -103,5 +47,67 @@ struct ShutterProperties{
     int open_time;
     int close_time;
 };
+
+class Camera : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit Camera(QObject *parent = 0, QString cam_name = "" );
+    void startCamera();
+    void stopCamera();
+    void getArrayTemp(int *temperature);
+    void setArrayTemp(int temperature);
+    void getCameraData(long *buffer);
+
+    ImageDimension getImageDims();
+    void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
+    void setImageDims(ImageDimension imageParameters);
+    ExposureProperties getExposureParams();
+    void setExposureParams(float exposure, int em_gain);
+    void setExposureParams(ExposureProperties expParameters);
+    ReadProperties getImageParams();
+    void setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp);
+    void setReadParams(ReadProperties readParameters);
+    TimingProperties getTimingParams();
+    void setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time);
+    void setTimingParams(TimingProperties timingParameters);
+    ShutterProperties getShutterParams();
+    void setShutterParams(int mode, int open, int close);
+    void setShutterParams(ShutterProperties shutterParameters);
+
+signals:
+
+public slots:
+
+private:
+    void initializeCamera();
+    void setImageProperties();
+    void setExposureProperties();
+    void setReadProperties();
+    void setTimingProperties();
+    void setShutterProperties();
+
+    ImageDimension s_imageDim;
+    ExposureProperties s_expProp;
+    ReadProperties s_readProp;
+    TimingProperties s_timingProp;
+    ShutterProperties s_shutterProp;
+    CameraThread *t_cam_thread;
+
+    void setCooler(int temperature);
+    bool checkError(unsigned int _ui_err, const char* _cp_func);
+
+    QString camera_name;
+    long *cam_data;
+    unsigned int ui_error;
+    bool b_gblerrorFlag;
+
+    int array_temp;
+    bool realcam;
+
+};
+
+
 
 #endif // CAMERA_H

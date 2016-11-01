@@ -15,15 +15,19 @@ TEMPLATE = lib
 
 DEFINES += CAMERALIBRARY_LIBRARY
 
-SOURCES += cameralibrary.cpp \
+SOURCES += \
     socketclient.cpp \
     camerathread.cpp \
-    camera.cpp
+    camera.cpp \
+    servo.cpp \
+    imageservo.cpp
 
-HEADERS += cameralibrary.h\
+HEADERS +=\
     socketclient.h \
     camerathread.h \
-    camera.h
+    camera.h \
+    servo.h \
+    imageservo.h
 
 unix {
     target.path = /usr/lib
@@ -33,7 +37,7 @@ unix {
 unix|win32: LIBS += -L$$PWD/../lib/ -latmcd32m
 
 win32: LIBS += -lAdvapi32 -lgdi32 -luser32 -lshell32
-win32:CONFIG(release): DLLDESTDIR = "C:\Program Files (x86)\National Instruments\LabVIEW 2016\user.lib\cameraLibrary"
+#win32:CONFIG(release): DLLDESTDIR = "C:\Program Files (x86)\National Instruments\LabVIEW 2016\user.lib\cameraLibrary"
 
 INCLUDEPATH += $$PWD/../include
 DEPENDPATH += $$PWD/../include
