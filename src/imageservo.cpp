@@ -35,7 +35,8 @@ void ImageServo::setRotation(float x_degrees, float y_degrees)
 
 void ImageServo::getTargetCoords(float *x, float *y)
 {
-    x = x_servo.get
+    x_servo.getTarget(x);
+    y_servo.getTarget(y);
 }
 
 void ImageServo::setTargetCoords(float x, float y)
