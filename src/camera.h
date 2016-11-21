@@ -1,8 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+
 #include <QObject>
 #include <QString>
+#include <QDebug>
 #include "camerathread.h"
 #include "ATMCD32D.H"
 
@@ -53,12 +55,14 @@ class Camera : public QObject
     Q_OBJECT
 
 public:
-    explicit Camera(QObject *parent = 0, QString cam_name = "" );
+    explicit Camera(QObject *parent = 0, QString cam_name = "" , bool real_cam = false);
     void startCamera();
+    bool isCameraRunning();
     void stopCamera();
     void getArrayTemp(int *temperature);
     void setArrayTemp(int temperature);
     void getCameraData(long *buffer);
+    void shutdownCamera();
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -81,12 +85,15 @@ signals:
 public slots:
 
 private:
-    void initializeCamera();
+    void _initializeCamera();
     void setImageProperties();
     void setExposureProperties();
     void setReadProperties();
     void setTimingProperties();
     void setShutterProperties();
+    void _shutdownCamera();
+    void _getArrayTemp();
+    void _warmArray();
 
     ImageDimension s_imageDim;
     ExposureProperties s_expProp;
@@ -102,12 +109,12 @@ private:
     long *cam_data;
     unsigned int ui_error;
     bool b_gblerrorFlag;
+    bool b_gblAcquireFlag;
 
     int array_temp;
-    bool realcam;
+    bool real_cam;
+    bool fake_cam_running;
 
 };
-
-
 
 #endif // CAMERA_H
