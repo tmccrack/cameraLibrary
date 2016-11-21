@@ -55,7 +55,7 @@ class Camera : public QObject
     Q_OBJECT
 
 public:
-    explicit Camera(QObject *parent = 0, QString cam_name = "" , bool real_cam = false);
+    explicit Camera(QObject *parent = 0, QString cam_name = "" , bool r_cam = false);
     void startCamera();
     bool isCameraRunning();
     void stopCamera();

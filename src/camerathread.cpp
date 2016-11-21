@@ -6,13 +6,12 @@
 
 #include "camerathread.h"
 
-CameraThread::CameraThread(QObject *parent, int image_size, long *image_buffer) : QThread(parent)
+CameraThread::CameraThread(QObject *parent, int i_size, long *image_buffer) : QThread(parent)
 {
     // Create copy data buffer and win32 event handle
-    image_size = image_size;
-    copy_data = new long[262144];
+    image_size = i_size;
     cam_data = new long[image_size];
-    cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);  // Create win32 event handle
+    cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     //TODO: Ensure imageBuffer is correct size???
     copy_data = image_buffer;
@@ -48,6 +47,14 @@ void CameraThread::startCameraThread()
         mutex.unlock();
         start();
     }
+    else
+    {
+        mutex.lock();
+        abort = false;
+        mutex.unlock();
+        start();
+    }
+    qDebug() << "Camera thread started." << endl;
 }
 
 /*

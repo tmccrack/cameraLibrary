@@ -23,7 +23,7 @@ class CameraThread : public QThread
     Q_OBJECT
 
 public:
-    CameraThread(QObject *parent = 0, int image_size = 0, long *image_buffer = 0);
+    CameraThread(QObject *parent = 0, int i_size = 0, long *image_buffer = 0);
     ~CameraThread();
     void startCameraThread();
     void abortCameraThread();

@@ -1,11 +1,11 @@
 #include "camera.h"
 
 
-Camera::Camera(QObject *parent, QString cam_name, bool real_cam)
+Camera::Camera(QObject *parent, QString cam_name, bool r_cam)
 {
     cam_data = new long[262144];  // Initialize camera data buffer
     camera_name = cam_name;
-    real_cam = real_cam;
+    real_cam = r_cam;
     if (!real_cam)
     {
         // Generate fake data
@@ -233,7 +233,7 @@ void Camera::_initializeCamera()
         qDebug() << "Setting to default FTT values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
-        s_readProp.acq_mode = 0;  // Run till abort
+        s_readProp.acq_mode = 5;  // Run till abort
         s_readProp.frame_transfer = 1;  // On
         s_readProp.output_amp = 0;  // Em amplifier
 
@@ -263,7 +263,7 @@ void Camera::_initializeCamera()
         qDebug() << "Setting to default ExpM values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
-        s_readProp.acq_mode = 0;  // Run till abort
+        s_readProp.acq_mode = 5;  // Run till abort
         s_readProp.frame_transfer = 1;  // On
         s_readProp.output_amp = 0;  // Em amplifier
 
@@ -293,7 +293,7 @@ void Camera::_initializeCamera()
         qDebug() << "Setting to full image mode values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
-        s_readProp.acq_mode = 0;  // Run till abort
+        s_readProp.acq_mode = 5;  // Run till abort
         s_readProp.frame_transfer = 1;  // On
         s_readProp.output_amp = 0;  // Em amplifier
 
@@ -500,7 +500,11 @@ void Camera::_getArrayTemp()
     if (real_cam)
     {
         ui_error = GetTemperature(&array_temp);
-        checkError(ui_error, "GetTemperature");
+        if (ui_error == DRV_TEMPERATURE_OFF)
+        {
+            array_temp = 15;
+        }
+        else checkError(ui_error, "GetTemperature");
     }
 }
 
@@ -513,14 +517,14 @@ void Camera::_warmArray()
 {
     setCooler(0);
     _getArrayTemp();
-    qDebug() << "Checking array temp";
+    qDebug() << "Checking array temp\n...";
     if (real_cam)
     {
         while (array_temp < 0)
         {
             Sleep(5000);  // Wait 5 seconds
             _getArrayTemp();
-            qDebug() << "Warming array, array at: " << array_temp;
+            qDebug() << "Warming array, array at: " << array_temp << "\n...";
         }
     }
 }
