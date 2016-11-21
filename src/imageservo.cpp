@@ -2,18 +2,22 @@
 
 ImageServo::ImageServo(QObject *parent, int x_dim, int y_dim)
 {
-    x_dim = x_dim;
-    y_dim = y_dim;
-    dimension = x_dim * y_dim;
+    dim[0] = x_dim;
+    dim[1] = y_dim;
+    dim[2] = x_dim * y_dim;
 }
 
+
+/*
+ * Centroid image, assign updates to pointers passed in
+ */
 void ImageServo::getUpdate(long *buffer, float *x, float *y)
 {
-    centroid(buffer, x, y);
-    x_servo.getUpdate(x);
-    y_servo.getUpdate(y);
-    cent[0] = *x;
-    cent[1] = *y;
+    centroid(buffer);
+    x_servo.getUpdate(&cent[0], &updates[0]);
+    y_servo.getUpdate(&cent[1], &updates[1]);
+    updates[0] = *x;
+    updates[1] = *y;
 }
 
 void ImageServo::getErrors(float *x, float *y)
@@ -27,18 +31,30 @@ void ImageServo::getErrors(float *x, float *y)
     y[2] = s_y_error.set_point;
 }
 
+
+/*
+ * Set camera rotation for transforming camera axes to stage axes
+ */
 void ImageServo::setRotation(float x_degrees, float y_degrees)
 {
     rotation[0] = PI * x_degrees / 180.0;
     rotation[1] = PI * y_degrees / 180.0;
 }
 
+
+/*
+ * Get the current target coordinates
+ */
 void ImageServo::getTargetCoords(float *x, float *y)
 {
     x_servo.getTarget(x);
     y_servo.getTarget(y);
 }
 
+
+/*
+ * Set the servo loop target values
+ */
 void ImageServo::setTargetCoords(float x, float y)
 {
     x_servo.setTarget(x);
@@ -47,7 +63,7 @@ void ImageServo::setTargetCoords(float x, float y)
 
 
 
-void ImageServo::centroid(long *buffer, float *x, float *y)
+void ImageServo::centroid(long *buffer)
 {
     row_x = 0;
     row_y = 0;
@@ -56,15 +72,15 @@ void ImageServo::centroid(long *buffer, float *x, float *y)
     sum_y = 0;
     int offs = 0;
 
-    for (int i = 0; i < x_dim; i++)
+    for (int i = 0; i < dim[0]; i++)
     {
         row_x = 0;
         row_y = 0;
-        for (int j = 0; j < y_dim; j++)
+        for (int j = 0; j < dim[1]; j++)
         {
-            offs = i * x_dim;
+            offs = i * dim[0];
             sum += buffer[offs + j];
-            row_x += buffer[i + j*y_dim];
+            row_x += buffer[i + j*dim[1]];
             row_y += buffer[offs + j];
         }
 
@@ -72,6 +88,6 @@ void ImageServo::centroid(long *buffer, float *x, float *y)
         sum_y += (i+1) * row_y;
     }
 
-    x = sum_x / sum;
-    y = sum_y / sum;
+    cent[0] = sum_x / sum;
+    cent[1] = sum_y / sum;
 }

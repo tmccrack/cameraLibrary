@@ -22,12 +22,13 @@ signals:
 public slots:
 
 private:
-    void centroid(long *buffer, float *x, float *y);
+    void centroid(long *buffer);
 
     float sum, row_x, row_y, sum_x, sum_y = 0;
 
-    int *dim = new int[3];
+    int *dim = new int[3];  // x, y, total
     float *cent = new float[2];
+    float *updates = new float[2];
     float *rotation = new float[2];
 
 

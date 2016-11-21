@@ -27,7 +27,7 @@ public:
     void setSpeed(float dt);
     void getTarget(float *set_point);
     void setTarget(float set_point);
-    void getUpdate(float *update);
+    void getUpdate(float *value, float *update);
     void getError(Error *error);
 
 signals:

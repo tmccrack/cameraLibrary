@@ -14,12 +14,13 @@ Servo::Servo(QObject *parent)
 
 
 /*
- * Iterate servo loop to update values
+ * Iterate servo loop to update value
+ * Value is put into algorithm to give update
  */
 void Servo::getUpdate(float *value, float *update)
 {
-    s_error.error = value - s_error.set_point;
-    update = s_error.error * s_gain.kp +  // Proportional
+    s_error.error = *value - s_error.set_point;
+    *update = s_error.error * s_gain.kp +  // Proportional
             s_error.error * s_gain.dt * s_gain.ki +  // Integral
             (s_error.error - s_error.pre_error) * s_gain.kd;  // Derivative
     s_error.pre_error = s_error.error;
@@ -31,7 +32,7 @@ void Servo::getUpdate(float *value, float *update)
  */
 void Servo::getError(Error *error)
 {
-    error = s_error;
+    *error = s_error;
 }
 
 
@@ -40,7 +41,7 @@ void Servo::getError(Error *error)
  */
 void Servo::getGain(Gain *gain)
 {
-    gain = s_gain;
+    *gain = s_gain;
 }
 
 
@@ -69,7 +70,7 @@ void Servo::setSpeed(float dt)
  */
 void Servo::getTarget(float *set_point)
 {
-    set_point = s_error.set_point;
+    *set_point = s_error.set_point;
 }
 
 void Servo::setTarget(float set_point)
