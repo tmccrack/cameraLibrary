@@ -190,7 +190,7 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
         cam->setTimingParams(tim);
         tim = cam->getTimingParams();
         cout << "H shift: " << tim.h_shift << "\tV shift: " << tim.v_shift << endl
-             << "# DMA images: " << tim.dma_images << "\tDMA accum" << tim.dma_accum_time;
+             << "# DMA images: " << tim.dma_images << "\tDMA accum: " << tim.dma_accum_time;
         return true;
     }
 
