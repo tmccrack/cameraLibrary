@@ -288,6 +288,36 @@ void Camera::_initializeCamera()
         s_imageDim.v_end = 512;
 
     }
+    else
+    {
+        qDebug() << "Setting to full image mode values";
+        // Set read parameters
+        s_readProp.read_mode = 4; //Image
+        s_readProp.acq_mode = 0;  // Run till abort
+        s_readProp.frame_transfer = 1;  // On
+        s_readProp.output_amp = 0;  // Em amplifier
+
+        // Set timing parameters
+        s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
+        s_timingProp.v_shift = 0;  // Fastest vertical shift speed
+        s_timingProp.dma_images = 1;  // Maximum number of images in DMA buffer
+        s_timingProp.dma_accum_time = float(0.001);  // Minimum time between hardware interrupts
+
+        // Set shutter parameters
+        s_shutterProp.type = 0;  // TTL low
+        s_shutterProp.mode = 0;  // Fully auto
+        s_shutterProp.open_time = 30;  //
+        s_shutterProp.close_time = 30;
+
+        // Set image properties and dimension
+        s_imageDim.h_bin = 1;
+        s_imageDim.v_bin = 1;
+        s_imageDim.h_start = 1;
+        s_imageDim.v_start = 1;
+        s_imageDim.h_end = 512;
+        s_imageDim.v_end = 512;
+
+    }
 
     if (real_cam)
     {
