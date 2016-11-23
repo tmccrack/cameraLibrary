@@ -1,14 +1,13 @@
 #ifndef CAMERATHREAD_H
 #define CAMERATHREAD_H
 
-#include <QtCore>
-#include <QObject>
-#include <QThread>
-#include <QMutex>
+#include <QtCore/QtCore>
+#include <QtCore/QObject>
+#include <QtCore/QThread>
+#include <QtCore/QMutex>
 #include <windows.h>
 #include <math.h>
 #include <iostream>
-#include "socketclient.h"
 #include "ATMCD32D.h"
 
 #define PI 3.14159265
@@ -20,7 +19,6 @@
  */
 class CameraThread : public QThread
 {
-    Q_OBJECT
 
 public:
     CameraThread(QObject *parent = 0, int i_size = 0, long *image_buffer = 0);
@@ -46,69 +44,69 @@ private:
 
 
 /*
- * Class for extending camera thread to include closed loop operation
- */
-class ClosedLoopCameraThread: public CameraThread
-{
-    Q_OBJECT
+// * Class for extending camera thread to include closed loop operation
+// */
+//class ClosedLoopCameraThread: public CameraThread
+//{
+//    Q_OBJECT
 
-public:
-    ClosedLoopCameraThread(QObject *parent = 0);
-    ~ClosedLoopCameraThread();
-    void startCameraThread(int xPix, int yPix, float set_x, float set_y, long *imageBuffer, float *controlBuffer);
-    void setTargetCoordinates(float x, float y);
-    void abortCameraThread();
+//public:
+//    ClosedLoopCameraThread(QObject *parent = 0);
+//    ~ClosedLoopCameraThread();
+//    void startCameraThread(int xPix, int yPix, float set_x, float set_y, long *imageBuffer, float *controlBuffer);
+//    void setTargetCoordinates(float x, float y);
+//    void abortCameraThread();
 
-protected:
-    void run() Q_DECL_OVERRIDE;
+//protected:
+//    void run() Q_DECL_OVERRIDE;
 
-private:
-    bool checkError(unsigned int _ui_error, const char* _cp_func);
-    void centroid(long *imageBuffer);
-    void controlLoop();
-    bool b_gblerrorFlag;
-    unsigned int and_error; // Andor error
-    DWORD win_error;  // Windows event error
-    int port;
-    QString *host;
-    QMutex mutex;
-    HANDLE camEvent;
-    bool abort;
-    int imageSize;
-    long *camData;
-    long *copyData;
-    float *copyControl;
-    float err_x, err_y;
+//private:
+//    bool checkError(unsigned int _ui_error, const char* _cp_func);
+//    void centroid(long *imageBuffer);
+//    void controlLoop();
+//    bool b_gblerrorFlag;
+//    unsigned int and_error; // Andor error
+//    DWORD win_error;  // Windows event error
+//    int port;
+//    QString *host;
+//    QMutex mutex;
+//    HANDLE camEvent;
+//    bool abort;
+//    int imageSize;
+//    long *camData;
+//    long *copyData;
+//    float *copyControl;
+//    float err_x, err_y;
 
-    /*
-     * Struct for control loop values
-     */
-    struct ControlValues{
-        int xDim;
-        int yDim;
-        float *caus = new float[6];
-//        float x;  caus[0]
-//        float y;  caus[1]
-//        float x_update;  caus[2]
-//        float y_update;  caus[3]
-//        float error_x;  caus[4]
-//        float error_y;  caus[5]
-        float pre_error_x;
-        float pre_error_y;
-        float set_point_x;
-        float set_point_y;
-        float kp;
-        float ki;
-        float kd;
-        float _dt;
-        float x_rot;
-        float y_rot;
-        bool even;
+//    /*
+//     * Struct for control loop values
+//     */
+//    struct ControlValues{
+//        int xDim;
+//        int yDim;
+//        float *caus = new float[6];
+////        float x;  caus[0]
+////        float y;  caus[1]
+////        float x_update;  caus[2]
+////        float y_update;  caus[3]
+////        float error_x;  caus[4]
+////        float error_y;  caus[5]
+//        float pre_error_x;
+//        float pre_error_y;
+//        float set_point_x;
+//        float set_point_y;
+//        float kp;
+//        float ki;
+//        float kd;
+//        float _dt;
+//        float x_rot;
+//        float y_rot;
+//        bool even;
 
-    } controlVals;
+//    } controlVals;
 
-};
+//};
 
-void moveMirror(float x, float y);
+//void moveMirror(float x, float y);
 
 #endif // CAMERATHREAD_H

@@ -1,10 +1,10 @@
 #ifndef SOCKETCLIENT_H
 #define SOCKETCLIENT_H
 
-#include <QtCore>
-#include <QObject>
-#include <QTcpSocket>
-#include <QDebug>
+#include <QtCore/QtCore>
+#include <QtCore/QObject>
+#include <QtNetwork/QTcpSocket>
+#include <QtCore/QDebug>
 
 class SocketClient : public QObject
 {

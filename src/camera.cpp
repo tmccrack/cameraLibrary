@@ -1,10 +1,10 @@
 #include "camera.h"
 
 
-Camera::Camera(QObject *parent, QString cam_name, bool r_cam)
+Camera::Camera(string cam_name, bool r_cam)
 {
     cam_data = new long[262144];  // Initialize camera data buffer
-    camera_name = cam_name;
+    camera_name = QString::fromStdString(cam_name);
     real_cam = r_cam;
     if (!real_cam)
     {
@@ -25,7 +25,7 @@ void Camera::startCamera()
 {
     if (real_cam)
     {
-        t_cam_thread = new CameraThread(this, s_imageDim.size, cam_data);
+        t_cam_thread = new CameraThread(0, s_imageDim.size, cam_data);
         t_cam_thread->startCameraThread();
     }
     else fake_cam_running = true;
@@ -70,6 +70,11 @@ void Camera::shutdownCamera()
     _shutdownCamera();
 }
 
+void Camera::getHandle(long *cam_handle)
+{
+    ui_error = GetCameraHandle(0, cam_handle);
+    checkError(ui_error, "GetHandle");
+}
 
 /*
  * Retrieve current camera data buffer

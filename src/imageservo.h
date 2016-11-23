@@ -1,7 +1,7 @@
 #ifndef IMAGESERVO_H
 #define IMAGESERVO_H
 
-#include <QObject>
+#include <QtCore/QObject>
 #include "servo.h"
 
 #define PI 3.14159265

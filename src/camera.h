@@ -2,9 +2,9 @@
 #define CAMERA_H
 
 
-#include <QObject>
-#include <QString>
-#include <QDebug>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QDebug>
 #include "camerathread.h"
 #include "ATMCD32D.H"
 
@@ -50,12 +50,11 @@ struct ShutterProperties{
     int close_time;
 };
 
-class Camera : public QObject
+class Camera
 {
-    Q_OBJECT
 
 public:
-    explicit Camera(QObject *parent = 0, QString cam_name = "" , bool r_cam = false);
+    explicit Camera(string cam_name = "" , bool r_cam = false);
     void startCamera();
     bool isCameraRunning();
     void stopCamera();
@@ -63,6 +62,7 @@ public:
     void setArrayTemp(int temperature);
     void getCameraData(long *buffer);
     void shutdownCamera();
+    void getHandle(long *cam_handle);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -79,10 +79,6 @@ public:
     ShutterProperties getShutterParams();
     void setShutterParams(int mode, int open, int close);
     void setShutterParams(ShutterProperties shutterParameters);
-
-signals:
-
-public slots:
 
 private:
     void _initializeCamera();

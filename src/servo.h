@@ -1,7 +1,7 @@
 #ifndef SERVO_H
 #define SERVO_H
 
-#include <QObject>
+#include <QtCore/QObject>
 
 struct Gain{
     float kp;
