@@ -21,6 +21,11 @@ Camera::Camera(string cam_name, bool r_cam)
 
 }
 
+Camera::~Camera()
+{
+
+}
+
 void Camera::startCamera()
 {
     if (real_cam)
@@ -70,10 +75,16 @@ void Camera::shutdownCamera()
     _shutdownCamera();
 }
 
-void Camera::getHandle(long *cam_handle)
+long Camera::getHandle()
 {
-    ui_error = GetCameraHandle(0, cam_handle);
-    checkError(ui_error, "GetHandle");
+    long *cam_handle;
+    if (real_cam)
+    {
+        ui_error = GetCameraHandle(0, cam_handle);
+        checkError(ui_error, "GetHandle");
+    }
+    else *cam_handle = long(100);
+    return *cam_handle;
 }
 
 /*

@@ -54,7 +54,8 @@ class Camera
 {
 
 public:
-    explicit Camera(string cam_name = "" , bool r_cam = false);
+    Camera(string cam_name = "" , bool r_cam = false);
+    ~Camera();
     void startCamera();
     bool isCameraRunning();
     void stopCamera();
@@ -62,7 +63,7 @@ public:
     void setArrayTemp(int temperature);
     void getCameraData(long *buffer);
     void shutdownCamera();
-    void getHandle(long *cam_handle);
+    long getHandle();
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
