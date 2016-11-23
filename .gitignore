@@ -2,3 +2,4 @@ build*/
 *.pro.user*
 pycam/pycamera.cpp
 pycam/build*
+pycam/pycamera.pyd
