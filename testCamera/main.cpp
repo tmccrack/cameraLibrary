@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         cout << "Setting up real camera " << cam_name << endl;
         sim_cam = TRUE;
     }
-    static Camera camera(0, QString::fromStdString(cam_name), sim_cam);
+    static Camera camera(cam_name, sim_cam);
 
     while(GetInput(buffer, control_buffer, &camera))
     {
@@ -64,6 +64,7 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
     printf("Exposure time - 5\n");
     printf("Array timing - 6\n");
     printf("Shutter parameters - 7\n");
+    printf("Camera handle - 8\n");
     printf("Shutdown camera - Any other key\n");
 
     getline(cin, temp);
@@ -214,6 +215,17 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
         shut = cam->getShutterParams();
         cout << "TTL level: " << shut.type << "\tMode: " << shut.mode << endl;
 
+        return true;
+    }
+
+    /*
+     * Get camera handle
+     */
+    else if (i_input == 8)
+    {
+        long handle = cam->getHandle();
+        cout << "Cam handle: " << *
+                handle << endl;
         return true;
     }
 
