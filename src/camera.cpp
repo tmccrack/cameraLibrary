@@ -1,7 +1,22 @@
 #include "camera.h"
 
+/*
+ * Camera constructor
+ */
+Camera::Camera()
+{
 
-Camera::Camera(string cam_name, bool r_cam)
+}
+
+/*
+ * Camera destructor
+ */
+Camera::~Camera()
+{
+    if (cam_data) delete[] cam_data;
+}
+
+void Camera::initializeCamera(string cam_name, bool r_cam)
 {
     cam_data = new long[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
@@ -17,13 +32,6 @@ Camera::Camera(string cam_name, bool r_cam)
     }
     _initializeCamera();
     b_gblerrorFlag = false;  // Clear error flag
-
-
-}
-
-Camera::~Camera()
-{
-
 }
 
 void Camera::startCamera()
@@ -40,7 +48,8 @@ bool Camera::isCameraRunning()
 {
     if (real_cam)
     {
-        return t_cam_thread->isRunning();
+        if (t_cam_thread) return t_cam_thread->isRunning();
+        else return false;
     }
     else return fake_cam_running;
 }
@@ -75,16 +84,17 @@ void Camera::shutdownCamera()
     _shutdownCamera();
 }
 
-long Camera::getHandle()
+/*
+ * Get handle of specified camera
+ */
+void Camera::getHandle(long *cam_handle)
 {
-    long *cam_handle;
     if (real_cam)
     {
         ui_error = GetCameraHandle(0, cam_handle);
         checkError(ui_error, "GetHandle");
     }
-    else *cam_handle = long(100);
-    return *cam_handle;
+    else *cam_handle = long(666);
 }
 
 /*
@@ -130,6 +140,12 @@ ExposureProperties Camera::getExposureParams()
     return s_expProp;
 }
 
+void Camera::setExposureParams(ExposureProperties expParameters)
+{
+    s_expProp = expParameters;
+    setExposureProperties();
+}
+
 void Camera::setExposureParams(float exposure, int em_gain)
 {
     s_expProp.exp_time = exposure;
@@ -137,19 +153,19 @@ void Camera::setExposureParams(float exposure, int em_gain)
     setExposureProperties();
 }
 
-void Camera::setExposureParams(ExposureProperties expParameters)
-{
-    s_expProp = expParameters;
-    setImageProperties();
-}
-
 
 /*
  * Camera read setup parameters
  */
-ReadProperties Camera::getImageParams()
+ReadProperties Camera::getReadParams()
 {
     return s_readProp;
+}
+
+void Camera::setReadParams(ReadProperties readParameters)
+{
+    s_readProp = readParameters;
+    setReadProperties();
 }
 
 void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
@@ -158,12 +174,6 @@ void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int 
     s_readProp.acq_mode = acq_mode;
     s_readProp.frame_transfer = frame_transfer;
     s_readProp.output_amp = output_amp;
-    setReadProperties();
-}
-
-void Camera::setReadParams(ReadProperties readParameters)
-{
-    s_readProp = readParameters;
     setReadProperties();
 }
 
@@ -244,7 +254,8 @@ void Camera::setArrayTemp(int temperature)
 void Camera::_initializeCamera()
 {
 
-    if ((camera_name == "FTT") || (camera_name == "NULL") || (camera_name == ""))
+    //if ((camera_name == "FTT") || (camera_name == "NULL") || (camera_name == ""))
+    if (camera_name == "FTT")
     {
         qDebug() << "Setting to default FTT values";
         // Set read parameters
@@ -261,7 +272,7 @@ void Camera::_initializeCamera()
 
         // Set shutter parameters
         s_shutterProp.type = 0;  // TTL low
-        s_shutterProp.mode = 0;  // Fully auto
+        s_shutterProp.mode = 1;  // Always open
         s_shutterProp.open_time = 30;  //
         s_shutterProp.close_time = 30;
 
@@ -272,6 +283,10 @@ void Camera::_initializeCamera()
         s_imageDim.v_start = 1;
         s_imageDim.h_end = 512;
         s_imageDim.v_end = 512;
+
+        // Set exposure properties
+        s_expProp.em_gain = 1;
+        s_expProp.exp_time = 0.1;
 
     }
     else if (camera_name == "ExpM")
@@ -303,6 +318,10 @@ void Camera::_initializeCamera()
         s_imageDim.h_end = 512;
         s_imageDim.v_end = 512;
 
+        // Set exposure properties
+        s_expProp.em_gain = 1;
+        s_expProp.exp_time = 0.01;
+
     }
     else
     {
@@ -333,6 +352,10 @@ void Camera::_initializeCamera()
         s_imageDim.h_end = 512;
         s_imageDim.v_end = 512;
 
+        // Set exposure properties
+        s_expProp.em_gain = 1;
+        s_expProp.exp_time = 0.01;
+
     }
 
     if (real_cam)
@@ -341,6 +364,13 @@ void Camera::_initializeCamera()
         char det_file[] = "";
         ui_error = Initialize(det_file);
         checkError(ui_error, "Initialize");
+
+//        qDebug() << "Checking gain settings";
+//        ui_error = SetEMAdvanced(0);  // Disable higher EM gains
+//        checkError(ui_error, "SetEMAdvanced");
+//        qDebug() << "Disabled high gains";
+        ui_error = GetEMGainRange(&s_expProp.em_gain_low, &s_expProp.em_gain_high);
+        checkError(ui_error, "GetEMGainRange");
     }
 
 
@@ -348,6 +378,7 @@ void Camera::_initializeCamera()
     setTimingProperties();
     setShutterProperties();
     setImageProperties();
+    setExposureProperties();
     qDebug() << "Intialized" << camera_name << "camera";
 }
 
@@ -416,15 +447,36 @@ void Camera::setExposureProperties()
     if (real_cam)
     {
         // Check gain levels and set
-        ui_error = GetEMGainRange(s_expProp.em_gain_low, s_expProp.em_gain_high);
+        ui_error = GetEMGainRange(&s_expProp.em_gain_low, &s_expProp.em_gain_high);
+        qDebug() << "Allowed EM gain: " << s_expProp.em_gain_low << " to " << s_expProp.em_gain_high;
         checkError(ui_error, "GetEMGainRange");
-        if (s_expProp.em_gain > *(s_expProp.em_gain_high)) s_expProp.em_gain = *(s_expProp.em_gain_high);
-        else if (s_expProp.em_gain < *(s_expProp.em_gain_low)) s_expProp.em_gain = *(s_expProp.em_gain_low);
+
+        if (s_expProp.em_gain > (s_expProp.em_gain_high))
+        {
+            qDebug() << "Specified EM gain too high";
+            s_expProp.em_gain = s_expProp.em_gain_high;
+        }
+        else if (s_expProp.em_gain < (s_expProp.em_gain_low))
+        {
+            qDebug() << "Specified EM gain too low";
+            s_expProp.em_gain = s_expProp.em_gain_low;
+        }
+
         ui_error = SetEMCCDGain(s_expProp.em_gain);
         checkError(ui_error, "SetEMCCDGain");
+        qDebug() << "EM gain set to " << s_expProp.em_gain;
 
         ui_error = SetExposureTime(s_expProp.exp_time);
         checkError(ui_error, "SetExposureTime");
+
+        ui_error = GetAcquisitionTimings(&s_expProp.exp_time,
+                                         &s_expProp.accum_time,
+                                         &s_expProp.kinetic_time);
+        checkError(ui_error, "GetAcquisitionTime");
+        qDebug() << "Exposure time set to: " << s_expProp.exp_time << endl
+                 << "Total accumulation time: " << s_expProp.accum_time << endl
+                 << "Kinetic time: " << s_expProp.kinetic_time;
+
     }
     qDebug() << "Done!";
 }
@@ -501,7 +553,7 @@ void Camera::_shutdownCamera()
         checkError(ui_error, "ShutDown");
     }
 
-    qDebug() << "Camera successfully shutdown";
+    qDebug() << camera_name << "successfully shutdown";
     // Free data array memory
     if(cam_data) delete[] cam_data;
 }
@@ -536,6 +588,7 @@ void Camera::_warmArray()
     qDebug() << "Checking array temp\n...";
     if (real_cam)
     {
+        qDebug() << "Array at" << array_temp << endl;
         while (array_temp < 0)
         {
             Sleep(5000);  // Wait 5 seconds

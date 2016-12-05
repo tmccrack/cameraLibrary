@@ -38,9 +38,11 @@ struct ImageDimension{
 
 struct ExposureProperties{
     float exp_time;
+    float accum_time;
+    float kinetic_time;
     int em_gain;
-    int *em_gain_high;
-    int *em_gain_low;
+    int em_gain_high;
+    int em_gain_low;
 };
 
 struct ShutterProperties{
@@ -54,8 +56,9 @@ class Camera
 {
 
 public:
-    Camera(string cam_name = "" , bool r_cam = false);
+    Camera();
     ~Camera();
+    void initializeCamera(string cam_name = "" , bool r_cam = false);
     void startCamera();
     bool isCameraRunning();
     void stopCamera();
@@ -63,7 +66,7 @@ public:
     void setArrayTemp(int temperature);
     void getCameraData(long *buffer);
     void shutdownCamera();
-    long getHandle();
+    void getHandle(long *cam_handle);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -71,7 +74,7 @@ public:
     ExposureProperties getExposureParams();
     void setExposureParams(float exposure, int em_gain);
     void setExposureParams(ExposureProperties expParameters);
-    ReadProperties getImageParams();
+    ReadProperties getReadParams();
     void setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp);
     void setReadParams(ReadProperties readParameters);
     TimingProperties getTimingParams();
