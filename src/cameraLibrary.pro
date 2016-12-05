@@ -10,7 +10,7 @@ QT       += network
 
 CONFIG += c++11
 
-TARGET = cameraLibrary
+TARGET = camera
 TEMPLATE = lib
 
 DEFINES += CAMERALIBRARY_LIBRARY

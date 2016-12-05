@@ -31,7 +31,8 @@ int main(int argc, char *argv[])
         cout << "Setting up real camera " << cam_name << endl;
         sim_cam = TRUE;
     }
-    static Camera camera(cam_name, sim_cam);
+    Camera camera;
+    camera.initializeCamera(cam_name, sim_cam);
 
     while(GetInput(buffer, control_buffer, &camera))
     {
@@ -223,9 +224,9 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
      */
     else if (i_input == 8)
     {
-        long handle = cam->getHandle();
-        cout << "Cam handle: " << *
-                handle << endl;
+        long *handle;
+        cam->getHandle(handle);
+        cout << "Cam handle: " << *handle << endl;
         return true;
     }
 

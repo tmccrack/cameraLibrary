@@ -40,6 +40,7 @@ private:
     int image_size;
     long *cam_data;
     long *copy_data;
+    int *status;
 };
 
 

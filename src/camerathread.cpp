@@ -98,6 +98,13 @@ void CameraThread::run()
         else if (win_error == WAIT_TIMEOUT)
         {
             // Timeout, do nothing
+            qDebug() << "Camera thread timed out waiting for event";
+            /*
+            GetStatus(status);
+            qDebug() << "Camera status: " << *status;
+            checkError(and_error, "GetStatus");
+            */
+            ResetEvent(cam_event);
         }
         else
         {
