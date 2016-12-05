@@ -6,13 +6,14 @@ except  ImportError:
     from distutils.extension import Extension
     
 from Cython.Build import cythonize
+import numpy
 
 ext = [
        Extension(name = "pycamera",
                  sources = ["pycamera.pyx",
                   "./../src/camera.cpp", 
                   "./../src/camerathread.cpp"],
-                 include_dirs = ["C:/Qt/5.7/msvc2013/include", "./../src", "./../include"],
+                 include_dirs = ["C:/Qt/5.7/msvc2013/include", "./../src", "./../include", numpy.get_include()],
                  library_dirs = ["C:/Qt/5.7/msvc2013/lib", "./../lib"], 
                  libraries = ["Qt5Core", "atmcd32m"],
                  language = "c++")
@@ -20,5 +21,6 @@ ext = [
 
 setup(
       name = "Andor camera wrapper",
-      ext_modules = cythonize(ext)
+      include_dirs = [numpy.get_include()],
+      ext_modules = cythonize(ext),
 )
