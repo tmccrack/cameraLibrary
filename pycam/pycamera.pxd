@@ -8,8 +8,9 @@
 #
 
 from libcpp cimport bool
-from libcpp cimport long
+from libcpp cimport int
 from libcpp.string cimport string
+
 
 
 cdef extern from "./../src/camera.h":
@@ -19,8 +20,7 @@ cdef extern from "./../src/camera.h":
 		void startCamera()
 		void stopCamera()
 		void shutdownCamera()
-		void getCameraData(long *buffer)
-		void getHandle(long *cam_handle)
+		void getCameraData(int *buffer)
 		ImageDimension getImageDims()
 		void setImageDims(ImageDimension imageDim)
 		

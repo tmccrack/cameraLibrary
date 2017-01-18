@@ -5,57 +5,58 @@
 
 import pycamera
 import numpy as np
+import time
 
 def GetInput():
-	print "1 - Start camera"
-	print "2 - Stop camera"
-	print "3 - Get handle"
-	print "4 - Get data"
-	print "5 - Check if running"
-	print "6 - Get image dimension"
-	print "Any other key to shutdown"
-	val = int(raw_input("What do you want to do?"))
-	if val == 1: 
-		print "Starting camera"
+	print("1 - Start camera")
+	print("2 - Stop camera")
+	print("3 - Get handle")
+	print("4 - Get data")
+	print("5 - Check if running")
+	print("6 - Get image dimension")
+	print("Any other key to shutdown")
+	val = input("What do you want to do?\n")
+	if val == '1': 
+		print("Starting camera")
 		ftt.Start()
 		return True
 
-	elif val == 2: 
-		"Stopping camera"
+	elif val == '2': 
+		print("Stopping camera")
 		ftt.Stop()
 		return True
 
-	elif val == 3: 
-		"Getting handle"
-		a = ftt.Handle()
-		print "Handle: " + str(a)
-		return True
+	# elif val == 3: 
+	# 	print("Getting handle")
+	# 	a = ftt.Handle()
+	# 	print("Handle: {}".format(a))
+	# 	return True
 
-	elif val == 4:
-		"Retrieving data"
+	elif val == '4':
+		print("Retrieving data")
 		ftt.Data(buffer)
-		print buffer[0:200]
+		print("{}".format(buffer[0:200]))
 		return True
 
-	elif val == 5:
-		print "Running? " + str(ftt.Running())
+	elif val == '5':
+		print("Running? {}".format(ftt.Running()))
 		return True
 
-	elif val == 6:
+	elif val == '6':
 		ftt.GetImageDimension()
 		return True
 
 	else:
 		return False	
 
-ftt = pycamera.PyCamera("FTT", True)	
-print ftt
-buffer = np.ascontiguousarray(np.empty([262144, ], dtype=long))
-print "What do you want to do?"
-while (GetInput()):
-	print "What do you want to do?\n"
+name = "FTT"
+ftt = pycamera.PyCamera(name.encode('utf-8'), False)	
+buffer = np.empty([262144, 1], dtype=int)
 
-print "Shutting down"
+while (GetInput()):
+	print("What do you want to do?\n")
+
+print("Shutting down")
 ftt.Shutdown()
 
-print "Done"
+print("Done")

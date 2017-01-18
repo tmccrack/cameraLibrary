@@ -1,9 +1,12 @@
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except  ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+# try:
+#     from setuptools import setup
+#     from setuptools import Extension
+# except  ImportError:
+#     from distutils.core import setup
+#     from distutils.extension import Extension
+
+from distutils.core import setup
+from distutils.extension import Extension
     
 from Cython.Build import cythonize
 import numpy
@@ -11,10 +14,10 @@ import numpy
 ext = [
        Extension(name = "pycamera",
                  sources = ["pycamera.pyx",
-                  "./../src/camera.cpp", 
+                  "./../src/camera.cpp",
                   "./../src/camerathread.cpp"],
-                 include_dirs = ["C:/Qt/5.7/msvc2013/include", "./../src", "./../include", numpy.get_include()],
-                 library_dirs = ["C:/Qt/5.7/msvc2013/lib", "./../lib"], 
+                 include_dirs = ["C:/Qt/5.7/msvc2015/include", "./../src", "./../include", numpy.get_include()],
+                 library_dirs = ["C:/Users/TMM/Anaconda3/Library/lib", "./../lib"],
                  libraries = ["Qt5Core", "atmcd32m"],
                  language = "c++")
        ]

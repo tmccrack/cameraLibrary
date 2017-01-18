@@ -7,19 +7,18 @@
 #
 cimport pycamera
 cimport numpy as np
-import numpy as np
 
 cdef class PyCamera:
 	cdef pycamera.Camera pycam
 	cdef pycamera.ImageDimension s_imageDim
-	cdef pycamera.ExposureProperites s_expProp
+	cdef pycamera.ExposureProperties s_expProp
 	cdef string name
 	cdef bint real_cam
-	cdef long *phandle
-	cdef long buffer[262144]
+	# cdef long *phandle
+	cdef int buffer[262144]
 
 
-	def __cinit__(self, name, real_cam):
+	def __cinit__(self, name = "", real_cam = False):
 		self.pycam = pycamera.Camera()
 		self.name = name
 		self.real_cam = real_cam
@@ -50,10 +49,7 @@ cdef class PyCamera:
 
 	def GetImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()
-		return (self.s_imageDim.h_start,
-			self.s_imageDim.h_dim,
-			self.s_imageDim.v_start,
-			self.s_imageDim.v_dim)
+		return self.s_imageDim
 
 	def SetImageDimension(self, int x_s, int y_s, int x_size, int y_size):
 		# Set array size
@@ -64,16 +60,16 @@ cdef class PyCamera:
 		self.s_imageDim.v_end = y_s + y_size - 1
 		self.pycam.setImageDims(self.s_imageDim)
 
-	def GetExposureSettings(self):
-		self.s_expProp = self.pycam.GetExposureSettings()
-		return 
+	# def GetExposureSettings(self):
+	# 	# self.s_expProp = self.pycam.GetExposureSettings()
+	# 	return None
 
-	def SetExposureSettings(self, float exp_time, int em_gain):
-		self.s_expProp.exp_time = exp_time
-		self.s_expProp.em_gain = em_gain
-		self.pycam.SetExposureSettings(self.s_expProp)
+	# def SetExposureSettings(self, float exp_time, int em_gain):
+	# 	self.s_expProp.exp_time = exp_time
+	# 	self.s_expProp.em_gain = em_gain
+	# 	# self.pycam.SetExposureSettings(self.s_expProp)
 
-	def Handle(self):
-		self.pycam.getHandle(self.phandle)
-		print "Got handle"
-		return self.phandle[0]
+	# def Handle(self):
+	# 	self.pycam.getHandle(self.phandle)
+	# 	print("Got handle")
+	# 	return self.phandle[0]
