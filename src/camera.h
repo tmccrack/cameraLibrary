@@ -58,31 +58,16 @@ class Camera
 public:
     Camera();
     ~Camera();
-    void initializeCamera(string cam_name = "" , bool r_cam = false);
-    void startCamera();
-    bool isCameraRunning();
-    void stopCamera();
-    void getArrayTemp(int *temperature);
-    void setArrayTemp(int temperature);
-    void getCameraData(long *buffer);
+    void initializeCamera(string cam_name, bool r_cam);
     void shutdownCamera();
-    void getHandle(long *cam_handle);
+    void startCamera();
+    void stopCamera();
+    bool isCameraRunning();
+    void getCameraData(int *buffer);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
     void setImageDims(ImageDimension imageParameters);
-    ExposureProperties getExposureParams();
-    void setExposureParams(float exposure, int em_gain);
-    void setExposureParams(ExposureProperties expParameters);
-    ReadProperties getReadParams();
-    void setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp);
-    void setReadParams(ReadProperties readParameters);
-    TimingProperties getTimingParams();
-    void setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time);
-    void setTimingParams(TimingProperties timingParameters);
-    ShutterProperties getShutterParams();
-    void setShutterParams(int mode, int open, int close);
-    void setShutterParams(ShutterProperties shutterParameters);
 
 private:
     void _initializeCamera();
@@ -91,6 +76,7 @@ private:
     void setReadProperties();
     void setTimingProperties();
     void setShutterProperties();
+    void setCooler(int temperature);
     void _shutdownCamera();
     void _getArrayTemp();
     void _warmArray();
@@ -102,11 +88,10 @@ private:
     ShutterProperties s_shutterProp;
     CameraThread *t_cam_thread;
 
-    void setCooler(int temperature);
     bool checkError(unsigned int _ui_err, const char* _cp_func);
 
     QString camera_name;
-    long *cam_data;
+    int *cam_data;
     unsigned int ui_error;
     bool b_gblerrorFlag;
     bool b_gblAcquireFlag;
@@ -114,6 +99,7 @@ private:
     int array_temp;
     bool real_cam;
     bool fake_cam_running;
+
 
 };
 

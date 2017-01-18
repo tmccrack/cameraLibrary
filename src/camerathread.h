@@ -21,7 +21,7 @@ class CameraThread : public QThread
 {
 
 public:
-    CameraThread(QObject *parent = 0, int i_size = 0, long *image_buffer = 0);
+    CameraThread(QObject *parent = 0, int i_size = 0, int *image_buffer = 0);
     ~CameraThread();
     void startCameraThread();
     void abortCameraThread();
@@ -38,8 +38,8 @@ private:
     HANDLE cam_event;
     bool abort;
     int image_size;
-    long *cam_data;
-    long *copy_data;
+    int *cam_data;
+    int *copy_data;
     int *status;
 };
 

@@ -6,11 +6,11 @@
 
 #include "camerathread.h"
 
-CameraThread::CameraThread(QObject *parent, int i_size, long *image_buffer) : QThread(parent)
+CameraThread::CameraThread(QObject *parent, int i_size, int *image_buffer) : QThread(parent)
 {
     // Create copy data buffer and win32 event handle
     image_size = i_size;
-    cam_data = new long[image_size];
+    cam_data = new int[image_size];
     cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     //TODO: Ensure imageBuffer is correct size???
@@ -91,8 +91,8 @@ void CameraThread::run()
             // Camera triggered event, get data
             mutex.lock();
             ResetEvent(cam_event);
-            GetMostRecentImage(cam_data, image_size);
-            std::copy(cam_data, cam_data + (long) image_size, copy_data);
+            GetMostRecentImage16((WORD*) cam_data, image_size);
+            std::copy(cam_data, cam_data + (int) image_size, copy_data);
             mutex.unlock();
         }
         else if (win_error == WAIT_TIMEOUT)

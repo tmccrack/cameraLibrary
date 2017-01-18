@@ -13,12 +13,12 @@ Camera::Camera()
  */
 Camera::~Camera()
 {
-    if (cam_data) delete[] cam_data;
+//    if (cam_data) delete[] cam_data;
 }
 
 void Camera::initializeCamera(string cam_name, bool r_cam)
 {
-    cam_data = new long[262144];  // Initialize camera data buffer
+    cam_data = new int[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
     real_cam = r_cam;
     if (!real_cam)
@@ -84,25 +84,25 @@ void Camera::shutdownCamera()
     _shutdownCamera();
 }
 
-/*
- * Get handle of specified camera
- */
-void Camera::getHandle(long *cam_handle)
-{
-    if (real_cam)
-    {
-        ui_error = GetCameraHandle(0, cam_handle);
-        checkError(ui_error, "GetHandle");
-    }
-    else *cam_handle = long(666);
-}
+///*
+// * Get handle of specified camera
+// */
+//void Camera::getHandle(long *cam_handle)
+//{
+//    if (real_cam)
+//    {
+//        ui_error = GetCameraHandle(0, cam_handle);
+//        checkError(ui_error, "GetHandle");
+//    }
+//    else *cam_handle = long(666);
+//}
 
 /*
  * Retrieve current camera data buffer
  */
-void Camera::getCameraData(long *buffer)
+void Camera::getCameraData(int *buffer)
 {
-    copy(cam_data, cam_data + (long) s_imageDim.size, buffer);
+    copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
 }
 
 
@@ -132,121 +132,121 @@ void Camera::setImageDims(ImageDimension imageParameters)
 }
 
 
-/*
- * Exposure and EM gain parameters
- */
-ExposureProperties Camera::getExposureParams()
-{
-    return s_expProp;
-}
+///*
+// * Exposure and EM gain parameters
+// */
+//ExposureProperties Camera::getExposureParams()
+//{
+//    return s_expProp;
+//}
 
-void Camera::setExposureParams(ExposureProperties expParameters)
-{
-    s_expProp = expParameters;
-    setExposureProperties();
-}
+//void Camera::setExposureParams(ExposureProperties expParameters)
+//{
+//    s_expProp = expParameters;
+//    setExposureProperties();
+//}
 
-void Camera::setExposureParams(float exposure, int em_gain)
-{
-    s_expProp.exp_time = exposure;
-    s_expProp.em_gain = em_gain;
-    setExposureProperties();
-}
-
-
-/*
- * Camera read setup parameters
- */
-ReadProperties Camera::getReadParams()
-{
-    return s_readProp;
-}
-
-void Camera::setReadParams(ReadProperties readParameters)
-{
-    s_readProp = readParameters;
-    setReadProperties();
-}
-
-void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
-{
-    s_readProp.read_mode = read_mode;
-    s_readProp.acq_mode = acq_mode;
-    s_readProp.frame_transfer = frame_transfer;
-    s_readProp.output_amp = output_amp;
-    setReadProperties();
-}
+//void Camera::setExposureParams(float exposure, int em_gain)
+//{
+//    s_expProp.exp_time = exposure;
+//    s_expProp.em_gain = em_gain;
+//    setExposureProperties();
+//}
 
 
-/*
- * Camera read timing parameters
- */
-TimingProperties Camera::getTimingParams()
-{
-    return s_timingProp;
-}
+///*
+// * Camera read setup parameters
+// */
+//ReadProperties Camera::getReadParams()
+//{
+//    return s_readProp;
+//}
 
-void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
-{
-    s_timingProp.h_shift = h_shift;
-    s_timingProp.v_shift = v_shift;
-    s_timingProp.dma_images = dma_images;
-    s_timingProp.dma_accum_time = dma_accum_time;
-    setTimingProperties();
-}
+//void Camera::setReadParams(ReadProperties readParameters)
+//{
+//    s_readProp = readParameters;
+//    setReadProperties();
+//}
 
-void Camera::setTimingParams(TimingProperties timingParameters)
-{
-    s_timingProp = timingParameters;
-    setTimingProperties();
-}
-
-
-/*
- *  Shutter parameters
- */
-ShutterProperties Camera::getShutterParams()
-{
-    return s_shutterProp;
-}
-
-void Camera::setShutterParams(int mode, int open, int close)
-{
-    s_shutterProp.mode = mode;
-    s_shutterProp.open_time = open;
-    s_shutterProp.close_time = close;
-    setShutterProperties();
-}
-
-void Camera::setShutterParams(ShutterProperties shutterParameters)
-{
-    s_shutterProp = shutterParameters;
-    setShutterProperties();
-}
+//void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
+//{
+//    s_readProp.read_mode = read_mode;
+//    s_readProp.acq_mode = acq_mode;
+//    s_readProp.frame_transfer = frame_transfer;
+//    s_readProp.output_amp = output_amp;
+//    setReadProperties();
+//}
 
 
+///*
+// * Camera read timing parameters
+// */
+//TimingProperties Camera::getTimingParams()
+//{
+//    return s_timingProp;
+//}
 
-/*
- * Return array temperature
- */
-void Camera::getArrayTemp(int *temperature)
-{
-    if (real_cam) _getArrayTemp();
-    *temperature = array_temp;
-}
+//void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
+//{
+//    s_timingProp.h_shift = h_shift;
+//    s_timingProp.v_shift = v_shift;
+//    s_timingProp.dma_images = dma_images;
+//    s_timingProp.dma_accum_time = dma_accum_time;
+//    setTimingProperties();
+//}
+
+//void Camera::setTimingParams(TimingProperties timingParameters)
+//{
+//    s_timingProp = timingParameters;
+//    setTimingProperties();
+//}
+
+
+///*
+// *  Shutter parameters
+// */
+//ShutterProperties Camera::getShutterParams()
+//{
+//    return s_shutterProp;
+//}
+
+//void Camera::setShutterParams(int mode, int open, int close)
+//{
+//    s_shutterProp.mode = mode;
+//    s_shutterProp.open_time = open;
+//    s_shutterProp.close_time = close;
+//    setShutterProperties();
+//}
+
+//void Camera::setShutterParams(ShutterProperties shutterParameters)
+//{
+//    s_shutterProp = shutterParameters;
+//    setShutterProperties();
+//}
 
 
 
-void Camera::setArrayTemp(int temperature)
-{
-    /*
-     * TODO:
-     * Add callback once temp reached?
-     */
-    if (real_cam) SetTemperature(temperature);
-    else array_temp = temperature;
+///*
+// * Return array temperature
+// */
+//void Camera::getArrayTemp(int *temperature)
+//{
+//    if (real_cam) _getArrayTemp();
+//    *temperature = array_temp;
+//}
 
-}
+
+
+//void Camera::setArrayTemp(int temperature)
+//{
+//    /*
+//     * TODO:
+//     * Add callback once temp reached?
+//     */
+//    if (real_cam) SetTemperature(temperature);
+//    else array_temp = temperature;
+
+//}
 
 /*
  * Camera initialization
@@ -540,6 +540,11 @@ void Camera::setShutterProperties()
     qDebug() << "Done!";
 }
 
+void Camera::setCooler(int temperature)
+{
+    if (real_cam) SetTemperature(temperature);
+}
+
 void Camera::_shutdownCamera()
 {
     s_shutterProp.mode = 2;  // Set shutter to permanently closed
@@ -558,10 +563,7 @@ void Camera::_shutdownCamera()
     if(cam_data) delete[] cam_data;
 }
 
-void Camera::setCooler(int temperature)
-{
-    if (real_cam) SetTemperature(temperature);
-}
+
 
 void Camera::_getArrayTemp()
 {

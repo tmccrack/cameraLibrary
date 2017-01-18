@@ -16,18 +16,12 @@ TEMPLATE = lib
 DEFINES += CAMERALIBRARY_LIBRARY
 
 SOURCES += \
-    socketclient.cpp \
-    camerathread.cpp \
     camera.cpp \
-    servo.cpp \
-    imageservo.cpp
+    camerathread.cpp
 
 HEADERS +=\
-    socketclient.h \
-    camerathread.h \
     camera.h \
-    servo.h \
-    imageservo.h
+    camerathread.h
 
 unix {
     target.path = /usr/lib
@@ -41,3 +35,6 @@ win32: LIBS += -lAdvapi32 -lgdi32 -luser32 -lshell32
 
 INCLUDEPATH += $$PWD/../include
 DEPENDPATH += $$PWD/../include
+
+FORMS += \
+    fttMainWindow.ui
