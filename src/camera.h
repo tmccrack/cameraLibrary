@@ -69,6 +69,22 @@ public:
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
     void setImageDims(ImageDimension imageParameters);
 
+    ExposureProperties getExposureParams();
+    void setExposureParams(float exposure, int em_gain);
+    void setExposureParams(ExposureProperties expParameters);
+
+    ReadProperties getReadParams();
+    void setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp);
+    void setReadParams(ReadProperties readParameters);
+
+    TimingProperties getTimingParams();
+    void setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time);
+    void setTimingParams(TimingProperties timingParameters);
+
+    ShutterProperties getShutterParams();
+    void setShutterParams(int mode, int open, int close);
+    void setShutterParams(ShutterProperties shutterParameters);
+
 private:
     void _initializeCamera();
     void setImageProperties();

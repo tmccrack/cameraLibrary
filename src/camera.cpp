@@ -102,7 +102,15 @@ void Camera::shutdownCamera()
  */
 void Camera::getCameraData(int *buffer)
 {
-    copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
+    if (real_cam) copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
+    else
+    {
+        for (int i = 0; i < 262144; i++)
+        {
+            cam_data[i] = qrand();
+        }
+        copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
+    }
 }
 
 
@@ -132,97 +140,97 @@ void Camera::setImageDims(ImageDimension imageParameters)
 }
 
 
-///*
-// * Exposure and EM gain parameters
-// */
-//ExposureProperties Camera::getExposureParams()
-//{
-//    return s_expProp;
-//}
+/*
+ * Exposure and EM gain parameters
+ */
+ExposureProperties Camera::getExposureParams()
+{
+    return s_expProp;
+}
 
-//void Camera::setExposureParams(ExposureProperties expParameters)
-//{
-//    s_expProp = expParameters;
-//    setExposureProperties();
-//}
+void Camera::setExposureParams(ExposureProperties expParameters)
+{
+    s_expProp = expParameters;
+    setExposureProperties();
+}
 
-//void Camera::setExposureParams(float exposure, int em_gain)
-//{
-//    s_expProp.exp_time = exposure;
-//    s_expProp.em_gain = em_gain;
-//    setExposureProperties();
-//}
-
-
-///*
-// * Camera read setup parameters
-// */
-//ReadProperties Camera::getReadParams()
-//{
-//    return s_readProp;
-//}
-
-//void Camera::setReadParams(ReadProperties readParameters)
-//{
-//    s_readProp = readParameters;
-//    setReadProperties();
-//}
-
-//void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
-//{
-//    s_readProp.read_mode = read_mode;
-//    s_readProp.acq_mode = acq_mode;
-//    s_readProp.frame_transfer = frame_transfer;
-//    s_readProp.output_amp = output_amp;
-//    setReadProperties();
-//}
+void Camera::setExposureParams(float exposure, int em_gain)
+{
+    s_expProp.exp_time = exposure;
+    s_expProp.em_gain = em_gain;
+    setExposureProperties();
+}
 
 
-///*
-// * Camera read timing parameters
-// */
-//TimingProperties Camera::getTimingParams()
-//{
-//    return s_timingProp;
-//}
+/*
+ * Camera read setup parameters
+ */
+ReadProperties Camera::getReadParams()
+{
+    return s_readProp;
+}
 
-//void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
-//{
-//    s_timingProp.h_shift = h_shift;
-//    s_timingProp.v_shift = v_shift;
-//    s_timingProp.dma_images = dma_images;
-//    s_timingProp.dma_accum_time = dma_accum_time;
-//    setTimingProperties();
-//}
+void Camera::setReadParams(ReadProperties readParameters)
+{
+    s_readProp = readParameters;
+    setReadProperties();
+}
 
-//void Camera::setTimingParams(TimingProperties timingParameters)
-//{
-//    s_timingProp = timingParameters;
-//    setTimingProperties();
-//}
+void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
+{
+    s_readProp.read_mode = read_mode;
+    s_readProp.acq_mode = acq_mode;
+    s_readProp.frame_transfer = frame_transfer;
+    s_readProp.output_amp = output_amp;
+    setReadProperties();
+}
 
 
-///*
-// *  Shutter parameters
-// */
-//ShutterProperties Camera::getShutterParams()
-//{
-//    return s_shutterProp;
-//}
+/*
+ * Camera read timing parameters
+ */
+TimingProperties Camera::getTimingParams()
+{
+    return s_timingProp;
+}
 
-//void Camera::setShutterParams(int mode, int open, int close)
-//{
-//    s_shutterProp.mode = mode;
-//    s_shutterProp.open_time = open;
-//    s_shutterProp.close_time = close;
-//    setShutterProperties();
-//}
+void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_accum_time)
+{
+    s_timingProp.h_shift = h_shift;
+    s_timingProp.v_shift = v_shift;
+    s_timingProp.dma_images = dma_images;
+    s_timingProp.dma_accum_time = dma_accum_time;
+    setTimingProperties();
+}
 
-//void Camera::setShutterParams(ShutterProperties shutterParameters)
-//{
-//    s_shutterProp = shutterParameters;
-//    setShutterProperties();
-//}
+void Camera::setTimingParams(TimingProperties timingParameters)
+{
+    s_timingProp = timingParameters;
+    setTimingProperties();
+}
+
+
+/*
+ *  Shutter parameters
+ */
+ShutterProperties Camera::getShutterParams()
+{
+    return s_shutterProp;
+}
+
+void Camera::setShutterParams(int mode, int open, int close)
+{
+    s_shutterProp.mode = mode;
+    s_shutterProp.open_time = open;
+    s_shutterProp.close_time = close;
+    setShutterProperties();
+}
+
+void Camera::setShutterParams(ShutterProperties shutterParameters)
+{
+    s_shutterProp = shutterParameters;
+    setShutterProperties();
+}
 
 
 
