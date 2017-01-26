@@ -12,19 +12,21 @@ from libcpp cimport int
 from libcpp.string cimport string
 
 
-
 cdef extern from "./../src/camera.h":
 	cdef cppclass Camera:
 		Camera() except +
 		void initializeCamera(string cam_name, bool real_cam)
 		void startCamera()
+		bool isCameraRunning()
 		void stopCamera()
 		void shutdownCamera()
 		void getCameraData(int *buffer)
+
 		ImageDimension getImageDims()
 		void setImageDims(ImageDimension imageDim)
-		
-		bool isCameraRunning()
+
+		ExposureProperties getExposureParams()
+		void setExposureParams(ExposureProperties expProps)
 
 	cdef struct ImageDimension:
 		int h_start
@@ -41,45 +43,20 @@ cdef extern from "./../src/camera.h":
 		float exp_time
 		int em_gain
 
-# 	cdef struct: ExposureProperties
+	# cdef struct ShutterProperties:
+	# 	int type
+	# 	int mode
+	# 	int open_time
+	# 	int close_time
 
+	# cdef struct ReadProperties:
+	# 	int read_mode
+	# 	int acq_mode
+	# 	int frame_transfer
+	# 	int output_amp
 
-# truct TimingProperties{
-#     int h_shift;
-#     int v_shift;
-#     int dma_images;
-#     float dma_accum_time;
-# };
-
-# struct ReadProperties{
-#     int read_mode;
-#     int acq_mode;
-#     int frame_transfer;
-#     int output_amp;
-# };
-
-# struct ImageDimension{
-#     int h_start;
-#     int h_end;
-#     int h_bin;
-#     int v_start;
-#     int v_end;
-#     int v_bin;
-#     int h_dim;
-#     int v_dim;
-#     unsigned long size;
-# };
-
-# struct ExposureProperties{
-#     float exp_time;
-#     int em_gain;
-#     int *em_gain_high;
-#     int *em_gain_low;
-# };
-
-# struct ShutterProperties{
-#     int type;
-#     int mode;
-#     int open_time;
-#     int close_time;
-# };
+	# cdef struct TimingProperties
+	# 	int h_shift
+	# 	int v_shift
+	# 	int dma_images
+	# 	float dma_accum_time

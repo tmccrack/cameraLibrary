@@ -7,67 +7,80 @@
 #
 cimport pycamera
 cimport numpy as np
+import numpy as np
+import sys
 
 cdef class PyCamera:
 	cdef pycamera.Camera pycam
-	cdef pycamera.ImageDimension s_imageDim
-	cdef pycamera.ExposureProperties s_expProp
 	cdef string name
 	cdef bint real_cam
-	# cdef long *phandle
 	cdef int buffer[262144]
+
+	# These are 'public' attributes
+	cdef pycamera.ImageDimension s_imageDim
+	cdef pycamera.ExposureProperties s_expProp
+	cpdef public int x_dim, y_dim
 
 
 	def __cinit__(self, name = "", real_cam = False):
 		self.pycam = pycamera.Camera()
-		self.name = name
+		self.name = name.encode('utf-8')
 		self.real_cam = real_cam
 		self._Initialize()
 
-	def _Initialize(self):
+	cpdef _Initialize(self):
 		self.pycam.initializeCamera(self.name, self.real_cam)
-		self.s_imageDim = self.GetImageDimension()
+		self.stop()
+		self.getImageDimension()
 
-	def Start(self):
+	def start(self):
 		self.pycam.startCamera()
 		return self.pycam.isCameraRunning()
 
-	def Stop(self):
+	def stop(self):
 		self.pycam.stopCamera()
 		return self.pycam.isCameraRunning()
 
-	def Shutdown(self):
+	def shutdown(self):
 		self.pycam.shutdownCamera()
 
-	def Running(self):
+	def running(self):
 		return self.pycam.isCameraRunning()
 
-	def Data(self, np.ndarray d_buff):
+	def data(self, buffer):
 		self.pycam.getCameraData(self.buffer)
-		for i in range(0, d_buff.shape[0]):
-			d_buff[i] = self.buffer[i]
+		for i in range(len(buffer)-1):
+			buffer[i] = self.buffer[i]
 
-	def GetImageDimension(self):
+	def getImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()
+		self._calcDimension()
 		return self.s_imageDim
 
-	def SetImageDimension(self, int x_s, int y_s, int x_size, int y_size):
-		# Set array size
-		# x_start, y_start, x dimension, y dimension
-		self.s_imageDim.h_start = x_s
-		self.s_imageDim.v_start = y_s
-		self.s_imageDim.h_end = x_s + x_size - 1
-		self.s_imageDim.v_end = y_s + y_size - 1
+	def setImageDimension(self, imageDim):
+		self.s_imageDim.h_start = imageDim['h_start']
+		self.s_imageDim.v_start = imageDim['v_start']
+		self.s_imageDim.h_end = imageDim['h_end']
+		self.s_imageDim.v_end = imageDim['v_end']
+		self.s_imageDim.h_bin = imageDim['h_bin']
+		self.s_imageDim.v_bin = imageDim['v_bin']
+		self._setImageDimension()
+
+	cpdef _setImageDimension(self):
 		self.pycam.setImageDims(self.s_imageDim)
+		self.getImageDimension()
 
-	# def GetExposureSettings(self):
-	# 	# self.s_expProp = self.pycam.GetExposureSettings()
-	# 	return None
+	cpdef _calcDimension(self):
+		self.x_dim = self.s_imageDim.h_end - self.s_imageDim.h_start + 1
+		self.y_dim = self.s_imageDim.v_end - self.s_imageDim.v_start + 1
 
-	# def SetExposureSettings(self, float exp_time, int em_gain):
-	# 	self.s_expProp.exp_time = exp_time
-	# 	self.s_expProp.em_gain = em_gain
-	# 	# self.pycam.SetExposureSettings(self.s_expProp)
+	def getExposureSettings(self):
+		self.s_expProp = self.pycam.getExposureParams()
+		return self.s_expProp
+
+	def setExposureSettings(self):
+		self.pycam.setExposureParams(self.s_expProp)
+		self.getExposureSettings()
 
 	# def Handle(self):
 	# 	self.pycam.getHandle(self.phandle)
