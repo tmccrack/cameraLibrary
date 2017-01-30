@@ -36,8 +36,15 @@ void Camera::initializeCamera(string cam_name, bool r_cam)
 
 void Camera::startCamera()
 {
+    if (camera_name == "FTT")
+    {
+        s_shutterProp.mode = 1;  // Always open
+        setShutterParams(s_shutterProp);
+    }
+
     if (real_cam)
     {
+
         t_cam_thread = new CameraThread(0, s_imageDim.size, cam_data);
         t_cam_thread->startCameraThread();
     }
@@ -232,29 +239,30 @@ void Camera::setShutterParams(ShutterProperties shutterParameters)
     _setShutterParams();
 }
 
+TemperatureProperties Camera::getTempParams()
+{
+    return s_tempProp;
+}
 
+TemperatureProperties Camera::getTempArray()
+{
+    _getTempArray();
+    return s_tempProp;
+}
 
-///*
-// * Return array temperature
-// */
-//void Camera::getArrayTemp(int *temperature)
-//{
-//    if (real_cam) _getArrayTemp();
-//    *temperature = array_temp;
-//}
+void Camera::setTempParams(int set_point, bool state)
+{
+    s_tempProp.set_point = set_point;
+    s_tempProp.power_state = state;
+    _setTempParams();
+}
 
+void Camera::setTempParams(TemperatureProperties tempParameters)
+{
+    s_tempProp = tempParameters;
+    _setTempParams();
+}
 
-
-//void Camera::setArrayTemp(int temperature)
-//{
-//    /*
-//     * TODO:
-//     * Add callback once temp reached?
-//     */
-//    if (real_cam) SetTemperature(temperature);
-//    else array_temp = temperature;
-
-//}
 
 /*
  * Camera initialization
@@ -280,7 +288,7 @@ void Camera::_initializeCamera()
 
         // Set shutter parameters
         s_shutterProp.type = 0;  // TTL low
-        s_shutterProp.mode = 1;  // Always open
+        s_shutterProp.mode = 0;  // Auto
         s_shutterProp.open_time = 30;  //
         s_shutterProp.close_time = 30;
 
@@ -379,7 +387,22 @@ void Camera::_initializeCamera()
 //        qDebug() << "Disabled high gains";
         ui_error = GetEMGainRange(&s_expProp.em_gain_low, &s_expProp.em_gain_high);
         checkError(ui_error, "GetEMGainRange");
+
+        ui_error = GetTemperatureRange(&s_tempProp.temp_low, &s_tempProp.temp_high);
+        checkError(ui_error, "GetTemperatureRange");
+
+
     }
+
+    else
+    {
+        s_tempProp.temp_low = -273;
+        s_tempProp.temp_high = 200;
+    }
+
+    // Set cooling point and power on cooler
+    s_tempProp.set_point = -65;
+    s_tempProp.power_state = true;
 
     _setReadParams();
     _setReadParams();
@@ -387,6 +410,7 @@ void Camera::_initializeCamera()
     _setShutterParams();
     _setImageDims();
     _setExposureParams();
+    _setTempParams();
     qDebug() << "Intialized" << camera_name << "camera";
 }
 
@@ -456,7 +480,7 @@ void Camera::_setExposureParams()
     {
         // Check gain levels and set
         ui_error = GetEMGainRange(&s_expProp.em_gain_low, &s_expProp.em_gain_high);
-        qDebug() << "Allowed EM gain: " << s_expProp.em_gain_low << " to " << s_expProp.em_gain_high;
+//        qDebug() << "Allowed EM gain: " << s_expProp.em_gain_low << " to " << s_expProp.em_gain_high;
         checkError(ui_error, "GetEMGainRange");
 
         if (s_expProp.em_gain > (s_expProp.em_gain_high))
@@ -548,29 +572,74 @@ void Camera::_setShutterParams()
     qDebug() << "Done!";
 }
 
-void Camera::setCooler(int temperature)
+void Camera::_setTempParams()
 {
-    if (real_cam) SetTemperature(temperature);
+    qDebug() << "Setting temperature properties";
+    if (real_cam)
+    {
+        // Set point
+        if (s_tempProp.set_point > s_tempProp.temp_high)
+        {
+            qDebug() << "Specified temperature too high";
+            s_tempProp.array_temp = s_tempProp.temp_high;
+        }
+        else if (s_tempProp.set_point < s_tempProp.temp_low)
+        {
+            qDebug() << "Specified temperature too low";
+        }
+        ui_error = SetTemperature(s_tempProp.set_point);
+        checkError(ui_error, "SetTemperature");
+        qDebug() << "Temperature set to " << s_tempProp.set_point;
+
+        // Power state
+        if (s_tempProp.power_state)
+        {
+            CoolerON();
+        }
+        else
+        {
+            CoolerOFF();
+        }
+    }
+    else
+    {
+        s_tempProp.array_temp = s_tempProp.set_point;
+    }
+
+    _getTempArray();
+    qDebug() << "Array temperaturea at " << s_tempProp.array_temp;
+    qDebug() << "Done!";
 }
 
-//bool Camera::cooler(int *state)
-//{
-//    IsCoolerOn(state);
-//    return state;
-//}
+void Camera::_getTempArray()
+{
+    if (real_cam)
+    {
+        // Array temp
+        ui_error = GetTemperature(&s_tempProp.array_temp);
+        if (ui_error == DRV_TEMPERATURE_OFF)
+        {
+            s_tempProp.array_temp = 15;
+            s_tempProp.cooler_state = ui_error;
+        }
+        else if ((ui_error == DRV_TEMPERATURE_DRIFT) ||
+                 (ui_error == DRV_TEMPERATURE_NOT_REACHED) ||
+                 (ui_error == DRV_TEMPERATURE_NOT_STABILIZED) ||
+                 (ui_error == DRV_TEMPERATURE_STABILIZED) ||
+                 (ui_error == DRV_ACQUIRING))
+        {
+            s_tempProp.cooler_state = ui_error;
+        }
+        else checkError(ui_error, "GetTemperature");
+    }
+    else
+    {
+        s_tempProp.array_temp = s_tempProp.set_point;
+        s_tempProp.cooler_state = 0;
 
-//bool Camera::cooler(bool pwr)
-//{
-//    if (pwr)
-//    {
-//        CoolerON();
-//        return true;
-//    }
-//    else
-//    {
-//        CoolerOFF();
-//    }
-//}
+    }
+
+}
 
 void Camera::_shutdownCamera()
 {
@@ -591,38 +660,23 @@ void Camera::_shutdownCamera()
 }
 
 
-
-void Camera::_getArrayTemp()
-{
-    if (real_cam)
-    {
-        ui_error = GetTemperature(&array_temp);
-        if (ui_error == DRV_TEMPERATURE_OFF)
-        {
-            array_temp = 15;
-        }
-        else checkError(ui_error, "GetTemperature");
-    }
-}
-
-
 /*
  * Function to warm up array
  * Camera cannot be shutdown while array is cold
  */
 void Camera::_warmArray()
 {
-    setCooler(0);
-    _getArrayTemp();
+    s_tempProp.set_point = 0;
+    _setTempParams();
     qDebug() << "Checking array temp\n...";
     if (real_cam)
     {
-        qDebug() << "Array at" << array_temp << endl;
-        while (array_temp < 0)
+        qDebug() << "Array at" << s_tempProp.array_temp << endl;
+        while (s_tempProp.array_temp < 0)
         {
             Sleep(5000);  // Wait 5 seconds
-            _getArrayTemp();
-            qDebug() << "Warming array, array at: " << array_temp << "\n...";
+            _getTempArray();
+            qDebug() << "Warming array, array at: " << s_tempProp.array_temp << "\n...";
         }
     }
 }

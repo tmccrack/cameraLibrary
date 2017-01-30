@@ -52,6 +52,15 @@ struct ShutterProperties{
     int close_time;
 };
 
+struct TemperatureProperties{
+    int set_point;
+    int array_temp;
+    int temp_high;
+    int temp_low;
+    bool power_state;
+    int cooler_state;
+};
+
 class Camera
 {
 
@@ -64,8 +73,6 @@ public:
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(int *buffer);
-//    bool cooler(int *state);
-//    bool cooler(bool pwr);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -87,6 +94,12 @@ public:
     void setShutterParams(int mode, int open, int close);
     void setShutterParams(ShutterProperties shutterParameters);
 
+    TemperatureProperties getTempParams();
+    TemperatureProperties getTempArray();
+    void setTempParams(int set_point, bool state);
+    void setTempParams(TemperatureProperties tempParameters);
+
+
 private:
     void _initializeCamera();
     void _setImageDims();
@@ -94,9 +107,9 @@ private:
     void _setReadParams();
     void _setTimingParams();
     void _setShutterParams();
-    void setCooler(int temperature);
+    void _setTempParams();
+    void _getTempArray();
     void _shutdownCamera();
-    void _getArrayTemp();
     void _warmArray();
 
     ImageDimension s_imageDim;
@@ -104,6 +117,7 @@ private:
     ReadProperties s_readProp;
     TimingProperties s_timingProp;
     ShutterProperties s_shutterProp;
+    TemperatureProperties s_tempProp;
     CameraThread *t_cam_thread;
 
     bool checkError(unsigned int _ui_err, const char* _cp_func);
@@ -114,7 +128,6 @@ private:
     bool b_gblerrorFlag;
     bool b_gblAcquireFlag;
 
-    int array_temp;
     bool real_cam;
     bool fake_cam_running;
 
