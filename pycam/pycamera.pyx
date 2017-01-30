@@ -19,27 +19,21 @@ cdef class PyCamera:
 	# These are 'public' attributes
 	cdef pycamera.ImageDimension s_imageDim
 	cdef pycamera.ExposureProperties s_expProp
-	cpdef public int x_dim, y_dim
-
 
 	def __cinit__(self, name = "", real_cam = False):
 		self.pycam = pycamera.Camera()
 		self.name = name.encode('utf-8')
 		self.real_cam = real_cam
-		self._Initialize()
-
-	cpdef _Initialize(self):
 		self.pycam.initializeCamera(self.name, self.real_cam)
 		self.stop()
-		self.getImageDimension()
 
 	def start(self):
 		self.pycam.startCamera()
-		return self.pycam.isCameraRunning()
+		return self.running()
 
 	def stop(self):
 		self.pycam.stopCamera()
-		return self.pycam.isCameraRunning()
+		return self.running()
 
 	def shutdown(self):
 		self.pycam.shutdownCamera()
@@ -54,7 +48,6 @@ cdef class PyCamera:
 
 	def getImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()
-		self._calcDimension()
 		return self.s_imageDim
 
 	def setImageDimension(self, imageDim):
@@ -66,10 +59,6 @@ cdef class PyCamera:
 		self.s_imageDim.v_bin = imageDim['v_bin']
 		self.pycam.setImageDims(self.s_imageDim)
 		return self.getImageDimension()
-
-	cpdef _calcDimension(self):
-		self.x_dim = self.s_imageDim.h_end - self.s_imageDim.h_start + 1
-		self.y_dim = self.s_imageDim.v_end - self.s_imageDim.v_start + 1
 
 	def getExposureProp(self):
 		self.s_expProp = self.pycam.getExposureParams()
