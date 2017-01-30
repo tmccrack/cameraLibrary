@@ -21,6 +21,8 @@ cdef extern from "./../src/camera.h":
 		void stopCamera()
 		void shutdownCamera()
 		void getCameraData(int *buffer)
+		# bint cooler()
+		# void cooler(bool state)
 
 		ImageDimension getImageDims()
 		void setImageDims(ImageDimension imageDim)
