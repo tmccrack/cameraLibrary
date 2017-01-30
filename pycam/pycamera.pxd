@@ -21,14 +21,20 @@ cdef extern from "./../src/camera.h":
 		void stopCamera()
 		void shutdownCamera()
 		void getCameraData(int *buffer)
-		# bint cooler()
-		# void cooler(bool state)
 
 		ImageDimension getImageDims()
 		void setImageDims(ImageDimension imageDim)
 
 		ExposureProperties getExposureParams()
-		void setExposureParams(ExposureProperties expProps)
+		void setExposureParams(ExposureProperties expProp)
+
+		TemperatureProperties getTempParams()
+		TemperatureProperties getTempArray()
+		void setTempParams(TemperatureProperties tempProp)
+
+		ShutterProperties getShutterParams()
+		void setShutterParams(ShutterProperties shutProp)
+		
 
 	cdef struct ImageDimension:
 		int h_start
@@ -44,12 +50,22 @@ cdef extern from "./../src/camera.h":
 	cdef struct ExposureProperties:
 		float exp_time
 		int em_gain
+		int em_gain_high
+		int em_gain_low
 
-	# cdef struct ShutterProperties:
-	# 	int type
-	# 	int mode
-	# 	int open_time
-	# 	int close_time
+	cdef struct TemperatureProperties:
+		int set_point
+		int array_temp
+		int temp_high
+		int temp_low
+		bool power_state
+		unsigned int cooler_state
+
+	cdef struct ShutterProperties:
+		int type
+		int mode
+		int open_time
+		int close_time
 
 	# cdef struct ReadProperties:
 	# 	int read_mode
