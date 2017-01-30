@@ -64,6 +64,8 @@ public:
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(int *buffer);
+//    bool cooler(int *state);
+//    bool cooler(bool pwr);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -87,11 +89,11 @@ public:
 
 private:
     void _initializeCamera();
-    void setImageProperties();
-    void setExposureProperties();
-    void setReadProperties();
-    void setTimingProperties();
-    void setShutterProperties();
+    void _setImageDims();
+    void _setExposureParams();
+    void _setReadParams();
+    void _setTimingParams();
+    void _setShutterParams();
     void setCooler(int temperature);
     void _shutdownCamera();
     void _getArrayTemp();

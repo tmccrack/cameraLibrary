@@ -107,7 +107,7 @@ void Camera::getCameraData(int *buffer)
     {
         for (int i = 0; i < 262144; i++)
         {
-            cam_data[i] = qrand();
+            cam_data[i] = qrand() % ((1000));
         }
         copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
     }
@@ -130,13 +130,13 @@ void Camera::setImageDims(int hstart, int hend, int vstart, int vend, int hbin, 
     s_imageDim.v_end = vend;
     s_imageDim.h_bin = hbin;
     s_imageDim.v_bin = vbin;
-    setImageProperties();
+    _setImageDims();
 }
 
 void Camera::setImageDims(ImageDimension imageParameters)
 {
     s_imageDim = imageParameters;
-    setImageProperties();
+    _setImageDims();
 }
 
 
@@ -151,14 +151,14 @@ ExposureProperties Camera::getExposureParams()
 void Camera::setExposureParams(ExposureProperties expParameters)
 {
     s_expProp = expParameters;
-    setExposureProperties();
+    _setExposureParams();
 }
 
 void Camera::setExposureParams(float exposure, int em_gain)
 {
     s_expProp.exp_time = exposure;
     s_expProp.em_gain = em_gain;
-    setExposureProperties();
+    _setExposureParams();
 }
 
 
@@ -173,7 +173,7 @@ ReadProperties Camera::getReadParams()
 void Camera::setReadParams(ReadProperties readParameters)
 {
     s_readProp = readParameters;
-    setReadProperties();
+    _setReadParams();
 }
 
 void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int output_amp)
@@ -182,7 +182,7 @@ void Camera::setReadParams(int read_mode, int acq_mode, int frame_transfer, int 
     s_readProp.acq_mode = acq_mode;
     s_readProp.frame_transfer = frame_transfer;
     s_readProp.output_amp = output_amp;
-    setReadProperties();
+    _setReadParams();
 }
 
 
@@ -200,13 +200,13 @@ void Camera::setTimingParams(int h_shift, int v_shift, int dma_images, int dma_a
     s_timingProp.v_shift = v_shift;
     s_timingProp.dma_images = dma_images;
     s_timingProp.dma_accum_time = dma_accum_time;
-    setTimingProperties();
+    _setTimingParams();
 }
 
 void Camera::setTimingParams(TimingProperties timingParameters)
 {
     s_timingProp = timingParameters;
-    setTimingProperties();
+    _setTimingParams();
 }
 
 
@@ -223,13 +223,13 @@ void Camera::setShutterParams(int mode, int open, int close)
     s_shutterProp.mode = mode;
     s_shutterProp.open_time = open;
     s_shutterProp.close_time = close;
-    setShutterProperties();
+    _setShutterParams();
 }
 
 void Camera::setShutterParams(ShutterProperties shutterParameters)
 {
     s_shutterProp = shutterParameters;
-    setShutterProperties();
+    _setShutterParams();
 }
 
 
@@ -381,12 +381,12 @@ void Camera::_initializeCamera()
         checkError(ui_error, "GetEMGainRange");
     }
 
-
-    setReadProperties();
-    setTimingProperties();
-    setShutterProperties();
-    setImageProperties();
-    setExposureProperties();
+    _setReadParams();
+    _setReadParams();
+    _setTimingParams();
+    _setShutterParams();
+    _setImageDims();
+    _setExposureParams();
     qDebug() << "Intialized" << camera_name << "camera";
 }
 
@@ -394,7 +394,7 @@ void Camera::_initializeCamera()
 /*
  * Internal function to set image properties
  */
-void Camera::setImageProperties()
+void Camera::_setImageDims()
 {
     qDebug() << "Setting image properties";
     // Calculate frame size
@@ -448,7 +448,7 @@ void Camera::setImageProperties()
     qDebug() << "Done!";
 }
 
-void Camera::setExposureProperties()
+void Camera::_setExposureParams()
 {
     qDebug() << "Setting read properties";
     // Program exposure properites
@@ -490,7 +490,7 @@ void Camera::setExposureProperties()
 }
 
 
-void Camera::setReadProperties()
+void Camera::_setReadParams()
 {
     qDebug() << "Setting read properties";
     // Program camera read properties
@@ -512,7 +512,7 @@ void Camera::setReadProperties()
 
 }
 
-void Camera::setTimingProperties()
+void Camera::_setTimingParams()
 {
     qDebug() << "Setting timing properties";
     // Program camera timing properties
@@ -533,7 +533,7 @@ void Camera::setTimingProperties()
     qDebug() << "Done!";
 }
 
-void Camera::setShutterProperties()
+void Camera::_setShutterParams()
 {
     qDebug() << "Setting shutter properties";
     // Program shutter properties
@@ -553,10 +553,29 @@ void Camera::setCooler(int temperature)
     if (real_cam) SetTemperature(temperature);
 }
 
+//bool Camera::cooler(int *state)
+//{
+//    IsCoolerOn(state);
+//    return state;
+//}
+
+//bool Camera::cooler(bool pwr)
+//{
+//    if (pwr)
+//    {
+//        CoolerON();
+//        return true;
+//    }
+//    else
+//    {
+//        CoolerOFF();
+//    }
+//}
+
 void Camera::_shutdownCamera()
 {
     s_shutterProp.mode = 2;  // Set shutter to permanently closed
-    setShutterProperties();
+    _setShutterParams();
 
     if (real_cam)
     {
