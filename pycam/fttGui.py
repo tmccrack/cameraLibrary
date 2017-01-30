@@ -178,9 +178,8 @@ class AppWindow(Ui_MainWindow):
 		self.btn_Closed.clicked.connect(self.btnClosedClicked)
 		self.btn_Abort.clicked.connect(self.btnAbortClicked)
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
+		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.cam_timer.timeout.connect(self.updateFig)
-		self.spb_ExpTime.valueChanged.connect(self.setExposureProp)
-		self.spb_EMGain.valueChanged.connect(self.setExposureProp)
 
 
 	def btnFullFrameClicked(self):
