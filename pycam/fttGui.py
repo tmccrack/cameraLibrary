@@ -143,6 +143,14 @@ class AppWindow(Ui_MainWindow):
 	"""
 	Main window class, inherits Ui
 	"""
+	d_temp = {'20034': 'Off',
+			  '20035': 'Not stable',
+			  '20036': 'Stable',
+			  '20037': 'Not reached',
+			  '20040': 'Drift',
+			  '20072': 'Acquiring',
+			  '0': 'Fake cam'}
+
 	def __init__(self, mainwindow):
 		self.setupUi(mainwindow)
 
@@ -151,12 +159,16 @@ class AppWindow(Ui_MainWindow):
 		self.camera = pycamera.PyCamera(name, False)
 		self.imageDim = self.camera.getImageDimension()
 		self.expProp = self.camera.getExposureProp()
+		self.tempProp = self.camera.getTempProp()
 		# self.controlProp = self.camera.getControlProps()
 		self.buffer = np.empty((262144,1), dtype='int')
 
-		# Timer to grab camera data and variab
+		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
 		self.cam_timer.setInterval(100)  # [ms]
+		self.temp_timer = QtCore.QTimer()
+		self.temp_timer.setInterval(1000)  # [ms]
+
 
 		# Time format for logging purposes
 		self.timeFormat = '%Y-%m-%dz%H:%M:%S'
@@ -170,6 +182,7 @@ class AppWindow(Ui_MainWindow):
 		self.imageDisp.updateFig(self.buffer)
 
 		self.connectSlots()
+		self.temp_timer.start()
 
 
 	def connectSlots(self):
@@ -179,7 +192,9 @@ class AppWindow(Ui_MainWindow):
 		self.btn_Abort.clicked.connect(self.btnAbortClicked)
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
+		self.btn_SetTemp.clicked.connect(self.setTempProp)
 		self.cam_timer.timeout.connect(self.updateFig)
+		self.temp_timer.timeout.connect(self.updateTemp)
 
 
 	def btnFullFrameClicked(self):
@@ -240,6 +255,16 @@ class AppWindow(Ui_MainWindow):
 		# Display updates
 		self.logUpdate("Setting frame parameters")
 		self.logUpdate(self.imageDim)
+
+	def setTempProp(self):
+		self.tempProp['set_point'] = self.spb_SetPoint.value()
+		self.tempProp = self.camera.setTempProp(self.tempProp)
+
+	def updateTemp(self):
+		self.tempProp = self.camera.getTempProp()
+		self.spb_ArrayTemp.setValue(self.tempProp['array_temp'])
+		self.edt_TempStatus.setText(AppWindow.d_temp[str(self.tempProp['cooler_state'])])
+
 
 	def setExposureProp(self):
 		self.expProp['exp_time'] = self.spb_ExpTime.value()
