@@ -1,4 +1,5 @@
 #include "camera.h"
+using namespace std;
 
 /*
  * Camera constructor
@@ -16,9 +17,9 @@ Camera::~Camera()
 //    if (cam_data) delete[] cam_data;
 }
 
-void Camera::initializeCamera(string cam_name, bool r_cam)
+void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
 {
-    cam_data = new int[262144];  // Initialize camera data buffer
+    cam_data = new uint16_t[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
     real_cam = r_cam;
     if (!real_cam)
@@ -30,10 +31,15 @@ void Camera::initializeCamera(string cam_name, bool r_cam)
         }
         qDebug() << "Fake camera initialized";
     }
-    _initializeCamera();
+    _initializeCamera(temp);
     b_gblerrorFlag = false;  // Clear error flag
+    qDebug() << "Done initializing";
 }
 
+
+/*
+ * Start camera acquisition thread
+ */
 void Camera::startCamera()
 {
     if (camera_name == "FTT")
@@ -44,9 +50,10 @@ void Camera::startCamera()
 
     if (real_cam)
     {
-
-        t_cam_thread = new CameraThread(0, s_imageDim.size, cam_data);
-        t_cam_thread->startCameraThread();
+        if (t_cam_thread->isRunning())
+            qDebug() << "Already running";
+        else
+            t_cam_thread->startCameraThread();
     }
     else fake_cam_running = true;
 }
@@ -61,6 +68,10 @@ bool Camera::isCameraRunning()
     else return fake_cam_running;
 }
 
+
+/*
+ * Stop camera acquisition thread
+ */
 void Camera::stopCamera()
 {
     if (real_cam)
@@ -74,7 +85,6 @@ void Camera::stopCamera()
 
     }
     else fake_cam_running = false;
-
 }
 
 
@@ -107,16 +117,19 @@ void Camera::shutdownCamera()
 /*
  * Retrieve current camera data buffer
  */
-void Camera::getCameraData(int *buffer)
+void Camera::getCameraData(uint16_t *buffer)
 {
-    if (real_cam) copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
+    if (real_cam)
+    {
+        copy(cam_data, cam_data + s_imageDim.size, buffer);
+    }
     else
     {
         for (int i = 0; i < 262144; i++)
         {
             cam_data[i] = qrand() % ((1000));
         }
-        copy(cam_data, cam_data + (int) s_imageDim.size, buffer);
+        copy(cam_data, cam_data + s_imageDim.size, buffer);
     }
 }
 
@@ -267,7 +280,7 @@ void Camera::setTempParams(TemperatureProperties tempParameters)
 /*
  * Camera initialization
  */
-void Camera::_initializeCamera()
+void Camera::_initializeCamera(int temp)
 {
 
     //if ((camera_name == "FTT") || (camera_name == "NULL") || (camera_name == ""))
@@ -401,7 +414,7 @@ void Camera::_initializeCamera()
     }
 
     // Set cooling point and power on cooler
-    s_tempProp.set_point = -65;
+    s_tempProp.set_point = temp;
     s_tempProp.power_state = true;
 
     _setReadParams();
@@ -411,6 +424,8 @@ void Camera::_initializeCamera()
     _setImageDims();
     _setExposureParams();
     _setTempParams();
+
+    t_cam_thread = new CameraThread(0, s_imageDim.size, cam_data);
     qDebug() << "Intialized" << camera_name << "camera";
 }
 

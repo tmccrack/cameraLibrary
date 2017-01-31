@@ -9,18 +9,19 @@
 
 from libcpp cimport bool
 from libcpp cimport int
+from libc.stdint cimport uint16_t
 from libcpp.string cimport string
 
 
 cdef extern from "./../src/camera.h":
 	cdef cppclass Camera:
 		Camera() except +
-		void initializeCamera(string cam_name, bool real_cam)
+		void initializeCamera(string cam_name, bool real_cam, int temp)
 		void startCamera()
 		bool isCameraRunning()
 		void stopCamera()
 		void shutdownCamera()
-		void getCameraData(int *buffer)
+		void getCameraData(uint16_t *buffer)
 
 		ImageDimension getImageDims()
 		void setImageDims(ImageDimension imageDim)

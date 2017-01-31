@@ -14,19 +14,23 @@ cdef class PyCamera:
 	cdef pycamera.Camera pycam
 	cdef string name
 	cdef bint real_cam
-	cdef int buffer[262144]
+	cdef np.uint16_t buffer[262144]
 
 	# These are 'public' attributes
 	cdef pycamera.ImageDimension s_imageDim
 	cdef pycamera.ExposureProperties s_expProp
 	cdef pycamera.TemperatureProperties s_tempProp
 
-	def __cinit__(self, name = "", real_cam = False):
+	def __cinit__(self, name = "", real_cam = False, temp=-65):
 		self.pycam = pycamera.Camera()
 		self.name = name.encode('utf-8')
 		self.real_cam = real_cam
-		self.pycam.initializeCamera(self.name, self.real_cam)
+		self.pycam.initializeCamera(self.name, self.real_cam, temp)
+		self.buffer = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
+
+	def __del__(self):
 		self.stop()
+		self.shutdown()
 
 	def start(self):
 		self.pycam.startCamera()
@@ -42,10 +46,15 @@ cdef class PyCamera:
 	def running(self):
 		return self.pycam.isCameraRunning()
 
-	def data(self, buffer):
+	def data(self):
+		# cdef np.ndarray[np.uint16_t, mode="c", ndim=1] data16
+		# data16 = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
 		self.pycam.getCameraData(self.buffer)
-		for i in range(len(buffer)-1):
-			buffer[i] = self.buffer[i]
+		return np.asarray(self.buffer, dtype=np.uint16)
+		# print("{}".format(data16[0:200]))
+		# return buffer
+		# for i in range(len(buffer)-1):
+			# buffer[i] = self.buffer[i]
 
 	def getImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()

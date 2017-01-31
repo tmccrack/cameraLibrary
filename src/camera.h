@@ -1,14 +1,13 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-
+#include <cstdint>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QDebug>
 #include "camerathread.h"
 #include "ATMCD32D.H"
 
-using namespace std;
 
 struct TimingProperties{
     int h_shift;
@@ -67,12 +66,12 @@ class Camera
 public:
     Camera();
     ~Camera();
-    void initializeCamera(string cam_name, bool r_cam);
+    void initializeCamera(std::string cam_name, bool r_cam, int temp=-65);
     void shutdownCamera();
     void startCamera();
     void stopCamera();
     bool isCameraRunning();
-    void getCameraData(int *buffer);
+    void getCameraData(uint16_t *buffer);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -101,7 +100,7 @@ public:
 
 
 private:
-    void _initializeCamera();
+    void _initializeCamera(int temp);
     void _setImageDims();
     void _setExposureParams();
     void _setReadParams();
@@ -123,7 +122,7 @@ private:
     bool checkError(unsigned int _ui_err, const char* _cp_func);
 
     QString camera_name;
-    int *cam_data;
+    uint16_t *cam_data;
     unsigned int ui_error;
     bool b_gblerrorFlag;
     bool b_gblAcquireFlag;

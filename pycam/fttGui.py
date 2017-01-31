@@ -156,18 +156,20 @@ class AppWindow(Ui_MainWindow):
 
 		# Initialize camera, data buffer, and data timer
 		name = "FTT"
-		self.camera = pycamera.PyCamera(name, False)
+		self.camera = pycamera.PyCamera(name, True, temp=17)
 		self.imageDim = self.camera.getImageDimension()
 		self.expProp = self.camera.getExposureProp()
 		self.tempProp = self.camera.getTempProp()
 		# self.controlProp = self.camera.getControlProps()
-		self.buffer = np.empty((262144,1), dtype='int')
+		# self.buffer = np.empty((262144,1), dtype='int')
 
 		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
 		self.cam_timer.setInterval(100)  # [ms]
 		self.temp_timer = QtCore.QTimer()
 		self.temp_timer.setInterval(1000)  # [ms]
+
+		# input()
 
 
 		# Time format for logging purposes
@@ -179,11 +181,10 @@ class AppWindow(Ui_MainWindow):
 		self.mpl_vl.addWidget(self.imageDisp)
 		self.mpl_vl.addWidget(toolbar)
 		self.imageDisp.setDimensions(self.imageDim)
-		self.imageDisp.updateFig(self.buffer)
+		# self.imageDisp.updateFig(n)
 
 		self.connectSlots()
 		self.temp_timer.start()
-
 
 	def connectSlots(self):
 		self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
@@ -233,8 +234,7 @@ class AppWindow(Ui_MainWindow):
 
 
 	def updateFig(self):
-		self.camera.data(self.buffer[0:self.imageDim['size']])
-		self.imageDisp.updateFig(self.buffer[0:self.imageDim['size']])
+		self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
 
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict
@@ -267,7 +267,7 @@ class AppWindow(Ui_MainWindow):
 
 
 	def setExposureProp(self):
-		self.expProp['exp_time'] = self.spb_ExpTime.value()
+		self.expProp['exp_time'] = self.spb_ExpTime.value() / 1000.0
 		self.expProp['em_gain'] = self.spb_EMGain.value()
 		# Pass internal exp. dict to camrea, camera returns actual exp. settings
 		self.expProp = self.camera.setExposureProp(self.expProp)
