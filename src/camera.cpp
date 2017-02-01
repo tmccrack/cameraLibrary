@@ -14,7 +14,7 @@ Camera::Camera()
  */
 Camera::~Camera()
 {
-//    if (cam_data) delete[] cam_data;
+    if (cam_data) delete[] cam_data;
 }
 
 void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
@@ -53,7 +53,7 @@ void Camera::startCamera()
         if (t_cam_thread->isRunning())
             qDebug() << "Already running";
         else
-            t_cam_thread->startCameraThread();
+            t_cam_thread->startCameraThread((int) s_imageDim.size);
     }
     else fake_cam_running = true;
 }
@@ -425,7 +425,7 @@ void Camera::_initializeCamera(int temp)
     _setExposureParams();
     _setTempParams();
 
-    t_cam_thread = new CameraThread(0, s_imageDim.size, cam_data);
+    t_cam_thread = new CameraThread(0, cam_data);
     qDebug() << "Intialized" << camera_name << "camera";
 }
 

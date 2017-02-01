@@ -7,6 +7,7 @@
 #
 cimport pycamera
 cimport numpy as np
+from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 import numpy as np
 import sys
 
@@ -15,6 +16,7 @@ cdef class PyCamera:
 	cdef string name
 	cdef bint real_cam
 	cdef np.uint16_t buffer[262144]
+	# cdef np.uint16_t* buffer
 
 	# These are 'public' attributes
 	cdef pycamera.ImageDimension s_imageDim
@@ -27,16 +29,30 @@ cdef class PyCamera:
 		self.real_cam = real_cam
 		self.pycam.initializeCamera(self.name, self.real_cam, temp)
 		self.buffer = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
+		# self.buffer = <np.uint16_t*> PyMem_Malloc(sizeof(np.uint16_t))  # Initialize to full frame
+		# if not self.buffer:
+		# 	raise MemoryError()
 
 	def __del__(self):
 		self.stop()
 		self.shutdown()
 
+	def __dealloc__(self):
+		PyMem_Free(self.buffer)
+
 	def start(self):
+		# Set up data array and start camera acquisition
+		# print("Size: {}".format(self.s_imageDim.size))
+		# mem = <np.uint16_t*> PyMem_Realloc(self.buffer, self.s_imageDim.size * sizeof(np.uint16_t))
+		# if not mem:
+		# 	raise MemoryError()
+		# self.buffer = mem
+		# print("Buffer size: {}".format(sizeof(self.buffer) / sizeof(np.uint16_t)))
 		self.pycam.startCamera()
 		return self.running()
 
 	def stop(self):
+		# Stop camera acquisition and delete data array
 		self.pycam.stopCamera()
 		return self.running()
 
@@ -50,6 +66,7 @@ cdef class PyCamera:
 		# cdef np.ndarray[np.uint16_t, mode="c", ndim=1] data16
 		# data16 = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
 		self.pycam.getCameraData(self.buffer)
+		# return np.empty((self.s_imageDim.size), dtype=np.uint16)
 		return np.asarray(self.buffer, dtype=np.uint16)
 		# print("{}".format(data16[0:200]))
 		# return buffer
@@ -61,6 +78,7 @@ cdef class PyCamera:
 		return self.s_imageDim
 
 	def setImageDimension(self, imageDim):
+		# Sets image dimensions as perscribed, program camera, return actual dimensions
 		self.s_imageDim.h_start = imageDim['h_start']
 		self.s_imageDim.v_start = imageDim['v_start']
 		self.s_imageDim.h_end = imageDim['h_end']
