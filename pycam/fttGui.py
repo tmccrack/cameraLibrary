@@ -167,7 +167,11 @@ class AppWindow(Ui_MainWindow):
 		self.cam_timer = QtCore.QTimer()
 		self.cam_timer.setInterval(100)  # [ms]
 		self.temp_timer = QtCore.QTimer()
-		self.temp_timer.setInterval(1000)  # [ms]
+		self.temp_timer.setInterval(5000)  # [ms]
+
+		# Make set point same as initialized value, to avoid confusion
+		self.spb_SetPoint.setValue(self.tempProp['set_point'])
+
 
 		# input()
 
@@ -261,13 +265,13 @@ class AppWindow(Ui_MainWindow):
 		self.tempProp = self.camera.setTempProp(self.tempProp)
 
 	def updateTemp(self):
-		self.tempProp = self.camera.getTempProp()
+		self.tempProp = self.camera.getTempArray()
 		self.spb_ArrayTemp.setValue(self.tempProp['array_temp'])
 		self.edt_TempStatus.setText(AppWindow.d_temp[str(self.tempProp['cooler_state'])])
 
 
 	def setExposureProp(self):
-		self.expProp['exp_time'] = self.spb_ExpTime.value() / 1000.0
+		self.expProp['exp_time'] = self.spb_ExpTime.value()
 		self.expProp['em_gain'] = self.spb_EMGain.value()
 		# Pass internal exp. dict to camrea, camera returns actual exp. settings
 		self.expProp = self.camera.setExposureProp(self.expProp)
