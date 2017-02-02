@@ -33,12 +33,9 @@ cdef class PyCamera:
 		# if not self.buffer:
 		# 	raise MemoryError()
 
-	def __del__(self):
+	def __dealloc__(self):
 		self.stop()
 		self.shutdown()
-
-	def __dealloc__(self):
-		PyMem_Free(self.buffer)
 
 	def start(self):
 		# Set up data array and start camera acquisition
