@@ -73,41 +73,24 @@ class ImageCanvas(FigureCanvas):
 		"""
 		self.ftt_image.set_data(buffer.reshape(ImageCanvas.iDims['v_dim'],
 											ImageCanvas.iDims['h_dim']))
-		# self.ftt_image.set_data(np.random.rand(ImageCanvas.iDims['h_dim'],
-		# 									   ImageCanvas.iDims['v_dim']))
-		# self.axes_ftt.imshow(buffer.reshape(ImageCanvas.iDims['h_dim'],
-		# 									ImageCanvas.iDims['v_dim']),
-		# 							aspect='auto', 
-		# 							interpolation='none', 
-		# 							cmap='gray')
 		self.ftt_image.set_clim(vmin=buffer.min(), vmax=buffer.max())
+
+		# Summation in horizontal direction
+		print("Max: {}".format(buffer.max()))
 		self.hsum_lines.set_data(np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],
 														ImageCanvas.iDims['h_dim']), 
-										 axis=1), self.ylims)
+										 axis=1)[::-1], self.ylims)
 		self.axes_hsum.relim()
 		self.axes_hsum.autoscale_view()
 		lab = self.axes_hsum.get_xticks()
 		self.axes_hsum.set_xticklabels([lab[0], lab[1], lab[2]], rotation=75)
 
-		# self.axes_vsum.plot(self.ylims, np.sum(buffer.reshape(
-		# 								ImageCanvas.iDims['h_dim'],
-		# 								ImageCanvas.iDims['v_dim']), 
-		# 							axis=0), 
-		# 						color='w', 
-		# 						linewidth=0.5)
+		# Summation in vertical direction
 		self.vsum_lines.set_data(self.xlims, np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],
 																	ImageCanvas.iDims['h_dim']), 
 													 axis=0))
 		self.axes_vsum.relim()
 		self.axes_vsum.autoscale_view()
-		# self.axes_hsum.plot(np.sum(buffer.reshape(
-		# 								ImageCanvas.iDims['h_dim'],
-		# 								ImageCanvas.iDims['v_dim']), 
-		# 							axis=1), 
-		# 						self.xlims, 
-		# 						color='w', 
-		# 						linewidth=0.5)
-		# self.axes_err.plot(np.linspace(0,49,50), np.random.rand(50,1), 'g')
 		self.draw()
 
 
@@ -165,25 +148,26 @@ class AppWindow(Ui_MainWindow):
 
 		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
-		self.cam_timer.setInterval(100)  # [ms]
+		self.cam_timer.setInterval(500)  # [ms]
 		self.temp_timer = QtCore.QTimer()
-		self.temp_timer.setInterval(1000)  # [ms]
+		self.temp_timer.setInterval(5000)  # [ms]
 
-		# input()
-
+		# Make set point same as initialized value, to avoid confusion
+		self.spb_SetPoint.setValue(self.tempProp['set_point'])
 
 		# Time format for logging purposes
 		self.timeFormat = '%Y-%m-%dz%H:%M:%S'
 
-		# fig = Figure(edgecolor='k')
+		# Instantiate class, add to gui, initialize display
 		self.imageDisp = ImageCanvas(parent=self.mpl_window)
 		toolbar = NavigationToolbar(self.imageDisp, self.mpl_window, coordinates=True)
 		self.mpl_vl.addWidget(self.imageDisp)
 		self.mpl_vl.addWidget(toolbar)
 		self.imageDisp.setDimensions(self.imageDim)
-		# self.imageDisp.updateFig(n)
 
 		self.connectSlots()
+		# Click setframe to initialize data array in cython to avoid 
+		# self.btn_SetFrame.click()
 		self.temp_timer.start()
 
 	def connectSlots(self):
@@ -234,6 +218,7 @@ class AppWindow(Ui_MainWindow):
 
 
 	def updateFig(self):
+		# Update image dispaly with newest data array, fires with timer timeeout
 		self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
 
 	def btnSetFrameClicked(self):
@@ -257,18 +242,20 @@ class AppWindow(Ui_MainWindow):
 		self.logUpdate(self.imageDim)
 
 	def setTempProp(self):
+		# Set internal temp dict, pass to camera, camera return actual values
 		self.tempProp['set_point'] = self.spb_SetPoint.value()
 		self.tempProp = self.camera.setTempProp(self.tempProp)
 
 	def updateTemp(self):
-		self.tempProp = self.camera.getTempProp()
+		# Update temp dict, set appropriate values
+		self.tempProp = self.camera.getTempArray()
 		self.spb_ArrayTemp.setValue(self.tempProp['array_temp'])
 		self.edt_TempStatus.setText(AppWindow.d_temp[str(self.tempProp['cooler_state'])])
 
-
 	def setExposureProp(self):
-		self.expProp['exp_time'] = self.spb_ExpTime.value() / 1000.0
+		self.expProp['exp_time'] = self.spb_ExpTime.value()
 		self.expProp['em_gain'] = self.spb_EMGain.value()
+
 		# Pass internal exp. dict to camrea, camera returns actual exp. settings
 		self.expProp = self.camera.setExposureProp(self.expProp)
 		self.spb_ExpTime.setValue(self.expProp['exp_time'])
@@ -284,17 +271,4 @@ if __name__ == '__main__':
 	ui = AppWindow(MainWindow)
 	MainWindow.show()
 	sys.exit(app.exec_())
-	
-
-
-# def setupImageDisplay(self):
-	# 	fig = Figure(edgecolor='k')
-	# 	matplotlib.rcParams.update({'font.size': 10})
-
-	# 	self.axes_err = fig.add_axes([0.075, 0.05, 0.775, 0.1], axis_bgcolor='k')  # error plot
-	# 	self.axes_ftt = fig.add_axes([0.075, 0.175, 0.775, 0.675], frame_on=True)  # FTT image frame
-	# 	self.axes_vhist = fig.add_axes([0.075, 0.875, 0.775, 0.1], axis_bgcolor='k')  # vertical histogrom
-	# 	self.axes_hhist = fig.add_axes([0.875, 0.175, 0.1, 0.675], axis_bgcolor='k')  # horizontal histogram
-
-	# 	self.buffer = np.empty((self.imageDim['size'], 1), dtype='int')
 	

@@ -6,11 +6,12 @@
 
 #include "camerathread.h"
 
-CameraThread::CameraThread(QObject *parent, int i_size, uint16_t *image_buffer) : QThread(parent)
+/*
+ * Constructor
+ */
+CameraThread::CameraThread(QObject *parent, uint16_t *image_buffer) : QThread(parent)
 {
     // Create copy data buffer and win32 event handle
-    image_size = i_size;
-    cam_data = new uint16_t[image_size];
     cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     //TODO: Ensure imageBuffer is correct size???
@@ -18,7 +19,9 @@ CameraThread::CameraThread(QObject *parent, int i_size, uint16_t *image_buffer) 
     abort = true;
 }
 
-
+/*
+ * Destructor
+ */
 CameraThread::~CameraThread()
 {
     mutex.lock();
@@ -26,14 +29,18 @@ CameraThread::~CameraThread()
     mutex.unlock();
 
     wait();  // Wait for run() to finish
+    if (cam_data) delete[] cam_data;
 }
 
 
 /*
  * Sets camera thread properties and starts the acquistion loop
  */
-void CameraThread::startCameraThread()
+void CameraThread::startCameraThread(int i_size)
 {
+    // Create copy data buffer
+    image_size = i_size;
+    cam_data = new uint16_t[image_size];
     if (isRunning())
     {
         mutex.lock();
@@ -56,6 +63,7 @@ void CameraThread::startCameraThread()
     }
     qDebug() << "Camera thread started." << endl;
 }
+
 
 /*
  * Function to set abort flag
@@ -91,7 +99,8 @@ void CameraThread::run()
             // Camera triggered event, get data
             mutex.lock();
             ResetEvent(cam_event);
-            GetMostRecentImage16((WORD*) cam_data, image_size);
+            and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
+            checkError(and_error, "GetMostRecentImage16");
             std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();
         }

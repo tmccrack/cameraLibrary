@@ -24,9 +24,9 @@ class CameraThread : public QThread
 {
 
 public:
-    CameraThread(QObject *parent = 0, int i_size = 0, uint16_t *image_buffer = 0);
+    CameraThread(QObject *parent = 0, uint16_t *image_buffer = 0);
     ~CameraThread();
-    void startCameraThread();
+    void startCameraThread(int i_size = 0);
     void abortCameraThread();
 
 protected:
