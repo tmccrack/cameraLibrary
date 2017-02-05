@@ -7,16 +7,51 @@
 #
 cimport pycamera
 cimport numpy as np
-from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 import numpy as np
-import sys
+
+cdef class SClient:
+	cdef pycamera.SocketClient client
+	cdef string conn_type
+
+	def __cinit__(self, conn_type="Single"):
+		self.client = pycamera.SocketClient()
+		self.conn_type = conn_type.encode('utf-8')
+
+	def sendData(self, x, y):
+		if self.conn_type == 'Single':
+			if (self.client.openConnection(self.conn_type)):
+				self.client.sendData(x, y)
+				self.client.closeConnection()
+				return True
+			else:
+				return False
+		else:
+			print("Connection type not supported")
+			return False
+
+	cdef _getData(self):
+		cdef float *x
+		cdef float *y
+		self.client.openConnection("Values".encode('utf-8'))
+		if self.client.isConnected():
+			self.client.getData(x, y)
+			self.client.closeConnection()
+			print("X: {}\tY: {}".format(x[0], y[0]))
+		else:
+			pass
+		
+		return np.asarray([x[0], y[0]], dtype=np.float32)
+
+	def getData(self):
+		arr = self._getData()
+		return arr
+
 
 cdef class PyCamera:
 	cdef pycamera.Camera pycam
 	cdef string name
 	cdef bint real_cam
 	cdef np.uint16_t buffer[262144]
-	# cdef np.uint16_t* buffer
 
 	# These are 'public' attributes
 	cdef pycamera.ImageDimension s_imageDim
@@ -29,22 +64,13 @@ cdef class PyCamera:
 		self.real_cam = real_cam
 		self.pycam.initializeCamera(self.name, self.real_cam, temp)
 		self.buffer = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
-		# self.buffer = <np.uint16_t*> PyMem_Malloc(sizeof(np.uint16_t))  # Initialize to full frame
-		# if not self.buffer:
-		# 	raise MemoryError()
 
 	def __dealloc__(self):
 		self.stop()
 		self.shutdown()
+		self.buffer
 
 	def start(self):
-		# Set up data array and start camera acquisition
-		# print("Size: {}".format(self.s_imageDim.size))
-		# mem = <np.uint16_t*> PyMem_Realloc(self.buffer, self.s_imageDim.size * sizeof(np.uint16_t))
-		# if not mem:
-		# 	raise MemoryError()
-		# self.buffer = mem
-		# print("Buffer size: {}".format(sizeof(self.buffer) / sizeof(np.uint16_t)))
 		self.pycam.startCamera()
 		return self.running()
 
@@ -60,15 +86,8 @@ cdef class PyCamera:
 		return self.pycam.isCameraRunning()
 
 	def data(self):
-		# cdef np.ndarray[np.uint16_t, mode="c", ndim=1] data16
-		# data16 = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
 		self.pycam.getCameraData(self.buffer)
-		# return np.empty((self.s_imageDim.size), dtype=np.uint16)
 		return np.asarray(self.buffer, dtype=np.uint16)
-		# print("{}".format(data16[0:200]))
-		# return buffer
-		# for i in range(len(buffer)-1):
-			# buffer[i] = self.buffer[i]
 
 	def getImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()
@@ -113,4 +132,6 @@ cdef class PyCamera:
 	# 	self.pycam.getHandle(self.phandle)
 	# 	print("Got handle")
 	# 	return self.phandle[0]
+
+ 
 

@@ -9,8 +9,18 @@
 
 from libcpp cimport bool
 from libcpp cimport int
+from libcpp cimport float
 from libc.stdint cimport uint16_t
 from libcpp.string cimport string
+
+cdef extern from "./../src/socketclient.h":
+	cdef cppclass SocketClient:
+		SocketClient() except+ 
+		bool openConnection(string conn_type)
+		bool isConnected()
+		void closeConnection()
+		void sendData(float x, float y)
+		void getData(float *x, float *y)
 
 
 cdef extern from "./../src/camera.h":
@@ -79,3 +89,5 @@ cdef extern from "./../src/camera.h":
 	# 	int v_shift
 	# 	int dma_images
 	# 	float dma_accum_time
+
+

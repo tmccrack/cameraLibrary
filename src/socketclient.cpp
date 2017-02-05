@@ -1,11 +1,11 @@
 #include <iostream>
 #include "socketclient.h"
-
+using namespace std;
 
 /*
  * Constructor for socket client class
  */
-SocketClient::SocketClient(QObject *parent) : QObject(parent)
+SocketClient::SocketClient()
 {
     socket = new QTcpSocket;
     data = new QByteArray;
@@ -27,7 +27,7 @@ SocketClient::~SocketClient()
 /*
  * Function to connect to specified client
  */
-void SocketClient::openConnection(QString conn_type)
+bool SocketClient::openConnection(std::string conn_type)
 {
     //connect
     socket->connectToHost(host, port);
@@ -36,7 +36,7 @@ void SocketClient::openConnection(QString conn_type)
     {
         qDebug() << "Connected";
         QByteArray temp;
-        temp.append(conn_type);
+        temp.append(QString::fromStdString(conn_type));
         socket->write(QByteArray::number(temp.size()), 2);
         socket->flush();
         socket->waitForBytesWritten(100);
@@ -49,6 +49,7 @@ void SocketClient::openConnection(QString conn_type)
     {
         qDebug() << "Cannot connect";
     }
+    return connected;
 }
 
 
@@ -82,6 +83,36 @@ void SocketClient::sendData(float x, float y)
         socket->close();  // Cleanup
         qDebug() << "Not connected";
         connected = false;
+    }
+
+}
+
+void SocketClient::getData(float *x, float *y)
+{
+    if(connected)
+    {
+        bool *ok;
+        QByteArray data;
+        if (socket->waitForReadyRead())
+        {
+            socket->readAll();
+            if (socket->waitForReadyRead())
+            {
+                data = socket->readAll();
+                QList<QByteArray> data_list = data.split(';');
+                *x = data_list[0].toFloat(ok);
+                if(!ok) qDebug() << "Value conversion error: " << data_list[0];
+
+                *y = data_list[1].toFloat(ok);
+                if(!ok) qDebug() << "Value conversion error: " << data_list[1];
+            }
+            else qDebug() << "Read error";
+        }
+        else qDebug() << "Handshake failed";
+    }
+    else
+    {
+        qDebug() << "Not connected";
     }
 
 }

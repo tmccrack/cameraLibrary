@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <math.h>
 #include <iostream>
+#include "socketclient.h"
 #include "ATMCD32D.h"
 
 #define PI 3.14159265
@@ -44,6 +45,7 @@ private:
     uint16_t *cam_data;
     uint16_t *copy_data;
     int *status;
+
 };
 
 

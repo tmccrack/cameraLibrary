@@ -3,19 +3,20 @@
 
 #include <QtCore/QtCore>
 #include <QtCore/QObject>
-#include <QtNetwork/QTcpSocket>
+#include <QtCore/QString>
 #include <QtCore/QDebug>
+#include <QtNetwork/QTcpSocket>
+#include <QtCore/QList>
 
-class SocketClient : public QObject
+class SocketClient
 {
-    Q_OBJECT
-
 public:
-    SocketClient(QObject *parent = 0);
+    SocketClient();
     ~SocketClient();
-    void openConnection(QString conn_type);
+    bool openConnection(std::string conn_type);
     void reopenConnection();
     void sendData(float x, float y);
+    void getData(float *x, float *y);
     void closeConnection();
     bool isConnected();
 

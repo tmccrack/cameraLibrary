@@ -55,15 +55,13 @@ class ImageCanvas(FigureCanvas):
 		self.ylims = np.linspace(0, 49, 50)
 		self.axes_vsum.relim()
 		self.axes_vsum.autoscale_view()
-		# self.axes_vsum.set_autoscaley_on(True)
+
 
 		self.axes_hsum.relim()
 		self.axes_hsum.autoscale_view()
-		# self.axes_hsum.set_autoscalex_on(True)
 
 		self.vsum_lines, = self.axes_vsum.plot(self.ylims, np.random.rand(50,1), color='r', linewidth=0.5)
 		self.hsum_lines, = self.axes_hsum.plot(np.random.rand(50,1), self.xlims, color='g', linewidth=0.5)
-		# self.axes_hsum.set_autoscalex_on(True)
 
 
 
@@ -76,7 +74,6 @@ class ImageCanvas(FigureCanvas):
 		self.ftt_image.set_clim(vmin=buffer.min(), vmax=buffer.max())
 
 		# Summation in horizontal direction
-		print("Max: {}".format(buffer.max()))
 		self.hsum_lines.set_data(np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],
 														ImageCanvas.iDims['h_dim']), 
 										 axis=1)[::-1], self.ylims)
@@ -122,6 +119,82 @@ class ImageCanvas(FigureCanvas):
 		self.axes_vsum.set_xticklabels([], visible=False)
 
 
+class Mirror(QtWidgets.QDialog):
+	"""
+	Dialog window for manually moving mirror
+	"""
+	def __init__(self, parent=None):
+		super(Mirror, self).__init__()
+		# Set up the window
+		self.setWindowTitle("Mirror control")
+		self.btn_Ch0 = QtWidgets.QPushButton("Ch. 0", parent=self)
+		self.btn_Ch0Plus = QtWidgets.QPushButton("+", parent=self)
+		self.btn_Ch0Minus = QtWidgets.QPushButton("-", parent=self)
+		self.btn_Ch1 = QtWidgets.QPushButton("Ch. 1", parent=self)
+		self.btn_Ch1Plus = QtWidgets.QPushButton("+", parent=self)
+		self.btn_Ch1Minus = QtWidgets.QPushButton("-", parent=self)
+		self.spb_Ch0 = QtWidgets.QDoubleSpinBox(self)
+		self.spb_Ch0.setRange(0.0, 10.0)
+		self.spb_Ch0.setDecimals(3)
+		self.spb_Ch1 = QtWidgets.QDoubleSpinBox(self)
+		self.spb_Ch1.setRange(0.0, 10.0)
+		self.spb_Ch1.setDecimals(3)
+		gl = QtWidgets.QGridLayout(self)
+		gl.addWidget(self.spb_Ch0, 0, 0)
+		gl.addWidget(self.spb_Ch1, 0, 1)
+		gl.addWidget(self.btn_Ch0Plus, 1, 0)
+		gl.addWidget(self.btn_Ch0, 2, 0)
+		gl.addWidget(self.btn_Ch0Minus, 3, 0)
+		gl.addWidget(self.btn_Ch1Plus, 1, 1)
+		gl.addWidget(self.btn_Ch1, 2, 1)
+		gl.addWidget(self.btn_Ch1Minus, 3, 1)
+
+		# Create client
+		self.client = pycamera.SClient(conn_type='Single')
+		self.connectSlots()
+
+	def connectSlots(self):
+		self.btn_Ch0.clicked.connect(self.moveMirror)
+		self.btn_Ch1.clicked.connect(self.moveMirror)
+		self.btn_Ch0Plus.clicked.connect(self.jogUpCh0)
+		self.btn_Ch0Minus.clicked.connect(self.jogDownCh0)
+		self.btn_Ch1Plus.clicked.connect(self.jogUpCh1)
+		self.btn_Ch1Minus.clicked.connect(self.jogDownCh1)
+
+	def moveMirror(self):
+		if self.client.sendData(self.spb_Ch0.value(),
+								self.spb_Ch1.value()):
+			self.spb_Ch0.setValue(self.spb_Ch0.value())
+			self.spb_Ch1.setValue(self.spb_Ch1.value())
+		else:
+			print("Connection error")
+			# Data didn't transmit, try to update, likely a connection issue
+			#try:
+			#	arr = self.client.getData()
+			#		self.spb_Ch0.setValue(arr[0])
+			#		self.spb_Ch1.setValue(arr[1])
+
+
+	def jogUpCh0(self):
+		self.spb_Ch0.setValue(self.spb_Ch0.value() + 0.01)
+		self.moveMirror()
+
+	def jogUpCh1(self):
+		self.spb_Ch1.setValue(self.spb_Ch1.value() + 0.01)
+		self.moveMirror()
+
+	def jogDownCh0(self):
+		self.spb_Ch0.setValue(self.spb_Ch0.value() - 0.01)
+		self.moveMirror()
+
+	def jogDownCh1(self):
+		self.spb_Ch1.setValue(self.spb_Ch1.value() - 0.01)
+		self.moveMirror()
+
+
+	
+
+
 class AppWindow(Ui_MainWindow):
 	"""
 	Main window class, inherits Ui
@@ -144,7 +217,6 @@ class AppWindow(Ui_MainWindow):
 		self.expProp = self.camera.getExposureProp()
 		self.tempProp = self.camera.getTempProp()
 		# self.controlProp = self.camera.getControlProps()
-		# self.buffer = np.empty((262144,1), dtype='int')
 
 		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
@@ -178,6 +250,7 @@ class AppWindow(Ui_MainWindow):
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.btn_SetTemp.clicked.connect(self.setTempProp)
+		self.btn_Mirror.clicked.connect(self.btnMirrorClicked)
 		self.cam_timer.timeout.connect(self.updateFig)
 		self.temp_timer.timeout.connect(self.updateTemp)
 
@@ -217,10 +290,7 @@ class AppWindow(Ui_MainWindow):
 		else: self.logUpdate("Exposure sequence already STOPPED")
 
 
-	def updateFig(self):
-		# Update image dispaly with newest data array, fires with timer timeeout
-		self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
-
+	
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict
 		self.imageDim['h_start'] = self.spb_XOffs.value()
@@ -240,6 +310,13 @@ class AppWindow(Ui_MainWindow):
 		# Display updates
 		self.logUpdate("Setting frame parameters")
 		self.logUpdate(self.imageDim)
+
+	def btnMirrorClicked(self):
+		pass
+
+	def updateFig(self):
+		# Update image dispaly with newest data array, fires with timer timeeout
+		self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
 
 	def setTempProp(self):
 		# Set internal temp dict, pass to camera, camera return actual values
@@ -269,6 +346,9 @@ if __name__ == '__main__':
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
 	ui = AppWindow(MainWindow)
+	# app.setMainWidget(MainWindow)
+	mir = Mirror()
+	mir.show()
 	MainWindow.show()
 	sys.exit(app.exec_())
 	
