@@ -12,9 +12,13 @@ import numpy as np
 cdef class SClient:
 	cdef pycamera.SocketClient client
 	cdef string conn_type
+	cdef int port
+	cdef string host
 
 	def __cinit__(self, conn_type="Single"):
-		self.client = pycamera.SocketClient()
+		self.port = 6666
+		self.host = "172.28.139.109".encode('utf-8')
+		self.client = pycamera.SocketClient(self.port, self.host)
 		self.conn_type = conn_type.encode('utf-8')
 
 	def sendData(self, x, y):
@@ -56,7 +60,11 @@ cdef class PyCamera:
 	# These are 'public' attributes
 	cdef pycamera.ImageDimension s_imageDim
 	cdef pycamera.ExposureProperties s_expProp
+	cdef pycamera.ReadProperties s_readProp
+	cdef pycamera.TimingProperties s_timingProp
+	cdef pycamera.ShutterProperties s_shutterProp
 	cdef pycamera.TemperatureProperties s_tempProp
+	cdef pycamera.Gain s_gain
 
 	def __cinit__(self, name = "", real_cam = False, temp=-65):
 		self.pycam = pycamera.Camera()
@@ -70,8 +78,8 @@ cdef class PyCamera:
 		self.shutdown()
 		self.buffer
 
-	def start(self):
-		self.pycam.startCamera()
+	def start(self, servo = False):
+		self.pycam.startCamera(servo)
 		return self.running()
 
 	def stop(self):
@@ -89,6 +97,8 @@ cdef class PyCamera:
 		self.pycam.getCameraData(self.buffer)
 		return np.asarray(self.buffer, dtype=np.uint16)
 
+	#
+	# Image dimension getter/setter
 	def getImageDimension(self):
 		self.s_imageDim = self.pycam.getImageDims()
 		return self.s_imageDim
@@ -104,6 +114,8 @@ cdef class PyCamera:
 		self.pycam.setImageDims(self.s_imageDim)
 		return self.getImageDimension()
 
+	#
+	# Exposure properites getter/setter
 	def getExposureProp(self):
 		self.s_expProp = self.pycam.getExposureParams()
 		return self.s_expProp
@@ -114,6 +126,49 @@ cdef class PyCamera:
 		self.pycam.setExposureParams(self.s_expProp)
 		return self.getExposureProp()
 
+	#
+	# Read properties getter/setter
+	def getReadProp(self):
+		self.s_readProp = self.pycam.getReadParams()
+		return self.s_readProp
+
+	def setReadProp(self, readProp):
+		self.s_readProp.read_mode = readProp['read_mode']
+		self.s_readProp.acq_mode = readProp['acq_mode']
+		self.s_readProp.frame_transfer = readProp['frame_transfer']
+		self.s_readProp.output_amp = readProp['output_amp']
+		self.pycam.setReadParams(self.s_readProp)
+		return self.getReadProp()
+
+	#
+	# Timing properties getter/setter
+	def getTimingProp(self):
+		self.s_timingProp = self.pycam.getTimingParams()
+		return self.s_timingProp
+
+	def setTimingProp(self, timingProp):
+		self.s_timingProp.h_shift = timingProp['h_shift']
+		self.s_timingProp.v_shift = timingProp['v_shift']
+		self.s_timingProp.dma_images = timingProp['dma_images']
+		self.s_timingProp.dma_accum_time = timingProp['dma_accum_time']
+		self.pycam.setTimingParams(self.s_timingProp)
+		return self.getTimingProp()
+
+	#
+	# Shutter properties getter/setter
+	def getShutterProp(self):
+		self.s_shutterProp = self.pycam.getShutterParams()
+		return self.s_shutterProp
+
+	def setShutterProp(self, shutterProp):
+		self.s_shutterProp.type = shutterProp['type']
+		self.s_shutterProp.mode = shutterProp['mode']
+		self.s_shutterProp.open_time = shutterProp['open_time']
+		self.s_shutterProp.close_time = shutterProp['close_time']
+		return self.getShutterProp()
+
+	#
+	# Temperature properties getter/setter
 	def getTempProp(self):
 		self.s_tempProp = self.pycam.getTempParams()
 		return self.s_tempProp
@@ -127,6 +182,19 @@ cdef class PyCamera:
 		self.s_tempProp.power_state = tempProp['power_state']
 		self.pycam.setTempParams(self.s_tempProp)
 		return self.getTempProp()
+
+	def getGain(self):
+		self.s_gain = self.pycam.getGain()
+		return self.s_gain
+
+	def setGain(self, gain, rotation):
+		self.s_gain.kp = gain['kp']
+		self.s_gain.ki = gain['ki']
+		self.s_gain.kd = gain['kd']
+		self.s_gain.dt = gain['dt']
+		self.pycam.setGain(self.s_gain)
+		self.pycam.setRotation(rotation)
+		return self.getGain()
 
 	# def Handle(self):
 	# 	self.pycam.getHandle(self.phandle)

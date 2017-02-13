@@ -15,7 +15,8 @@ from libcpp.string cimport string
 
 cdef extern from "./../src/socketclient.h":
 	cdef cppclass SocketClient:
-		SocketClient() except+ 
+		SocketClient() except + 
+		SocketClient(int port, string host) except +
 		bool openConnection(string conn_type)
 		bool isConnected()
 		void closeConnection()
@@ -27,7 +28,7 @@ cdef extern from "./../src/camera.h":
 	cdef cppclass Camera:
 		Camera() except +
 		void initializeCamera(string cam_name, bool real_cam, int temp)
-		void startCamera()
+		void startCamera(bool servo)
 		bool isCameraRunning()
 		void stopCamera()
 		void shutdownCamera()
@@ -39,12 +40,23 @@ cdef extern from "./../src/camera.h":
 		ExposureProperties getExposureParams()
 		void setExposureParams(ExposureProperties expProp)
 
+		ReadProperties getReadParams()
+		void setReadParams(ReadProperties readProp)
+
+		TimingProperties getTimingParams()
+		void setTimingParams(TimingProperties timeProp)
+
+		ShutterProperties getShutterParams()
+		void setShutterParams(ShutterProperties shutProp)
+
 		TemperatureProperties getTempParams()
 		TemperatureProperties getTempArray()
 		void setTempParams(TemperatureProperties tempProp)
 
-		ShutterProperties getShutterParams()
-		void setShutterParams(ShutterProperties shutProp)
+		Gain getGain()
+		void setGain(Gain gain)
+		float getRotation()
+		void setRotation(float rot)
 		
 
 	cdef struct ImageDimension:
@@ -64,13 +76,17 @@ cdef extern from "./../src/camera.h":
 		int em_gain_high
 		int em_gain_low
 
-	cdef struct TemperatureProperties:
-		int set_point
-		int array_temp
-		int temp_high
-		int temp_low
-		bool power_state
-		unsigned int cooler_state
+	cdef struct ReadProperties:
+		int read_mode
+		int acq_mode
+		int frame_transfer
+		int output_amp
+
+	cdef struct TimingProperties:
+		int h_shift
+		int v_shift
+		int dma_images
+		float dma_accum_time
 
 	cdef struct ShutterProperties:
 		int type
@@ -78,16 +94,20 @@ cdef extern from "./../src/camera.h":
 		int open_time
 		int close_time
 
-	# cdef struct ReadProperties:
-	# 	int read_mode
-	# 	int acq_mode
-	# 	int frame_transfer
-	# 	int output_amp
+	cdef struct TemperatureProperties:
+		int set_point
+		int array_temp
+		int temp_high
+		int temp_low
+		bool power_state
+		unsigned int cooler_state	
 
-	# cdef struct TimingProperties
-	# 	int h_shift
-	# 	int v_shift
-	# 	int dma_images
-	# 	float dma_accum_time
+	cdef struct Gain:
+		float kp
+		float ki
+		float kd
+		float dt
 
+
+	
 
