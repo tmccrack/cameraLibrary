@@ -285,7 +285,9 @@ void Camera::setTempParams(TemperatureProperties tempParameters)
 }
 
 
-
+/*
+ * Getter/setters for servo
+ */
 Gain Camera::getGainX()
 {
     s_gainxProp = t_cam_thread->getServoGainX();
@@ -303,6 +305,16 @@ void Camera::setGain(Gain gainx, Gain gainy)
     s_gainxProp = gainx;
     s_gainyProp = gainy;
     t_cam_thread->setServoGain(s_gainxProp, s_gainyProp);
+}
+
+void Camera::getTargetCoords(float *x, float *y)
+{
+    t_cam_thread->getServoTargetCoords(x, y);
+}
+
+void Camera::setTargetCoords(float x, float y)
+{
+    t_cam_thread->setServoTargetCoords(x, y);
 }
 
 float Camera::getRotation()

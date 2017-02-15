@@ -545,26 +545,6 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QSpinBox" name="spb_XFib">
-           <property name="toolTip">
-            <string>Target horizontal location for control algorithm</string>
-           </property>
-           <property name="buttonSymbols">
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QSpinBox" name="spb_YFib">
-           <property name="toolTip">
-            <string>Target vertical location for control algorithm</string>
-           </property>
-           <property name="buttonSymbols">
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
           <widget class="QLabel" name="label_I">
            <property name="text">
@@ -651,6 +631,38 @@
           <widget class="QPushButton" name="btn_Gain">
            <property name="text">
             <string>Set Gain</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="spb_XFib">
+           <property name="toolTip">
+            <string>Target horizontal location for control algorithm</string>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>512.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QDoubleSpinBox" name="spb_YFib">
+           <property name="toolTip">
+            <string>Target vertical location for control algorithm</string>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>512.000000000000000</double>
            </property>
           </widget>
          </item>
