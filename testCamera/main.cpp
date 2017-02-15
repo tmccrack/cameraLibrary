@@ -1,15 +1,16 @@
 #include <QCoreApplication>
 #include <iostream>
 #include "camera.h"
+#include "socketclient.h"
 
 using namespace std;
 
-bool GetInput(long *buffer, float *control_buffer, Camera *cam);
+bool GetInput(uint16_t *buffer, float *control_buffer, Camera *cam);
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    long *buffer = new long[262144];
+    uint16_t *buffer = new uint16_t[262144];
     float *control_buffer = new float[6];
     bool sim_cam;
 
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
         sim_cam = TRUE;
     }
     Camera camera;
-    camera.initializeCamera(cam_name, sim_cam);
+    camera.initializeCamera(cam_name, sim_cam, 0);
 
     while(GetInput(buffer, control_buffer, &camera))
     {
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 }
 
 
-bool GetInput(long *buffer, float *control_buffer, Camera *cam)
+bool GetInput(uint16_t *buffer, float *control_buffer, Camera *cam)
 {
     int i_input;
     ImageDimension img;
@@ -65,7 +66,7 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
     printf("Exposure time - 5\n");
     printf("Array timing - 6\n");
     printf("Shutter parameters - 7\n");
-    printf("Camera handle - 8\n");
+    printf("Socket values - 8\n");
     printf("Shutdown camera - Any other key\n");
 
     getline(cin, temp);
@@ -224,9 +225,17 @@ bool GetInput(long *buffer, float *control_buffer, Camera *cam)
      */
     else if (i_input == 8)
     {
-        long *handle;
-        cam->getHandle(handle);
-        cout << "Cam handle: " << *handle << endl;
+        SocketClient client;
+        float *x, *y;
+        client.openConnection("Values");
+        if(client.isConnected())
+        {
+            client.getData(x, y);
+            cout << "X: " << x << "\tY: " << y << endl;
+            client.closeConnection();
+        }
+        else cout << "Cannot connect" << endl;
+
         return true;
     }
 
