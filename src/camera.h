@@ -9,20 +9,6 @@
 #include "ATMCD32D.H"
 
 
-struct TimingProperties{
-    int h_shift;
-    int v_shift;
-    int dma_images;
-    float dma_accum_time;
-};
-
-struct ReadProperties{
-    int read_mode;
-    int acq_mode;
-    int frame_transfer;
-    int output_amp;
-};
-
 struct ImageDimension{
     int h_start;
     int h_end;
@@ -42,6 +28,22 @@ struct ExposureProperties{
     int em_gain;
     int em_gain_high;
     int em_gain_low;
+};
+
+struct ReadProperties{
+    int read_mode;
+    int acq_mode;
+    int frame_transfer;
+    int output_amp;
+    int track_cent;
+    int track_height;
+};
+
+struct TimingProperties{
+    int h_shift;
+    int v_shift;
+    int dma_images;
+    float dma_accum_time;
 };
 
 struct ShutterProperties{
@@ -68,7 +70,7 @@ public:
     ~Camera();
     void initializeCamera(std::string cam_name, bool r_cam, int temp=-65);
     void shutdownCamera();
-    void startCamera();
+    void startCamera(bool servo);
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(uint16_t *buffer);
@@ -98,6 +100,13 @@ public:
     void setTempParams(int set_point, bool state);
     void setTempParams(TemperatureProperties tempParameters);
 
+    Gain getGainX();
+    Gain getGainY();
+    void setGain(Gain gainx, Gain gainy);
+    float getRotation();
+    void setRotation(float rot);
+
+
 
 private:
     void _initializeCamera(int temp);
@@ -117,6 +126,8 @@ private:
     TimingProperties s_timingProp;
     ShutterProperties s_shutterProp;
     TemperatureProperties s_tempProp;
+    Gain s_gainxProp;
+    Gain s_gainyProp;
     CameraThread *t_cam_thread;
 
     bool checkError(unsigned int _ui_err, const char* _cp_func);

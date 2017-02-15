@@ -1,6 +1,72 @@
 #include "imageservo.h"
 
-ImageServo::ImageServo(QObject *parent, int x_dim, int y_dim)
+ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_dim, int y_dim)
+{
+    dim[0] = x_dim;
+    dim[1] = y_dim;
+    dim[2] = x_dim * y_dim;
+    cent = centroids;
+    update = updates;
+    errs = new float[2];  // For transformed errors
+
+    // Set up servos
+    x_servo = new Servo(this);
+    y_servo = new Servo(this);
+
+    setRotation(315);
+    setTargetCoords(256, 256);
+}
+
+
+/*
+ * Centroid image, find error and rotate to mirror coordinate system
+ * Assign updates to pointers from instantiation
+ */
+void ImageServo::getUpdate()
+{
+    centroid();
+
+    errs[0] = cent[0] - x_servo->getTarget();
+    errs[1] = cent[1] - y_servo->getTarget();
+
+    // Transform errors for servo
+    x_servo->setError(errs[0]*rotation[0] - errs[1]*rotation[1]);
+    y_servo->setError(errs[0]*rotation[1] + errs[1]*rotation[0]);
+
+    // Assign the update
+    update[0] += x_servo->getUpdate();
+    update[1] += y_servo->getUpdate();
+}
+
+/*
+ * Assign the image buffer
+ */
+void ImageServo::setBuffer(uint16_t *cont_buffer)
+{
+    buffer = cont_buffer;
+}
+
+
+/*
+ * Get error structures
+ */
+void ImageServo::getErrors(Error *x, Error *y)
+{
+    *x = x_servo->getError();
+    *y = y_servo->getError();
+}
+
+
+/*
+ * Getter/setters for image dimension
+ */
+void ImageServo::getImageDim(int *x_dim, int *y_dim)
+{
+    *x_dim = dim[0];
+    *y_dim = dim[1];
+}
+
+void ImageServo::setImageDim(int x_dim, int y_dim)
 {
     dim[0] = x_dim;
     dim[1] = y_dim;
@@ -9,61 +75,65 @@ ImageServo::ImageServo(QObject *parent, int x_dim, int y_dim)
 
 
 /*
- * Centroid image, assign updates to pointers passed in
- */
-void ImageServo::getUpdate(long *buffer, float *x, float *y)
-{
-    centroid(buffer);
-    x_servo.getUpdate(&cent[0], &updates[0]);
-    y_servo.getUpdate(&cent[1], &updates[1]);
-    updates[0] = *x;
-    updates[1] = *y;
-}
-
-void ImageServo::getErrors(float *x, float *y)
-{
-    x[0] = s_x_error.error;
-    x[1] = s_x_error.pre_error;
-    x[2] = s_x_error.set_point;
-
-    y[0] = s_y_error.error;
-    y[1] = s_y_error.pre_error;
-    y[2] = s_y_error.set_point;
-}
-
-
-/*
  * Set camera rotation for transforming camera axes to stage axes
  */
-void ImageServo::setRotation(float x_degrees, float y_degrees)
+float ImageServo::getRotation()
 {
-    rotation[0] = PI * x_degrees / 180.0;
-    rotation[1] = PI * y_degrees / 180.0;
+    return rot_deg;
+}
+
+void ImageServo::setRotation(float degrees)
+{
+    rotation[0] = cos(PI * degrees / 180.0);  // X rotation
+    rotation[1] = sin(PI * degrees / 180.0);  // Y rotation
+    rot_deg = degrees;
 }
 
 
 /*
- * Get the current target coordinates
+ * Getter/setter for target coordinates
  */
 void ImageServo::getTargetCoords(float *x, float *y)
 {
-    x_servo.getTarget(x);
-    y_servo.getTarget(y);
+    *x = x_servo->getTarget();
+    *y = y_servo->getTarget();
+}
+
+void ImageServo::setTargetCoords(float x, float y)
+{
+    x_servo->setTarget(x);
+    y_servo->setTarget(y);
 }
 
 
 /*
- * Set the servo loop target values
+ * Getter/setter for servo gains
  */
-void ImageServo::setTargetCoords(float x, float y)
+Gain ImageServo::getGainsX()
 {
-    x_servo.setTarget(x);
-    y_servo.setTarget(y);
+    return x_servo->getGain();
+}
+
+Gain ImageServo::getGainsY()
+{
+    return y_servo->getGain();
+}
+
+void ImageServo::setGainsX(Gain gain)
+{
+    x_servo->setGain(gain);
+}
+
+void ImageServo::setGainsY(Gain gain)
+{
+    y_servo->setGain(gain);
 }
 
 
-
-void ImageServo::centroid(long *buffer)
+/*
+ * Barycenter algorithm
+ */
+void ImageServo::centroid()
 {
     row_x = 0;
     row_y = 0;

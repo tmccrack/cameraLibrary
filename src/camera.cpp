@@ -40,7 +40,7 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
 /*
  * Start camera acquisition thread
  */
-void Camera::startCamera()
+void Camera::startCamera(bool servo)
 {
     if (camera_name == "FTT")
     {
@@ -49,11 +49,19 @@ void Camera::startCamera()
     }
 
     if (real_cam)
-    {
+    {        
+        // Check and start thread
         if (t_cam_thread->isRunning())
             qDebug() << "Already running";
         else
-            t_cam_thread->startCameraThread((int) s_imageDim.size);
+        {
+            // Update servo variables
+            bool st = t_cam_thread->setLoopStatus(servo);
+            qDebug() << "Serov status: " << st;
+//            t_cam_thread->setServoDim(s_imageDim.h_dim, s_imageDim.v_dim);
+
+            t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim);
+        }
     }
     else fake_cam_running = true;
 }
@@ -79,7 +87,7 @@ void Camera::stopCamera()
         // check if thread running, abort and delete array
         if (t_cam_thread->isRunning())
         {
-            t_cam_thread->abortCameraThread();
+            t_cam_thread->abortThread();
             t_cam_thread->wait();
         }
 
@@ -277,6 +285,37 @@ void Camera::setTempParams(TemperatureProperties tempParameters)
 }
 
 
+
+Gain Camera::getGainX()
+{
+    s_gainxProp = t_cam_thread->getServoGainX();
+    return s_gainxProp;
+}
+
+Gain Camera::getGainY()
+{
+    s_gainyProp = t_cam_thread->getServoGainY();
+    return s_gainyProp;
+}
+
+void Camera::setGain(Gain gainx, Gain gainy)
+{
+    s_gainxProp = gainx;
+    s_gainyProp = gainy;
+    t_cam_thread->setServoGain(s_gainxProp, s_gainyProp);
+}
+
+float Camera::getRotation()
+{
+    return t_cam_thread->getServoRotation();
+}
+
+void Camera::setRotation(float rot)
+{
+    t_cam_thread->setServoRotation(rot);
+}
+
+
 /*
  * Camera initialization
  */
@@ -284,6 +323,8 @@ void Camera::_initializeCamera(int temp)
 {
 
     //if ((camera_name == "FTT") || (camera_name == "NULL") || (camera_name == ""))
+    t_cam_thread = new CameraThread(0, cam_data);
+
     if (camera_name == "FTT")
     {
         qDebug() << "Setting to default FTT values";
@@ -317,6 +358,14 @@ void Camera::_initializeCamera(int temp)
         s_expProp.em_gain = 1;
         s_expProp.exp_time = 0.1;
 
+        // Set gain
+        s_gainxProp.kp = 0.01;
+        s_gainxProp.ki = 0.0;
+        s_gainxProp.kd = 0.0;
+        s_gainxProp.dt = s_expProp.exp_time;
+        s_gainyProp = s_gainxProp;
+        setGain(s_gainxProp, s_gainyProp);
+
     }
     else if (camera_name == "ExpM")
     {
@@ -326,6 +375,8 @@ void Camera::_initializeCamera(int temp)
         s_readProp.acq_mode = 5;  // Run till abort
         s_readProp.frame_transfer = 1;  // On
         s_readProp.output_amp = 0;  // Em amplifier
+        s_readProp.track_cent = 256;
+        s_readProp.track_height = 50;
 
         // Set timing parameters
         s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
@@ -425,7 +476,6 @@ void Camera::_initializeCamera(int temp)
     _setExposureParams();
     _setTempParams();
 
-    t_cam_thread = new CameraThread(0, cam_data);
     qDebug() << "Intialized" << camera_name << "camera";
 }
 
@@ -537,6 +587,13 @@ void Camera::_setReadParams()
     {
         ui_error = SetReadMode(s_readProp.read_mode);
         checkError(ui_error, "SetReadMode");
+
+        // If single track, set track
+        if (s_readProp.read_mode == 3)
+        {
+            ui_error = SetSingleTrack(s_readProp.track_cent, s_readProp.track_height);
+            checkError(ui_error, "SetSingleTrack");
+        }
 
         ui_error = SetAcquisitionMode(s_readProp.acq_mode);
         checkError(ui_error, "SetAcquisitionMode");
@@ -681,9 +738,15 @@ void Camera::_shutdownCamera()
  */
 void Camera::_warmArray()
 {
-    s_tempProp.set_point = 0;
-    _setTempParams();
     qDebug() << "Checking array temp\n...";
+
+    _getTempArray();
+    if ((s_tempProp.array_temp < 0) || (s_tempProp.set_point < 0))
+    {
+        s_tempProp.set_point = 0;
+        _setTempParams();
+    }
+
     if (real_cam)
     {
         qDebug() << "Array at" << s_tempProp.array_temp << endl;

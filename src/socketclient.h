@@ -12,6 +12,7 @@ class SocketClient
 {
 public:
     SocketClient();
+    SocketClient(int pport, std::string hhost);
     ~SocketClient();
     bool openConnection(std::string conn_type);
     void reopenConnection();

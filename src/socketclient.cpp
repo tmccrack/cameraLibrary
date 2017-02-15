@@ -7,10 +7,19 @@ using namespace std;
  */
 SocketClient::SocketClient()
 {
-    socket = new QTcpSocket;
-    data = new QByteArray;
     host = "172.29.46.109";
     port = 6666;
+    socket = new QTcpSocket;
+    data = new QByteArray;
+    connected = false;
+}
+
+SocketClient::SocketClient(int pport, string hhost)
+{
+    host = QString::fromStdString(hhost);
+    port = pport;
+    socket = new QTcpSocket;
+    data = new QByteArray;
     connected = false;
 }
 
@@ -27,7 +36,7 @@ SocketClient::~SocketClient()
 /*
  * Function to connect to specified client
  */
-bool SocketClient::openConnection(std::string conn_type)
+bool SocketClient::openConnection(string conn_type)
 {
     //connect
     socket->connectToHost(host, port);

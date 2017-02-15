@@ -14,41 +14,52 @@ Servo::Servo(QObject *parent)
 
 
 /*
- * Iterate servo loop to update value
- * Value is put into algorithm to give update
+ * Iterate servo loop to get update
+ * Error value must be set previously
+ * In case of image servo, value must be transformed prior
  */
-void Servo::getUpdate(float *value, float *update)
+float Servo::getUpdate()
 {
-    s_error.error = *value - s_error.set_point;
-    *update = s_error.error * s_gain.kp +  // Proportional
+    update = s_error.error * s_gain.kp +  // Proportional
             s_error.error * s_gain.dt * s_gain.ki +  // Integral
             (s_error.error - s_error.pre_error) * s_gain.kd;  // Derivative
     s_error.pre_error = s_error.error;
+    return update;
 }
 
 
 /*
  * Error accessor
  */
-void Servo::getError(Error *error)
+Error Servo::getError()
 {
-    *error = s_error;
+    return s_error;
+}
+
+void Servo::setError(float err)
+{
+    s_error.error = err;
 }
 
 
 /*
  * Gain accessor
  */
-void Servo::getGain(Gain *gain)
+Gain Servo::getGain()
 {
-    *gain = s_gain;
+    return s_gain;
 }
 
+
+void Servo::setGain(Gain gain)
+{
+    s_gain = gain;
+}
 
 /*
  * Gain setter
  */
-void Servo::setGain(float kp, float ki, float kd)
+void Servo::setGain(float kp, float ki, float kd, float dt)
 {
     s_gain.kp = kp;
     s_gain.ki = ki;
@@ -57,20 +68,11 @@ void Servo::setGain(float kp, float ki, float kd)
 
 
 /*
- * Loop speed setter
- */
-void Servo::setSpeed(float dt)
-{
-    s_gain.dt = dt;
-}
-
-
-/*
  * Target setpoint setter
  */
-void Servo::getTarget(float *set_point)
+float Servo::getTarget()
 {
-    *set_point = s_error.set_point;
+    return s_error.set_point;
 }
 
 void Servo::setTarget(float set_point)
