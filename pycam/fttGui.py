@@ -358,8 +358,6 @@ if __name__ == '__main__':
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
 	ui = AppWindow(MainWindow)
-	# mir = Mirror()
-	# mir.show()
 	MainWindow.show()
 	sys.exit(app.exec_())
 	
