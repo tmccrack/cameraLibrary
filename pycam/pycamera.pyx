@@ -64,7 +64,8 @@ cdef class PyCamera:
 	cdef pycamera.TimingProperties s_timingProp
 	cdef pycamera.ShutterProperties s_shutterProp
 	cdef pycamera.TemperatureProperties s_tempProp
-	cdef pycamera.Gain s_gain
+	cdef pycamera.Gain s_gainx
+	cdef pycamera.Gain s_gainy
 
 	def __cinit__(self, name = "", real_cam = False, temp=-65):
 		self.pycam = pycamera.Camera()
@@ -137,6 +138,8 @@ cdef class PyCamera:
 		self.s_readProp.acq_mode = readProp['acq_mode']
 		self.s_readProp.frame_transfer = readProp['frame_transfer']
 		self.s_readProp.output_amp = readProp['output_amp']
+		self.s_readProp.track_cent = readProp['track_cent']
+		self.s_readProp.track_height = readProp['track_height']
 		self.pycam.setReadParams(self.s_readProp)
 		return self.getReadProp()
 
@@ -183,18 +186,25 @@ cdef class PyCamera:
 		self.pycam.setTempParams(self.s_tempProp)
 		return self.getTempProp()
 
-	def getGain(self):
-		self.s_gain = self.pycam.getGain()
-		return self.s_gain
+	#
+	# Gain properties getter/setter
+	def getGainX(self):
+		self.s_gainx = self.pycam.getGainX()
+		return self.s_gainx
+
+	def getGainY(self):
+		self.s_gainy = self.pycam.getGainY()
+		return self._s_gainy
 
 	def setGain(self, gain, rotation):
-		self.s_gain.kp = gain['kp']
-		self.s_gain.ki = gain['ki']
-		self.s_gain.kd = gain['kd']
-		self.s_gain.dt = gain['dt']
-		self.pycam.setGain(self.s_gain)
+		self.s_gainx.kp = gain['kp']
+		self.s_gainx.ki = gain['ki']
+		self.s_gainx.kd = gain['kd']
+		self.s_gainx.dt = gain['dt']
+		self.s_gainy = self.s_gainx
+		self.pycam.setGain(self.s_gainx, self.s_gainy)
 		self.pycam.setRotation(rotation)
-		return self.getGain()
+		return self.getGainX()
 
 	# def Handle(self):
 	# 	self.pycam.getHandle(self.phandle)

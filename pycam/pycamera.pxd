@@ -53,8 +53,9 @@ cdef extern from "./../src/camera.h":
 		TemperatureProperties getTempArray()
 		void setTempParams(TemperatureProperties tempProp)
 
-		Gain getGain()
-		void setGain(Gain gain)
+		Gain getGainX()
+		Gain getGainY()
+		void setGain(Gain gainx, Gain gainy)
 		float getRotation()
 		void setRotation(float rot)
 		
@@ -81,6 +82,8 @@ cdef extern from "./../src/camera.h":
 		int acq_mode
 		int frame_transfer
 		int output_amp
+		int track_cent
+		int track_height
 
 	cdef struct TimingProperties:
 		int h_shift
@@ -107,6 +110,11 @@ cdef extern from "./../src/camera.h":
 		float ki
 		float kd
 		float dt
+
+	# cdef struct ControlProperties:
+	# 	float targetx
+	# 	float targety
+	# 	float rotation
 
 
 	

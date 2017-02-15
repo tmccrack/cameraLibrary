@@ -215,8 +215,11 @@ class AppWindow(Ui_MainWindow):
 		self.camera = pycamera.PyCamera(name, True, temp=17)
 		self.imageDim = self.camera.getImageDimension()
 		self.expProp = self.camera.getExposureProp()
+		self.readProp = self.camera.getReadProp()
+		self.timingProp = self.camera.getTimingProp()
+		self.shutterProp = self.camera.getShutterProp()
 		self.tempProp = self.camera.getTempProp()
-		# self.controlProp = self.camera.getControlProps()
+		self.gain = self.camera.getGainX()
 
 		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
@@ -250,7 +253,7 @@ class AppWindow(Ui_MainWindow):
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.btn_SetTemp.clicked.connect(self.setTempProp)
-		self.btn_Mirror.clicked.connect(self.btnMirrorClicked)
+		self.btn_Gain.clicked.connect(self.btnGainClicked)
 		self.cam_timer.timeout.connect(self.updateFig)
 		self.temp_timer.timeout.connect(self.updateTemp)
 
@@ -280,7 +283,12 @@ class AppWindow(Ui_MainWindow):
 			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
 
 	def btnClosedClicked(self):
-		pass
+		if  self.camera.running(): 
+			self.logUpdate("Exposure sequence already STARTED")
+		else:
+			self.camera.start(servo = True)
+			self.cam_timer.start()
+			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
 
 	def btnAbortClicked(self):
 		if self.camera.running():
@@ -288,8 +296,6 @@ class AppWindow(Ui_MainWindow):
 			self.cam_timer.stop()
 			self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
 		else: self.logUpdate("Exposure sequence already STOPPED")
-
-
 	
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict
@@ -311,8 +317,14 @@ class AppWindow(Ui_MainWindow):
 		self.logUpdate("Setting frame parameters")
 		self.logUpdate(self.imageDim)
 
-	def btnMirrorClicked(self):
-		pass
+	def btnGainClicked(self):
+		self.gain['kp'] = self.spb_P.value()
+		self.gain['ki'] = self.spb_I.value()
+		self.gain['kd'] = self.spb_D.value()
+		self.gain['dt'] = self.expProp['exp_time']
+
+		self.gain = self.camera.setGain(self.gain, self.spb_Rotation.value())
+		# print("{} {} {}".format(self.gain['kp'], self.gain['ki'], self.gain['kd']))
 
 	def updateFig(self):
 		# Update image dispaly with newest data array, fires with timer timeeout
@@ -346,9 +358,8 @@ if __name__ == '__main__':
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
 	ui = AppWindow(MainWindow)
-	# app.setMainWidget(MainWindow)
-	mir = Mirror()
-	mir.show()
+	# mir = Mirror()
+	# mir.show()
 	MainWindow.show()
 	sys.exit(app.exec_())
 	
