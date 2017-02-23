@@ -18,46 +18,46 @@ Edit the repo/pycam/fttGui.py file:
 The cython camera interface (pycamera.pyx) uses dictionaries to translate between the python gui and the underlying c structures. It is easiest to initialize each dictionary after the camera is instantiated. The dictionaries lump together similar functions (array size, how the array is read, timing for the array, etc.) Dictionary keys are listed in the cython pxd file (pycamera.pxd). The key name should translate to the appropriate parameter in the Andor SDK. A not necessarily up-to-date list follows:
 
 ImageDimension:
-		int h_start
-		int h_end
-		int h_bin
-		int v_start
-		int v_end
-		int v_bin
-		int h_dim
-		int v_dim
+		int h_start,
+		int h_end,
+		int h_bin,
+		int v_start,
+		int v_end,
+		int v_bin,
+		int h_dim,
+		int v_dim,
 		unsigned long size
     
 ExposureProperties:
-		float exp_time
-		int em_gain
-		int em_gain_high
-		int em_gain_low
+		float exp_time,
+		int em_gain,
+		int em_gain_high,
+		int em_gain_low,
     
 ReadProperties:
-		int read_mode
-		int acq_mode
-		int frame_transfer
-		int output_amp
-		int track_cent
-		int track_height
+		int read_mode,
+		int acq_mode,
+		int frame_transfer,
+		int output_amp,
+		int track_cent,
+		int track_height,
     
 TimingProperties:
-		int h_shift
-		int v_shift
-		int dma_images
-		float dma_accum_time
+		int h_shift,
+		int v_shift,
+		int dma_images,
+		float dma_accum_time,
     
 ShutterProperties:
-		int type
-		int mode
-		int open_time
-		int close_time
+		int type,
+		int mode,
+		int open_time,
+		int close_time,
     
 TemperatureProperties:
-		int set_point
-		int array_temp
-		int temp_high
-		int temp_low
-		bool power_state
+		int set_point,
+		int array_temp,
+		int temp_high,
+		int temp_low,
+		bool power_state,
 		unsigned int cooler_state
