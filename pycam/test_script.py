@@ -7,6 +7,9 @@ import pycamera
 import numpy as np
 import time
 
+def report_data(buffer, buff_len):
+	print("Buff: {}".format(buffer[0:10]))
+
 def GetInput():
 	print("1 - Start camera")
 	print("2 - Stop camera")
@@ -18,12 +21,12 @@ def GetInput():
 	val = input("What do you want to do?\n")
 	if val == '1': 
 		print("Starting camera")
-		ftt.Start()
+		ftt.startExpMeter(report_data)
 		return True
 
 	elif val == '2': 
 		print("Stopping camera")
-		ftt.Stop()
+		ftt.stop()
 		return True
 
 	# elif val == 3: 
@@ -34,7 +37,7 @@ def GetInput():
 
 	elif val == '4':
 		print("Retrieving data")
-		ftt.Data(buffer)
+		ftt.data(buffer)
 		print("{}".format(buffer[0:200]))
 		return True
 
@@ -43,20 +46,20 @@ def GetInput():
 		return True
 
 	elif val == '6':
-		ftt.GetImageDimension()
+		ftt.getImageDimension()
 		return True
 
 	else:
 		return False	
 
 name = "FTT"
-ftt = pycamera.PyCamera(name.encode('utf-8'), False)	
-buffer = np.empty([262144, 1], dtype=int)
+ftt = pycamera.PyCamera(name, False, 0)	
+# buffer = np.empty([262144, 1], dtype=int)
 
 while (GetInput()):
 	print("What do you want to do?\n")
 
 print("Shutting down")
-ftt.Shutdown()
+ftt.shutdown()
 
 print("Done")

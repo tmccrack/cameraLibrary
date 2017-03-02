@@ -40,7 +40,7 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
 /*
  * Start camera acquisition thread
  */
-void Camera::startCamera(bool servo)
+void Camera::startCamera(int loopCond)
 {
     if (camera_name == "FTT")
     {
@@ -48,32 +48,41 @@ void Camera::startCamera(bool servo)
         setShutterParams(s_shutterProp);
     }
 
-    if (real_cam)
-    {        
-        // Check and start thread
-        if (t_cam_thread->isRunning())
-            qDebug() << "Already running";
-        else
-        {
-            // Update servo variables
-            bool st = t_cam_thread->setLoopStatus(servo);
-            qDebug() << "Serov status: " << st;
+    // Check and start thread
+    if (t_cam_thread->isRunning())
+        qDebug() << "Already running";
+    else
+    {
+        // Update servo variables
+        int st = t_cam_thread->setLoopCond(loopCond);
+        qDebug() << "Loop status: " << st;
 //            t_cam_thread->setServoDim(s_imageDim.h_dim, s_imageDim.v_dim);
 
-            t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim);
-        }
+        t_cam_thread->startThread((int)s_imageDim.h_dim, (int)s_imageDim.v_dim, (bool)real_cam);
     }
-    else fake_cam_running = true;
+}
+
+void Camera::startCamera(cb_cam_func cb, void *user_data)
+{
+    if (camera_name == "FTT")
+    {
+        s_shutterProp.mode = 1;  // Always open
+        setShutterParams(s_shutterProp);
+    }
+
+    // Check and start thread
+    if (t_cam_thread->isRunning())
+        qDebug() << "Already running";
+    else
+    {
+        t_cam_thread->startThread(cb, user_data, s_imageDim.h_dim, s_imageDim.v_dim, real_cam);
+    }
 }
 
 bool Camera::isCameraRunning()
 {
-    if (real_cam)
-    {
-        if (t_cam_thread) return t_cam_thread->isRunning();
-        else return false;
-    }
-    else return fake_cam_running;
+    if (t_cam_thread) return t_cam_thread->isRunning();
+    else return false;
 }
 
 
@@ -82,17 +91,12 @@ bool Camera::isCameraRunning()
  */
 void Camera::stopCamera()
 {
-    if (real_cam)
+    // check if thread running, abort and delete array
+    if (t_cam_thread->isRunning())
     {
-        // check if thread running, abort and delete array
-        if (t_cam_thread->isRunning())
-        {
-            t_cam_thread->abortThread();
-            t_cam_thread->wait();
-        }
-
+        t_cam_thread->abortThread();
+        t_cam_thread->wait();
     }
-    else fake_cam_running = false;
 }
 
 

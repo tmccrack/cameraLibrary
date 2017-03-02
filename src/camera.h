@@ -62,6 +62,8 @@ struct TemperatureProperties{
     int cooler_state;
 };
 
+typedef void (*cb_cam_func)(uint16_t *buffer, int size, void *user_data);
+
 class Camera
 {
 
@@ -70,7 +72,8 @@ public:
     ~Camera();
     void initializeCamera(std::string cam_name, bool r_cam, int temp=-65);
     void shutdownCamera();
-    void startCamera(bool servo);
+    void startCamera(int loopCond);
+    void startCamera(cb_cam_func cb, void *user_data);
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(uint16_t *buffer);
@@ -105,7 +108,6 @@ public:
     void setGain(Gain gainx, Gain gainy);
     float getRotation();
     void setRotation(float rot);
-
 
 
 private:

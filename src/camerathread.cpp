@@ -18,7 +18,7 @@ CameraThread::CameraThread(QObject *parent, uint16_t *image_buffer) : QThread(pa
     //TODO: Ensure imageBuffer is correct size???
     copy_data = image_buffer;
     b_abort = true;
-    b_servo = false;
+    real_cam = false;
     centroids = new float[2];
     updates = new float[2];
     servo = new ImageServo(this, centroids, updates, 512, 512);
@@ -43,35 +43,62 @@ CameraThread::~CameraThread()
 /*
  * Set camera thread properties and start the acquistion loop
  */
-void CameraThread::startThread(int x, int y)
+void CameraThread::startThread(int x, int y, bool real_cam)
 {
     // Create copy data buffer
     xd = (float) x;
     yd = (float) y;
     image_size = (int) xd * yd;
     cam_data = new uint16_t[image_size];
+
+    //
     if (isRunning())
     {
+        // Kill it if running
         mutex.lock();
         b_abort = true;
         mutex.unlock();
 
         wait();
+    }
 
-        mutex.lock();
-        b_abort = false;
-        mutex.unlock();
-        start();
-    }
-    else
-    {
-        mutex.lock();
-        b_abort = false;
-        mutex.unlock();
-        start();
-    }
+    mutex.lock();
+    b_abort = false;
+    mutex.unlock();
+    start();
+/*
+ * TODO: should run on high priority
+ */
 }
 
+// Overloaded for callback
+void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bool real_cam)
+{
+    // Create copy data buffer
+    xd = (float) x;
+    yd = (float) y;
+    image_size = (int) xd * yd;
+    cam_data = new uint16_t[image_size];
+
+    // Set to run callback thread function
+    i_loopCond = 2;
+    callback = cb;
+    ud = user_data;
+
+    if (isRunning())
+    {
+        // Kill it if running
+        mutex.lock();
+        b_abort = true;
+        mutex.unlock();
+
+        wait();
+    }
+    mutex.lock();
+    b_abort = false;
+    mutex.unlock();
+    start();
+}
 
 /*
  * Set abort flag and stop acquisition
@@ -83,10 +110,10 @@ void CameraThread::abortThread()
     mutex.unlock();
 }
 
-bool CameraThread::setLoopStatus(bool loop)
+bool CameraThread::setLoopCond(int loopCond)
 {
-    b_servo = loop;
-    return b_servo;
+    i_loopCond = loopCond;
+    return i_loopCond;
 }
 
 /*
@@ -144,6 +171,7 @@ void CameraThread::getServoTargetCoords(float *tar_x, float *tar_y)
 {
     servo->getTargetCoords(tar_x, tar_y);
 }
+
 void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
 {
     servo->setTargetCoords(tar_x, tar_y);
@@ -156,21 +184,44 @@ void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
  */
 void CameraThread::run()
 {
-    // Pass Andor API event handle and start acquistion
-    and_error = SetDriverEvent(cam_event);
-    checkError(and_error, "SetDriverEvent");
-
-    if (b_servo)
+    if(real_cam)
     {
-        servoLoop();
-    }
-    else
-    {
-        openLoop();
+        // Pass Andor API event handle and start acquistion
+        and_error = SetDriverEvent(cam_event);
+        checkError(and_error, "SetDriverEvent");
     }
 
-    and_error = AbortAcquisition();
-    checkError(and_error, "AbortAcquisition");
+    switch(i_loopCond)
+    {
+        case 0 :
+            qDebug() << "Starting open loop";
+            openLoop();
+            break;
+
+        case 1 :
+            qDebug() << "Starting servo loop";
+            servoLoop();
+            break;
+
+        case 2 :
+            qDebug() << "Starting callback loop with image size: " << image_size << endl;
+            callbackLoop();
+            break;
+
+        case 3 :
+            qDebug() << "Starting single shot";
+//            callbackSingle();
+            break;
+
+        default :
+            b_abort = true;
+    }
+
+    if (real_cam)
+    {
+        and_error = AbortAcquisition();
+        checkError(and_error, "AbortAcquisition");
+    }
 
     printf("Acquistion ended\n");
 }
@@ -299,6 +350,27 @@ void CameraThread::servoLoop()
     client->closeConnection();
 
 }
+
+void CameraThread::callbackLoop()
+{
+    while(!b_abort)
+    {
+        for (int i=0; i<image_size; i++)
+        {
+            cam_data[i] = (uint16_t) rand() % 100;
+        }
+        qDebug() << "Callback";
+        callback(cam_data, image_size, ud);
+        qDebug() << "Callback success";
+        Sleep(1000);
+    }
+
+}
+
+//void CameraThread::callbackSingle()
+//{
+
+//}
 
 /*
  * Check Andor error code
