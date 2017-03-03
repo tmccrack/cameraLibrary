@@ -8,7 +8,6 @@
 cimport pycamera
 cimport numpy as np
 import numpy as np
-from PyQt5.QtCore import pyqtSignal
 
 cdef class SClient:
     cdef pycamera.SocketClient client
