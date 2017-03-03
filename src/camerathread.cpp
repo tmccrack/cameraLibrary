@@ -353,18 +353,56 @@ void CameraThread::servoLoop()
 
 void CameraThread::callbackLoop()
 {
-    while(!b_abort)
+    if (real_cam)
     {
-        for (int i=0; i<image_size; i++)
+        while (!b_abort)
         {
-            cam_data[i] = (uint16_t) rand() % 100;
-        }
-        qDebug() << "Callback";
-        callback(cam_data, image_size, ud);
-        qDebug() << "Callback success";
-        Sleep(1000);
-    }
+            win_error = WaitForSingleObject(cam_event, 2500);
 
+            // Object triggered, check what happened
+            if (win_error == WAIT_OBJECT_0)
+            {
+                // Camera triggered event, get data
+                mutex.lock();
+                ResetEvent(cam_event);
+                and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
+                checkError(and_error, "GetMostRecentImage16");
+                mutex.unlock();
+                callback(cam_data, image_size, ud);
+            }
+            else if (win_error == WAIT_TIMEOUT)
+            {
+                // Timeout, do nothing
+                qDebug() << "Camera thread timed out waiting for event";
+                /*
+                GetStatus(status);
+                qDebug() << "Camera status: " << *status;
+                checkError(and_error, "GetStatus");
+                */
+                ResetEvent(cam_event);
+            }
+            else
+            {
+                // Error, abort acquisition loop
+                mutex.lock();
+                b_abort = true;
+                mutex.unlock();
+                printf("Error in image acquisition\n");
+            }
+        }
+    }
+    else
+    {
+        while(!b_abort)
+        {
+            for (int i=0; i<image_size; i++)
+            {
+                cam_data[i] = (uint16_t) rand() % 100;
+            }
+            callback(cam_data, image_size, ud);
+            Sleep(1000);
+        }
+    }
 }
 
 //void CameraThread::callbackSingle()

@@ -98,8 +98,7 @@ cdef class PyCamera:
         return self.running()
 
     @staticmethod
-    cdef void expmfunction(np.uint16_t *buff, int buff_len, void *f):
-        print("Buffer length: {}".format(buff_len))
+    cdef void expmfunction(np.uint16_t *buff, int buff_len, void *f) with gil:
         for i in range(0,buff_len):
             buffer[i] = buff[i]
         (<object>f)(<object>buffer, <object>buff_len)
