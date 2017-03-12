@@ -92,9 +92,23 @@ cdef class PyCamera:
         self.pycam.startCamera(loopCond)
         return self.running()
 
+    def arm(self, arm_state):
+        if (arm_state):
+            self.s_expProp.ext_trig = True
+            self.pycam.setExposureParams(self.s_expProp)
+        else:
+            # Software trigger
+            self.s_expProp.ext_trig = False
+            self.pycam.setExposureParams(self.s_expProp)
+        return self.getExposureProp()
+
+
     def startExpMeter(self, f):
         self.pycam.startCamera(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*>f)
         return self.running()
+
+    def singleShot(self, f):
+        self.pycam.singleShot(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*> f)
 
     @staticmethod
     cdef void expmfunction(np.uint16_t *buff, int buff_len, void *f) with gil:
@@ -146,6 +160,7 @@ cdef class PyCamera:
     def setExposureProp(self, expProp):
         self.s_expProp.exp_time = expProp['exp_time']
         self.s_expProp.em_gain = expProp['em_gain']
+        self.s_expProp.ext_trig = expProp['ext_trig']
         self.pycam.setExposureParams(self.s_expProp)
         return self.getExposureProp()
 

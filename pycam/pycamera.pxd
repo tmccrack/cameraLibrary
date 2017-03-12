@@ -31,6 +31,7 @@ cdef extern from "./../src/camera.h":
         void initializeCamera(string cam_name, bool real_cam, int temp)
         void startCamera(int loopCond)
         void startCamera(cb_cam_func cb, void *user_data)
+        void singleShot(cb_cam_func cb, void *user_data)
         bool isCameraRunning()
         void stopCamera()
         void shutdownCamera()
@@ -73,6 +74,7 @@ cdef extern from "./../src/camera.h":
     cdef struct ExposureProperties:
         float exp_time
         int em_gain
+        bool ext_trig
         int em_gain_high
         int em_gain_low
 

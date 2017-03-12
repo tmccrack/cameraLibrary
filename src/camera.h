@@ -28,6 +28,7 @@ struct ExposureProperties{
     int em_gain;
     int em_gain_high;
     int em_gain_low;
+    bool ext_trig;
 };
 
 struct ReadProperties{
@@ -74,6 +75,7 @@ public:
     void shutdownCamera();
     void startCamera(int loopCond);
     void startCamera(cb_cam_func cb, void *user_data);
+    void singleShot(cb_cam_func cb, void *user_data);
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(uint16_t *buffer);

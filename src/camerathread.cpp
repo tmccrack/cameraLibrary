@@ -72,7 +72,7 @@ void CameraThread::startThread(int x, int y, bool real_cam)
 }
 
 // Overloaded for callback
-void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bool real_cam)
+void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bool real_cam, bool s_shot)
 {
     // Create copy data buffer
     xd = (float) x;
@@ -80,8 +80,9 @@ void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bo
     image_size = (int) xd * yd;
     cam_data = new uint16_t[image_size];
 
-    // Set to run callback thread function
-    i_loopCond = 2;
+    // Set to appropriate callback thread function
+    if (s_shot) i_loopCond = 3;
+    else i_loopCond = 2;
     callback = cb;
     ud = user_data;
 
@@ -114,6 +115,14 @@ bool CameraThread::setLoopCond(int loopCond)
 {
     i_loopCond = loopCond;
     return i_loopCond;
+}
+
+bool CameraThread::setClosedLoop(bool state)
+{
+    mutex.lock();
+    b_closed = state;
+    mutex.unlock();
+    return b_closed;
 }
 
 /*
@@ -210,11 +219,12 @@ void CameraThread::run()
 
         case 3 :
             qDebug() << "Starting single shot";
-//            callbackSingle();
+            singleShot();
             break;
 
         default :
             b_abort = true;
+            break;
     }
 
     if (real_cam)
@@ -292,8 +302,6 @@ void CameraThread::servoLoop()
     client = new SocketClient();
     client->openConnection("Values");
     client->getData(&updates[0], &updates[1]);  // Assign starting values
-//    updates[0] = 0;
-//    updates[1] = 0;
     client->closeConnection();
 
 //    qDebug() << "Starting values: " << updates[0] << " " << updates[1];
@@ -318,11 +326,14 @@ void CameraThread::servoLoop()
 
             // Pass current data to servo
             // Servo updates pointers passed to constructor
-            servo->getUpdate();
-            servo->getErrors(x_err, y_err);
-            client->sendData(updates[1], updates[0]);
-            qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
-                     << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
+            if(b_closed)
+            {
+                servo->getUpdate();
+                servo->getErrors(x_err, y_err);
+                client->sendData(updates[1], updates[0]);
+                qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
+                         << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
+            }
             std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();
         }
@@ -355,6 +366,9 @@ void CameraThread::callbackLoop()
 {
     if (real_cam)
     {
+        and_error = StartAcquisition();
+        checkError(and_error, "StartAcquistion");
+
         while (!b_abort)
         {
             win_error = WaitForSingleObject(cam_event, 2500);
@@ -405,10 +419,46 @@ void CameraThread::callbackLoop()
     }
 }
 
-//void CameraThread::callbackSingle()
-//{
+void CameraThread::singleShot()
+{
+    qDebug() << "Starting single shot";
 
-//}
+    if (real_cam)
+    {
+        and_error = StartAcquisition();
+        checkError(and_error, "StartAcquisition");
+
+        win_error = WaitForSingleObject(cam_event, 2500);
+
+        // Object triggered, check what happened
+        if (win_error == WAIT_OBJECT_0)
+        {
+            // Camera triggered event, get data
+            mutex.lock();
+            and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
+            checkError(and_error, "GetMostRecentImage16");
+            mutex.unlock();
+            callback(cam_data, image_size, ud);
+        }
+        else if (win_error == WAIT_TIMEOUT)
+        {
+            // Timeout, do nothing
+            qDebug() << "Camera thread timed out waiting for event";
+        }
+        else
+        {
+            printf("Error in image acquisition\n");
+        }
+    }
+    else
+    {
+        for (int i=0; i<image_size; i++)
+        {
+            cam_data[i] = (uint16_t) rand() % 100;
+        }
+        callback(cam_data, image_size, ud);
+    }
+}
 
 /*
  * Check Andor error code

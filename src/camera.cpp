@@ -58,7 +58,7 @@ void Camera::startCamera(int loopCond)
         qDebug() << "Loop status: " << st;
 //            t_cam_thread->setServoDim(s_imageDim.h_dim, s_imageDim.v_dim);
 
-        t_cam_thread->startThread((int)s_imageDim.h_dim, (int)s_imageDim.v_dim, (bool)real_cam);
+        t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim, real_cam);
     }
 }
 
@@ -75,7 +75,17 @@ void Camera::startCamera(cb_cam_func cb, void *user_data)
         qDebug() << "Already running";
     else
     {
-        t_cam_thread->startThread(cb, user_data, s_imageDim.h_dim, s_imageDim.v_dim, real_cam);
+        t_cam_thread->startThread(cb, user_data, s_imageDim.h_dim, s_imageDim.v_dim, real_cam, false);
+    }
+}
+
+void Camera::singleShot(cb_cam_func cb, void *user_data)
+{
+    if (t_cam_thread->isRunning())
+        qDebug() << "Already running";
+    else
+    {
+        t_cam_thread->startThread(cb, user_data, s_imageDim.h_dim, s_imageDim.v_dim, real_cam, true);
     }
 }
 
@@ -361,6 +371,7 @@ void Camera::_initializeCamera(int temp)
         // Set exposure properties
         s_expProp.em_gain = 1;
         s_expProp.exp_time = 0.1;
+        s_expProp.ext_trig = false;
 
         // Set gain
         s_gainxProp.kp = 0.01;
@@ -405,7 +416,7 @@ void Camera::_initializeCamera(int temp)
         // Set exposure properties
         s_expProp.em_gain = 1;
         s_expProp.exp_time = 0.01;
-
+        s_expProp.ext_trig = false;
     }
     else
     {
@@ -439,6 +450,7 @@ void Camera::_initializeCamera(int temp)
         // Set exposure properties
         s_expProp.em_gain = 1;
         s_expProp.exp_time = 0.01;
+        s_expProp.ext_trig = false;
 
     }
 
@@ -570,6 +582,18 @@ void Camera::_setExposureParams()
         ui_error = SetExposureTime(s_expProp.exp_time);
         checkError(ui_error, "SetExposureTime");
 
+        if (s_expProp.ext_trig)
+        {
+            qDebug() << "Setting for external trigger";
+            ui_error = SetTriggerMode(6);
+        }
+        else
+        {
+            qDebug() << "Setting for internal trigger";
+            ui_error = SetTriggerMode(0);
+        }
+        checkError(ui_error, "SetTriggerMode");
+
         ui_error = GetAcquisitionTimings(&s_expProp.exp_time,
                                          &s_expProp.accum_time,
                                          &s_expProp.kinetic_time);
@@ -586,14 +610,24 @@ void Camera::_setExposureParams()
 void Camera::_setReadParams()
 {
     qDebug() << "Setting read properties";
+    // Check if FVB or single track
+    if ((s_readProp.read_mode == 3) || (s_readProp.read_mode == 0))
+    {
+        // Need to adjust image dimension for array size
+        s_imageDim.h_start = 1;
+        s_imageDim.h_end = 512;
+        s_imageDim.v_start = 1;
+        s_imageDim.v_end = 1;
+        setImageDims(s_imageDim);
+    }
     // Program camera read properties
     if (real_cam)
     {
         ui_error = SetReadMode(s_readProp.read_mode);
         checkError(ui_error, "SetReadMode");
 
-        // If single track, set track
-        if (s_readProp.read_mode == 3)
+        // If single track or FVB, set track
+        if ((s_readProp.read_mode == 3) || (s_readProp.read_mode == 0))
         {
             ui_error = SetSingleTrack(s_readProp.track_cent, s_readProp.track_height);
             checkError(ui_error, "SetSingleTrack");

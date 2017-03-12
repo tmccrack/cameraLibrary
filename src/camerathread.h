@@ -32,10 +32,11 @@ public:
     CameraThread(QObject *parent = 0, uint16_t *image_buffer = 0);
     ~CameraThread();
     void startThread(int x = 0, int y = 0, bool real_cam = false);
-    void startThread(cb_cam_func cb = NULL, void *user_data = NULL, int x = 0, int y = 0, bool real_cam = false);
+    void startThread(cb_cam_func cb = NULL, void *user_data = NULL, int x = 0, int y = 0, bool real_cam = false, bool s_shot = false);
     void abortThread();
 
     bool setLoopCond(int loopCond = 0);
+    bool setClosedLoop(bool state);
 
     Gain getServoGainX();
     Gain getServoGainY();
@@ -54,9 +55,12 @@ protected:
 
 private:
     bool checkError(unsigned int _ui_error, const char* _cp_func);
+
     void openLoop();
     void servoLoop();
     void callbackLoop();
+    void singleShot();
+
     bool b_gblerrorFlag;
     unsigned int and_error; // Andor error
     DWORD win_error;  // Windows event error
@@ -66,6 +70,7 @@ private:
     float xd = 32;
     float yd = 32;
     bool b_abort;
+    bool b_closed;
     int i_loopCond = 0;
     uint16_t *cam_data;
     uint16_t *copy_data;
