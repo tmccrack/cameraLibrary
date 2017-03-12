@@ -15,6 +15,7 @@ Camera::Camera()
 Camera::~Camera()
 {
     if (cam_data) delete[] cam_data;
+    if (t_cam_thread) delete t_cam_thread;
 }
 
 void Camera::initializeCamera(string cam_name, bool r_cam, int temp)

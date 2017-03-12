@@ -421,8 +421,6 @@ void CameraThread::callbackLoop()
 
 void CameraThread::singleShot()
 {
-    qDebug() << "Starting single shot";
-
     if (real_cam)
     {
         and_error = StartAcquisition();
