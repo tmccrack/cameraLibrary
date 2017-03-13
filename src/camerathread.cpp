@@ -43,13 +43,14 @@ CameraThread::~CameraThread()
 /*
  * Set camera thread properties and start the acquistion loop
  */
-void CameraThread::startThread(int x, int y, bool real_cam)
+void CameraThread::startThread(int x, int y, bool r_cam)
 {
     // Create copy data buffer
     xd = (float) x;
     yd = (float) y;
     image_size = (int) xd * yd;
     cam_data = new uint16_t[image_size];
+    real_cam = r_cam;
 
     //
     if (isRunning())
@@ -72,13 +73,14 @@ void CameraThread::startThread(int x, int y, bool real_cam)
 }
 
 // Overloaded for callback
-void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bool real_cam, bool s_shot)
+void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bool r_cam, bool s_shot)
 {
     // Create copy data buffer
     xd = (float) x;
     yd = (float) y;
     image_size = (int) xd * yd;
     cam_data = new uint16_t[image_size];
+    real_cam = r_cam;
 
     // Set to appropriate callback thread function
     if (s_shot) i_loopCond = 3;

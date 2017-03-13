@@ -71,8 +71,8 @@ def GetInput():
 	else:
 		return False	
 
-name = "FTT"
-ftt = pycamera.PyCamera(name, False, 0)	
+name = "ExpM"
+ftt = pycamera.PyCamera(name, True, 0)	
 # buffer = np.empty([262144, 1], dtype=int)
 
 while (GetInput()):

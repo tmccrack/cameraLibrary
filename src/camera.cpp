@@ -23,6 +23,7 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
     cam_data = new uint16_t[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
     real_cam = r_cam;
+    qDebug() << "Real cam: " << real_cam;
     if (!real_cam)
     {
         // Generate fake data
@@ -416,7 +417,7 @@ void Camera::_initializeCamera(int temp)
 
         // Set exposure properties
         s_expProp.em_gain = 1;
-        s_expProp.exp_time = 0.01;
+        s_expProp.exp_time = 1.0;
         s_expProp.ext_trig = false;
     }
     else

@@ -31,8 +31,8 @@ class CameraThread : public QThread
 public:
     CameraThread(QObject *parent = 0, uint16_t *image_buffer = 0);
     ~CameraThread();
-    void startThread(int x = 0, int y = 0, bool real_cam = false);
-    void startThread(cb_cam_func cb = NULL, void *user_data = NULL, int x = 0, int y = 0, bool real_cam = false, bool s_shot = false);
+    void startThread(int x = 0, int y = 0, bool r_cam = false);
+    void startThread(cb_cam_func cb = NULL, void *user_data = NULL, int x = 0, int y = 0, bool r_cam = false, bool s_shot = false);
     void abortThread();
 
     bool setLoopCond(int loopCond = 0);
