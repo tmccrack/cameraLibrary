@@ -259,10 +259,11 @@ class AppWindow(Ui_MainWindow):
 		self.temp_timer.start()
 
 	def connectSlots(self):
-		self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
-		self.btn_SubFrame.clicked.connect(self.btnSubFrameClicked)
-		self.btn_Closed.clicked.connect(self.btnClosedClicked)
-		self.btn_Abort.clicked.connect(self.btnAbortClicked)
+		# self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
+		# self.btn_SubFrame.clicked.connect(self.btnSubFrameClicked)
+		# self.btn_Closed.clicked.connect(self.btnClosedClicked)
+		# self.btn_Abort.clicked.connect(self.btnAbortClicked)
+		self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.btn_SetTemp.clicked.connect(self.setTempProp)
@@ -271,45 +272,56 @@ class AppWindow(Ui_MainWindow):
 		self.cam_timer.timeout.connect(self.updateFig)
 		self.temp_timer.timeout.connect(self.updateTemp)
 
-
-	def btnFullFrameClicked(self):
+	def btnToggleCamClicked(self):
 		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			# set frame size to full frame, click 'setFrame', start camera
-			self.spb_XOffs.setValue(1)
-			self.spb_YOffs.setValue(1)
-			self.spb_XDim.setValue(512)
-			self.spb_YDim.setValue(512)
-			self.spb_XBin.setValue(1)
-			self.spb_YBin.setValue(1)
-			self.btn_SetFrame.click()
-			self.camera.start()
-			self.cam_timer.start()
-			self.logUpdate("Full frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnSubFrameClicked(self):
-		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			self.camera.start()
-			self.cam_timer.start()
-			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnClosedClicked(self):
-		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			self.camera.start(servo = True)
-			self.cam_timer.start()
-			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnAbortClicked(self):
-		if self.camera.running():
 			self.camera.stop()
 			self.cam_timer.stop()
 			self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
-		else: self.logUpdate("Exposure sequence already STOPPED")
+			self.btn_ToggleCam.setText('Start')
+		elif not self.camera.running():
+			self.camera.start()
+			self.cam_timer.start()
+			self.logUpdate("Exposure sequence started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+			self.btn_ToggleCam.setText('Stop')
+
+	# def btnFullFrameClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		# set frame size to full frame, click 'setFrame', start camera
+	# 		self.spb_XOffs.setValue(1)
+	# 		self.spb_YOffs.setValue(1)
+	# 		self.spb_XDim.setValue(512)
+	# 		self.spb_YDim.setValue(512)
+	# 		self.spb_XBin.setValue(1)
+	# 		self.spb_YBin.setValue(1)
+	# 		self.btn_SetFrame.click()
+	# 		self.camera.start()
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Full frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnSubFrameClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		self.camera.start()
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnClosedClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		self.camera.start(servo = True)
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnAbortClicked(self):
+	# 	if self.camera.running():
+	# 		self.camera.stop()
+	# 		self.cam_timer.stop()
+	# 		self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
+	# 	else: self.logUpdate("Exposure sequence already STOPPED")
 	
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict

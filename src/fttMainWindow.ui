@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>762</width>
-    <height>811</height>
+    <width>830</width>
+    <height>914</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,30 +36,8 @@
      <layout class="QVBoxLayout" name="button_vl">
       <item>
        <layout class="QGridLayout" name="button_grid">
-        <item row="4" column="2">
-         <widget class="QPushButton" name="btn_SubFrame">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Start subframe exposures. Subframe determined by frame parameters.</string>
-          </property>
-          <property name="text">
-           <string>Sub Frame</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QPushButton" name="btn_FullFrame">
+        <item row="4" column="0">
+         <widget class="QPushButton" name="btn_ToggleCam">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -76,45 +54,14 @@
            <string>Start full frame exposures</string>
           </property>
           <property name="text">
-           <string>Full Frame</string>
+           <string>Start</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="QPushButton" name="btn_Closed">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Start closed loop operation.</string>
-          </property>
+        <item row="5" column="0">
+         <widget class="QRadioButton" name="radioButton">
           <property name="text">
-           <string>Closed</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="2">
-         <widget class="QPushButton" name="btn_Abort">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>Abort current exposure sequence</string>
-          </property>
-          <property name="text">
-           <string>Abort</string>
+           <string>Servo</string>
           </property>
          </widget>
         </item>
@@ -681,8 +628,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>762</width>
-     <height>21</height>
+     <width>830</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>
