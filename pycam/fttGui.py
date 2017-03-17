@@ -22,6 +22,7 @@ class ImageCanvas(FigureCanvas):
 	"""
 	FigureCanvasQtAgg that is ultimately a QWidget
 	"""
+	imageClick = QtCore.pyqtSignal(float, float)
 	iDims = {}
 	def __init__(self, parent=None):
 		fig = Figure()
@@ -43,7 +44,7 @@ class ImageCanvas(FigureCanvas):
 									  axis_bgcolor='k')  # horizontal summation
 
 		# The image, plot random data for initialization
-		self.ftt_image = self.axes_ftt.imshow(np.random.rand(50,50), 
+		self.ftt_image = self.axes_ftt.imshow(np.random.rand(512,512), 
 											  cmap='gray', 
 											  interpolation='none')
 		self.axes_ftt.set_axis_off()
@@ -51,8 +52,8 @@ class ImageCanvas(FigureCanvas):
 		self.axes_ftt.hold(False)
 
 		# Summation plots, generate axes and plot random data for initialization
-		self.xlims = np.linspace(0, 49, 50)
-		self.ylims = np.linspace(0, 49, 50)
+		self.xlims = np.linspace(0, 511, 512)
+		self.ylims = np.linspace(0, 511, 512)
 		self.axes_vsum.relim()
 		self.axes_vsum.autoscale_view()
 
@@ -60,9 +61,16 @@ class ImageCanvas(FigureCanvas):
 		self.axes_hsum.relim()
 		self.axes_hsum.autoscale_view()
 
-		self.vsum_lines, = self.axes_vsum.plot(self.ylims, np.random.rand(50,1), color='r', linewidth=0.5)
-		self.hsum_lines, = self.axes_hsum.plot(np.random.rand(50,1), self.xlims, color='g', linewidth=0.5)
+		self.vsum_lines, = self.axes_vsum.plot(self.ylims, np.random.rand(512,1), color='w', linewidth=0.5)
+		self.hsum_lines, = self.axes_hsum.plot(np.random.rand(512,1), self.xlims, color='w', linewidth=0.5)
 
+		cid = self.mpl_connect('button_press_event', self.on_press)
+
+
+	#
+	# 
+	def on_press(self, event):
+		self.imageClick.emit(event.xdata, event.ydata)
 
 
 	def updateFig(self, buffer):
@@ -74,7 +82,7 @@ class ImageCanvas(FigureCanvas):
 		self.ftt_image.set_clim(vmin=buffer.min(), vmax=buffer.max())
 
 		# Summation in horizontal direction
-		self.hsum_lines.set_data(np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],
+		self.hsum_lines.set_data(np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],	
 														ImageCanvas.iDims['h_dim']), 
 										 axis=1)[::-1], self.ylims)
 		self.axes_hsum.relim()
@@ -107,7 +115,12 @@ class ImageCanvas(FigureCanvas):
 		self.ylims = np.linspace(0, ImageCanvas.iDims['v_dim'] - 1,
 									ImageCanvas.iDims['v_dim'])
 
-		# self.axes_hsum.set_ylim(0, 511)
+		# self.axes_ftt.set_xbound(0, ImageCanvas.iDims['h_dim']-1)
+		# self.axes_ftt.set_ybound(0, ImageCanvas.iDims['v_dim']-1)
+		extent = (0, ImageCanvas.iDims['h_dim'] - 1, ImageCanvas.iDims['v_dim'] - 1, 0)
+		self.ftt_image.set_extent(extent)
+
+
 		self.axes_hsum.set_ylim(0, ImageCanvas.iDims['v_dim'] - 1)
 		self.axes_hsum.locator_params(axis='x', nbins=3)
 		self.axes_hsum.set_yticklabels([], visible=False)
@@ -212,7 +225,7 @@ class AppWindow(Ui_MainWindow):
 
 		# Initialize camera, data buffer, and data timer
 		name = "FTT"
-		self.camera = pycamera.PyCamera(name, True, temp=17)
+		self.camera = pycamera.PyCamera(name, False, temp=17)
 		self.imageDim = self.camera.getImageDimension()
 		self.expProp = self.camera.getExposureProp()
 		self.readProp = self.camera.getReadProp()
@@ -246,56 +259,69 @@ class AppWindow(Ui_MainWindow):
 		self.temp_timer.start()
 
 	def connectSlots(self):
-		self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
-		self.btn_SubFrame.clicked.connect(self.btnSubFrameClicked)
-		self.btn_Closed.clicked.connect(self.btnClosedClicked)
-		self.btn_Abort.clicked.connect(self.btnAbortClicked)
+		# self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
+		# self.btn_SubFrame.clicked.connect(self.btnSubFrameClicked)
+		# self.btn_Closed.clicked.connect(self.btnClosedClicked)
+		# self.btn_Abort.clicked.connect(self.btnAbortClicked)
+		self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.btn_SetTemp.clicked.connect(self.setTempProp)
 		self.btn_Gain.clicked.connect(self.btnGainClicked)
+		self.imageDisp.imageClick.connect(self.imageClicked)
 		self.cam_timer.timeout.connect(self.updateFig)
 		self.temp_timer.timeout.connect(self.updateTemp)
 
-
-	def btnFullFrameClicked(self):
+	def btnToggleCamClicked(self):
 		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			# set frame size to full frame, click 'setFrame', start camera
-			self.spb_XOffs.setValue(1)
-			self.spb_YOffs.setValue(1)
-			self.spb_XDim.setValue(512)
-			self.spb_YDim.setValue(512)
-			self.spb_XBin.setValue(1)
-			self.spb_YBin.setValue(1)
-			self.btn_SetFrame.click()
-			self.camera.start()
-			self.cam_timer.start()
-			self.logUpdate("Full frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnSubFrameClicked(self):
-		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			self.camera.start()
-			self.cam_timer.start()
-			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnClosedClicked(self):
-		if  self.camera.running(): 
-			self.logUpdate("Exposure sequence already STARTED")
-		else:
-			self.camera.start(servo = True)
-			self.cam_timer.start()
-			self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	def btnAbortClicked(self):
-		if self.camera.running():
 			self.camera.stop()
 			self.cam_timer.stop()
 			self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
-		else: self.logUpdate("Exposure sequence already STOPPED")
+			self.btn_ToggleCam.setText('Start')
+		elif not self.camera.running():
+			self.camera.start()
+			self.cam_timer.start()
+			self.logUpdate("Exposure sequence started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+			self.btn_ToggleCam.setText('Stop')
+
+	# def btnFullFrameClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		# set frame size to full frame, click 'setFrame', start camera
+	# 		self.spb_XOffs.setValue(1)
+	# 		self.spb_YOffs.setValue(1)
+	# 		self.spb_XDim.setValue(512)
+	# 		self.spb_YDim.setValue(512)
+	# 		self.spb_XBin.setValue(1)
+	# 		self.spb_YBin.setValue(1)
+	# 		self.btn_SetFrame.click()
+	# 		self.camera.start()
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Full frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnSubFrameClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		self.camera.start()
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnClosedClicked(self):
+	# 	if  self.camera.running(): 
+	# 		self.logUpdate("Exposure sequence already STARTED")
+	# 	else:
+	# 		self.camera.start(servo = True)
+	# 		self.cam_timer.start()
+	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+
+	# def btnAbortClicked(self):
+	# 	if self.camera.running():
+	# 		self.camera.stop()
+	# 		self.cam_timer.stop()
+	# 		self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
+	# 	else: self.logUpdate("Exposure sequence already STOPPED")
 	
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict
@@ -325,6 +351,11 @@ class AppWindow(Ui_MainWindow):
 
 		self.gain = self.camera.setGain(self.gain, self.spb_Rotation.value())
 		# print("{} {} {}".format(self.gain['kp'], self.gain['ki'], self.gain['kd']))
+
+	def imageClicked(self, targx, targy):
+		x, y = self.camera.setTargetCoords(targx, targy)
+		self.spb_XFib.setValue(x)
+		self.spb_YFib.setValue(y)
 
 	def updateFig(self):
 		# Update image dispaly with newest data array, fires with timer timeeout

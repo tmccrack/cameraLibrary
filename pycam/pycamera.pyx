@@ -88,8 +88,10 @@ cdef class PyCamera:
         self.shutdown()
         self.buffer
 
-    def start(self, loopCond = 0):
-        self.pycam.startCamera(loopCond)
+    # def start(self, loopCond = 0):
+        # self.pycam.startCamera(loopCond)
+    def start(self, servo = False):
+        self.pycam.startCamera(servo)
         return self.running()
 
     def arm(self, arm_state):
@@ -243,5 +245,15 @@ cdef class PyCamera:
         self.pycam.setRotation(rotation)
         return self.getGainX()
 
-     
+    #
+    # Servo setpoint getter/setter
+    def getTargetCoords(self):
+        cdef float *x
+        cdef float *y
+        self.pycam.getTargetCoords(x, y)
+        return (x[0], y[0])
+
+    def setTargetCoords(self, x, y):
+        self.pycam.setTargetCoords(x, y)
+        return self.getTargetCoords()
 

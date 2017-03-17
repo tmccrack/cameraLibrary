@@ -29,7 +29,8 @@ cdef extern from "./../src/camera.h":
     cdef cppclass Camera:
         Camera() except +
         void initializeCamera(string cam_name, bool real_cam, int temp)
-        void startCamera(int loopCond)
+        # void startCamera(int loopCond)
+        void startCamera(bool servo)
         void startCamera(cb_cam_func cb, void *user_data)
         void singleShot(cb_cam_func cb, void *user_data)
         bool isCameraRunning()
@@ -42,8 +43,10 @@ cdef extern from "./../src/camera.h":
 
         ExposureProperties getExposureParams()
         void setExposureParams(ExposureProperties expProp)
+
         ReadProperties getReadParams()
         void setReadParams(ReadProperties readProp)
+
         TimingProperties getTimingParams()
         void setTimingParams(TimingProperties timeProp)
 
@@ -116,7 +119,3 @@ cdef extern from "./../src/camera.h":
     # 	float targetx
     # 	float targety
     # 	float rotation
-
-
-    	
-

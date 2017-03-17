@@ -108,6 +108,8 @@ public:
     Gain getGainX();
     Gain getGainY();
     void setGain(Gain gainx, Gain gainy);
+    void getTargetCoords(float *x, float *y);
+    void setTargetCoords(float x, float y);
     float getRotation();
     void setRotation(float rot);
 
