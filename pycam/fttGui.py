@@ -16,7 +16,10 @@ from matplotlib.image import AxesImage
 from fttMainWindow import Ui_MainWindow  # pyuic5 generated file
 
 import time
+import logging
 
+logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
+image_path = "./../data/"
 
 class ImageCanvas(FigureCanvas):
 	"""
@@ -54,15 +57,22 @@ class ImageCanvas(FigureCanvas):
 		# Summation plots, generate axes and plot random data for initialization
 		self.xlims = np.linspace(0, 511, 512)
 		self.ylims = np.linspace(0, 511, 512)
+		self.errlims = np.linspace(0, 99, 100)
+
 		self.axes_vsum.relim()
 		self.axes_vsum.autoscale_view()
-
-
 		self.axes_hsum.relim()
 		self.axes_hsum.autoscale_view()
+		self.axes_err.relim()
+		self.axes_err.autoscale_view()
+
+		# error buffer
+		self.errs = np.zeros((100,2))
 
 		self.vsum_lines, = self.axes_vsum.plot(self.ylims, np.random.rand(512,1), color='w', linewidth=0.5)
 		self.hsum_lines, = self.axes_hsum.plot(np.random.rand(512,1), self.xlims, color='w', linewidth=0.5)
+		self.xerr_lines, = self.axes_err.plot(self.errlims, self.errs[:,0], color='r') 
+		self.yerr_lines, = self.axes_err.plot(self.errlims, self.errs[:,1], color='g')
 
 		cid = self.mpl_connect('button_press_event', self.on_press)
 
@@ -73,7 +83,7 @@ class ImageCanvas(FigureCanvas):
 		self.imageClick.emit(event.xdata, event.ydata)
 
 
-	def updateFig(self, buffer):
+	def updateFig(self, buffer, vals=None):
 		"""
 		Reshape the linear buffer, show image and summations
 		"""
@@ -96,8 +106,18 @@ class ImageCanvas(FigureCanvas):
 													 axis=0))
 		self.axes_vsum.relim()
 		self.axes_vsum.autoscale_view()
-		self.draw()
 
+		# Update error buffer
+		# print(vals)
+		if vals is not None:
+			self.errs[0,:] = vals
+			self.errs = np.roll(self.errs, -1, axis=0)
+			self.xerr_lines.set_data(self.errlims, self.errs[:,0])
+			self.yerr_lines.set_data(self.errlims, self.errs[:,1])
+			self.axes_err.relim()
+			self.axes_err.autoscale_view()
+
+		self.draw()
 
 	def setDimensions(self, iDims):
 		"""
@@ -202,10 +222,7 @@ class Mirror(QtWidgets.QDialog):
 
 	def jogDownCh1(self):
 		self.spb_Ch1.setValue(self.spb_Ch1.value() - 0.01)
-		self.moveMirror()
-
-
-	
+		self.moveMirror()	
 
 
 class AppWindow(Ui_MainWindow):
@@ -223,6 +240,9 @@ class AppWindow(Ui_MainWindow):
 	def __init__(self, mainwindow):
 		self.setupUi(mainwindow)
 
+		# Initialize logger
+		self.logger = logging.getLogger('')
+
 		# Initialize camera, data buffer, and data timer
 		name = "FTT"
 		self.camera = pycamera.PyCamera(name, False, temp=17)
@@ -233,6 +253,7 @@ class AppWindow(Ui_MainWindow):
 		self.shutterProp = self.camera.getShutterProp()
 		self.tempProp = self.camera.getTempProp()
 		self.gain = self.camera.getGainX()
+		self.coords = self.camera.getTargetCoords()
 
 		# Timers for updates
 		self.cam_timer = QtCore.QTimer()
@@ -244,7 +265,7 @@ class AppWindow(Ui_MainWindow):
 		self.spb_SetPoint.setValue(self.tempProp['set_point'])
 
 		# Time format for logging purposes
-		self.timeFormat = '%Y-%m-%dz%H:%M:%S'
+		self.timeFormat = '%Y-%m-%dz%H-%M-%S'
 
 		# Instantiate class, add to gui, initialize display
 		self.imageDisp = ImageCanvas(parent=self.mpl_window)
@@ -255,19 +276,16 @@ class AppWindow(Ui_MainWindow):
 
 		self.connectSlots()
 		# Click setframe to initialize data array in cython to avoid 
-		# self.btn_SetFrame.click()
+		self.btn_SetFrame.click()
 		self.temp_timer.start()
 
 	def connectSlots(self):
-		# self.btn_FullFrame.clicked.connect(self.btnFullFrameClicked)
-		# self.btn_SubFrame.clicked.connect(self.btnSubFrameClicked)
-		# self.btn_Closed.clicked.connect(self.btnClosedClicked)
-		# self.btn_Abort.clicked.connect(self.btnAbortClicked)
 		self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
 		self.btn_SetFrame.clicked.connect(self.btnSetFrameClicked)
 		self.btn_SetExp.clicked.connect(self.setExposureProp)
 		self.btn_SetTemp.clicked.connect(self.setTempProp)
 		self.btn_Gain.clicked.connect(self.btnGainClicked)
+		self.rad_ToggleServo.toggled.connect(self.radToggleServoClicked)
 		self.imageDisp.imageClick.connect(self.imageClicked)
 		self.cam_timer.timeout.connect(self.updateFig)
 		self.temp_timer.timeout.connect(self.updateTemp)
@@ -279,49 +297,17 @@ class AppWindow(Ui_MainWindow):
 			self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
 			self.btn_ToggleCam.setText('Start')
 		elif not self.camera.running():
-			self.camera.start()
+			log_file = image_path+time.strftime(self.timeFormat, time.gmtime())+"-ftt.dat"
+			self.camera.start(1, log_file)
 			self.cam_timer.start()
 			self.logUpdate("Exposure sequence started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+			self.logUpdate("Data log at {} with image dim {},{}".format(log_file, self.imageDim['h_dim']
+																				, self.imageDim['v_dim']))
 			self.btn_ToggleCam.setText('Stop')
 
-	# def btnFullFrameClicked(self):
-	# 	if  self.camera.running(): 
-	# 		self.logUpdate("Exposure sequence already STARTED")
-	# 	else:
-	# 		# set frame size to full frame, click 'setFrame', start camera
-	# 		self.spb_XOffs.setValue(1)
-	# 		self.spb_YOffs.setValue(1)
-	# 		self.spb_XDim.setValue(512)
-	# 		self.spb_YDim.setValue(512)
-	# 		self.spb_XBin.setValue(1)
-	# 		self.spb_YBin.setValue(1)
-	# 		self.btn_SetFrame.click()
-	# 		self.camera.start()
-	# 		self.cam_timer.start()
-	# 		self.logUpdate("Full frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	# def btnSubFrameClicked(self):
-	# 	if  self.camera.running(): 
-	# 		self.logUpdate("Exposure sequence already STARTED")
-	# 	else:
-	# 		self.camera.start()
-	# 		self.cam_timer.start()
-	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	# def btnClosedClicked(self):
-	# 	if  self.camera.running(): 
-	# 		self.logUpdate("Exposure sequence already STARTED")
-	# 	else:
-	# 		self.camera.start(servo = True)
-	# 		self.cam_timer.start()
-	# 		self.logUpdate("Sub frame started {}".format(time.strftime(self.timeFormat,time.gmtime())))
-
-	# def btnAbortClicked(self):
-	# 	if self.camera.running():
-	# 		self.camera.stop()
-	# 		self.cam_timer.stop()
-	# 		self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
-	# 	else: self.logUpdate("Exposure sequence already STOPPED")
+	def radToggleServoClicked(self):
+		servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
+		self.logUpdate("Servo state set {} {}".format(servoState, time.strftime(self.timeFormat,time.gmtime())))
 	
 	def btnSetFrameClicked(self):
 		# Update internal dimension dict
@@ -339,9 +325,8 @@ class AppWindow(Ui_MainWindow):
 		self.imageDim = self.camera.setImageDimension(self.imageDim)
 		self.imageDisp.setDimensions(self.imageDim)
 
-		# Display updates
-		self.logUpdate("Setting frame parameters")
-		self.logUpdate(self.imageDim)
+		self.logUpdate("Setting frame parameters: {} {}".format(self.imageDim, 
+									time.strftime(self.timeFormat,time.gmtime())))
 
 	def btnGainClicked(self):
 		self.gain['kp'] = self.spb_P.value()
@@ -350,27 +335,40 @@ class AppWindow(Ui_MainWindow):
 		self.gain['dt'] = self.expProp['exp_time']
 
 		self.gain = self.camera.setGain(self.gain, self.spb_Rotation.value())
-		# print("{} {} {}".format(self.gain['kp'], self.gain['ki'], self.gain['kd']))
+		self.coords = self.camera.setTargetCoords(self.coords[0],
+												  self.coords[1])
+		self.logUpdate("Setting gain parameters: {} {}".format(self.gain,
+									time.strftime(self.timeFormat,time.gmtime())))
+		self.logUpdate("Target coordinates set to: [{}, {}] {}".format(self.coords[0],
+									self.coords[1], time.strftime(self.timeFormat,time.gmtime())))
 
 	def imageClicked(self, targx, targy):
-		x, y = self.camera.setTargetCoords(targx, targy)
-		self.spb_XFib.setValue(x)
-		self.spb_YFib.setValue(y)
+		self.coords = (targx, targy)
+		self.spb_XFib.setValue(targx)
+		self.spb_YFib.setValue(targy)
 
 	def updateFig(self):
-		# Update image dispaly with newest data array, fires with timer timeeout
-		self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
+		# Update image dispaly with newest data array, fires with timer timeout
+		if self.rad_ToggleServo.isChecked():
+			self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']],
+									self.camera.servoData())
+		else:
+			self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
 
 	def setTempProp(self):
 		# Set internal temp dict, pass to camera, camera return actual values
 		self.tempProp['set_point'] = self.spb_SetPoint.value()
 		self.tempProp = self.camera.setTempProp(self.tempProp)
+		self.logUpdate("Temp setpoint: {} {}".format(self.tempProp['set_point'],
+													 time.strftime(self.timeFormat,time.gmtime())))
 
 	def updateTemp(self):
 		# Update temp dict, set appropriate values
 		self.tempProp = self.camera.getTempArray()
 		self.spb_ArrayTemp.setValue(self.tempProp['array_temp'])
 		self.edt_TempStatus.setText(AppWindow.d_temp[str(self.tempProp['cooler_state'])])
+		self.logTemp("Camera temp: {} {}".format(self.tempProp['array_temp'],
+												   time.strftime(self.timeFormat,time.gmtime())))
 
 	def setExposureProp(self):
 		self.expProp['exp_time'] = self.spb_ExpTime.value()
@@ -380,9 +378,18 @@ class AppWindow(Ui_MainWindow):
 		self.expProp = self.camera.setExposureProp(self.expProp)
 		self.spb_ExpTime.setValue(self.expProp['exp_time'])
 		self.spb_EMGain.setValue(self.expProp['em_gain'])
+		self.logUpdate("Exp time: {}, Cycle time: {} EMGain: {}, {}".format(self.expProp['exp_time'],
+													self.expProp['kinetic_time'], self.expProp['em_gain'],
+													time.strftime(self.timeFormat,time.gmtime())))
 
 	def logUpdate(self, value):
 		self.logUpdateText.appendPlainText(str(value))
+		logging.info(value)
+
+	def logTemp(self, value):
+		#
+		# TODO: replace logging with appropriate database call
+		logging.info(value)
 
 
 if __name__ == '__main__':
