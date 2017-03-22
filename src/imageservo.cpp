@@ -17,6 +17,13 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     setTargetCoords(256, 256);
 }
 
+ImageServo::~ImageServo()
+{
+    if (errs) delete errs;
+    if (x_servo) delete x_servo;
+    if (y_servo) delete y_servo;
+}
+
 
 /*
  * Centroid image, find error and rotate to mirror coordinate system
@@ -54,6 +61,12 @@ void ImageServo::getErrors(Error *x, Error *y)
 {
     *x = x_servo->getError();
     *y = y_servo->getError();
+}
+
+void ImageServo::zeroErrors()
+{
+    x_servo->zeroError();
+    y_servo->zeroError();
 }
 
 

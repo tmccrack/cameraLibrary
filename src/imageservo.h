@@ -12,12 +12,14 @@ class ImageServo : public QObject
 {
 
 public:
-    explicit ImageServo(QObject *parent = 0, float *centroids=0, float *updates=0, int x_dim=32, int y_dim=32);
+    ImageServo(QObject *parent = 0, float *centroids=0, float *updates=0, int x_dim=32, int y_dim=32);
+    ~ImageServo();
 
     void setBuffer(uint16_t *cont_buffer);
 
     void getUpdate();
     void getErrors(Error *x, Error *y);
+    void zeroErrors();
 
     void getImageDim(int *x_dim, int *y_dim);
     void setImageDim(int x_dim, int y_dim);

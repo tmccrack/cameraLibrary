@@ -25,7 +25,8 @@ class Servo : public QObject
 {
 
 public:
-    explicit Servo(QObject *parent=0);
+    Servo(QObject *parent=0);
+    ~Servo();
     Gain getGain();
     void setGain(Gain gain);
     void setGain(float kp, float ki, float kd, float dt);
@@ -36,7 +37,7 @@ public:
 
     Error getError();
     void setError(float err);
-
+    void zeroError();
 
 private:
     Gain s_gain;

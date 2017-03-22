@@ -12,6 +12,11 @@ Servo::Servo(QObject *parent)
     s_error.set_point = 0;
 }
 
+Servo::~Servo()
+{
+
+}
+
 
 /*
  * Iterate servo loop to get update
@@ -39,6 +44,12 @@ Error Servo::getError()
 void Servo::setError(float err)
 {
     s_error.error = err;
+}
+
+void Servo::zeroError()
+{
+    s_error.error = 0;
+    s_error.pre_error = 0;
 }
 
 
