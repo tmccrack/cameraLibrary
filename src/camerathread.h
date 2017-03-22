@@ -15,6 +15,7 @@
 #include <iostream>
 #include "socketclient.h"
 #include "imageservo.h"
+#include "imagelogger.h"
 #include "ATMCD32D.h"
 
 #define PI 3.14159265
@@ -31,18 +32,22 @@ class CameraThread : public QThread
 public:
     CameraThread(QObject *parent = 0, uint16_t *image_buffer = 0);
     ~CameraThread();
-    void startThread(int x = 0, int y = 0, bool r_cam = false);
-    void startThread(cb_cam_func cb = NULL, void *user_data = NULL, int x = 0, int y = 0, bool r_cam = false, bool s_shot = false);
+    void startThread(int x = 0, int y = 0, bool r_cam = false, std::string filename = "");  // Must get data manually
+    void startThread(cb_cam_func cb = NULL,
+                     void *user_data = NULL,
+                     int x = 0, int y = 0, bool r_cam = false, bool s_shot = false);  // Supplied callabck
     void abortThread();
 
     bool setLoopCond(int loopCond = 0);
-    bool setClosedLoop(bool state);
+    bool setServoState(bool state);
+    bool setLogState(bool state);
 
     Gain getServoGainX();
     Gain getServoGainY();
     void setServoGain(Gain gainx, Gain gainy);
     float getServoRotation();
     void setServoRotation(float rotation);
+    void getServoData(float *update);
 
     void getServoTargetCoords(float *tar_x, float *tar_y);
     void setServoTargetCoords(float tar_x, float tar_y);
@@ -71,12 +76,14 @@ private:
     float yd = 32;
     bool b_abort;
     bool b_closed;
+    bool b_log;
+    bool real_cam;
+    std::string log_file;
     int i_loopCond = 0;
     uint16_t *cam_data;
     uint16_t *copy_data;
     int *status;
 
-    bool real_cam;
 
     cb_cam_func callback;
     void *ud;
@@ -89,6 +96,7 @@ private:
     Error *y_err;
 
     ImageServo *servo;
+    ImageLogger *logger;
     SocketClient *client;
 
 };

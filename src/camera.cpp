@@ -42,7 +42,7 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
 /*
  * Start camera acquisition thread
  */
-void Camera::startCamera(int loopCond)
+void Camera::startCamera(int loopCond, string filename)
 {
     if (camera_name == "FTT")
     {
@@ -59,8 +59,7 @@ void Camera::startCamera(int loopCond)
         int st = t_cam_thread->setLoopCond(loopCond);
         qDebug() << "Loop status: " << st;
 //            t_cam_thread->setServoDim(s_imageDim.h_dim, s_imageDim.v_dim);
-
-        t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim, real_cam);
+        t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim, real_cam, filename);
     }
 }
 
@@ -155,6 +154,11 @@ void Camera::getCameraData(uint16_t *buffer)
         }
         copy(cam_data, cam_data + s_imageDim.size, buffer);
     }
+}
+
+void Camera::getServoData(float *updates)
+{
+    t_cam_thread->getServoData(updates);
 }
 
 
@@ -341,6 +345,11 @@ float Camera::getRotation()
 void Camera::setRotation(float rot)
 {
     t_cam_thread->setServoRotation(rot);
+}
+
+bool Camera::setServoState(bool state)
+{
+    return t_cam_thread->setServoState(state);
 }
 
 

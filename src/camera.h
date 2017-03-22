@@ -73,12 +73,13 @@ public:
     ~Camera();
     void initializeCamera(std::string cam_name, bool r_cam, int temp=-65);
     void shutdownCamera();
-    void startCamera(int loopCond);
+    void startCamera(int loopCond, std::string filename=NULL);
     void startCamera(cb_cam_func cb, void *user_data);
     void singleShot(cb_cam_func cb, void *user_data);
     void stopCamera();
     bool isCameraRunning();
     void getCameraData(uint16_t *buffer);
+    void getServoData(float *updates);
 
     ImageDimension getImageDims();
     void setImageDims(int hstart, int hend, int vstart, int vend, int hbin, int vbin);
@@ -112,6 +113,8 @@ public:
     void setTargetCoords(float x, float y);
     float getRotation();
     void setRotation(float rot);
+    bool setServoState(bool state);
+    bool setLogState(bool state);
 
 
 private:
