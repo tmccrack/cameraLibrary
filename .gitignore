@@ -4,3 +4,4 @@ pycam/pycamera.cpp
 pycam/build*
 pycam/*.pyd
 log*/
+data*/
