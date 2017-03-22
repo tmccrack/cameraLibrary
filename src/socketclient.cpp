@@ -7,7 +7,7 @@ using namespace std;
  */
 SocketClient::SocketClient()
 {
-    host = "172.29.46.109";
+    host = "localhost";
     port = 6666;
     socket = new QTcpSocket;
     data = new QByteArray;
@@ -29,7 +29,8 @@ SocketClient::SocketClient(int pport, string hhost)
  */
 SocketClient::~SocketClient()
 {
-
+    if (socket) delete socket;
+    if (data) delete data;
 }
 
 

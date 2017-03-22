@@ -10,6 +10,7 @@
 
 class SocketClient
 {
+
 public:
     SocketClient();
     SocketClient(int pport, std::string hhost);
