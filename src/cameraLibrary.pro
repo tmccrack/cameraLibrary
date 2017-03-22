@@ -20,14 +20,16 @@ SOURCES += \
     camerathread.cpp \
     socketclient.cpp \
     imageservo.cpp \
-    servo.cpp
+    servo.cpp \
+    imagelogger.cpp
 
 HEADERS +=\
     camera.h \
     camerathread.h \
     socketclient.h \
     imageservo.h \
-    servo.h
+    servo.h \
+    imagelogger.h
 
 unix {
     target.path = /usr/lib
