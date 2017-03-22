@@ -29,15 +29,17 @@ cdef extern from "./../src/camera.h":
     cdef cppclass Camera:
         Camera() except +
         void initializeCamera(string cam_name, bool real_cam, int temp)
-        # void startCamera(int loopCond)
-        void startCamera(bool servo)
+        void startCamera(int loopCond, string filename)
         void startCamera(cb_cam_func cb, void *user_data)
         void singleShot(cb_cam_func cb, void *user_data)
         bool isCameraRunning()
         void stopCamera()
         void shutdownCamera()
         void getCameraData(uint16_t *buffer)
+        void getServoData(float *updates)
 
+        #
+        # Camera properties
         ImageDimension getImageDims()
         void setImageDims(ImageDimension imageDim)
 
@@ -57,11 +59,17 @@ cdef extern from "./../src/camera.h":
         TemperatureProperties getTempArray()
         void setTempParams(TemperatureProperties tempProp)
 
+        #
+        # Servo properties
         Gain getGainX()
         Gain getGainY()
         void setGain(Gain gainx, Gain gainy)
         float getRotation()
         void setRotation(float rot)
+        void getTargetCoords(float *x, float *y)
+        void setTargetCoords(float x, float y)
+        bool setServoState(bool state)
+        bool setLogState(bool state)
 
     cdef struct ImageDimension:
         int h_start
@@ -80,6 +88,7 @@ cdef extern from "./../src/camera.h":
         bool ext_trig
         int em_gain_high
         int em_gain_low
+        float kinetic_time
 
     cdef struct ReadProperties:
         int read_mode
@@ -114,8 +123,3 @@ cdef extern from "./../src/camera.h":
         float ki
         float kd
         float dt
-
-    # cdef struct ControlProperties:
-    # 	float targetx
-    # 	float targety
-    # 	float rotation

@@ -51,20 +51,13 @@ cdef class SClient:
         arr = self._getData()
         return arr
 
-# cdef np.uint16_t buffer[262144]
-# cdef void cbFunc(np.uint16_t *buff, int buff_len):
-#     print("Got this far")
-#     for i in range(0,buff_len):
-#         buffer[i] = buff[i]
-#     t = np.asarray(buffer, dtype=np.uint16)
-#     print("Buffer: {}".format(t[0:buff_len]))
-
 cdef np.uint16_t buffer[262144]
 cdef class PyCamera:
     cdef pycamera.Camera pycam
     cdef string name
     cdef bint real_cam
     cdef np.uint16_t buffer[262144]
+    cdef float updates[2]
 
     # These are 'public' attributes
     cdef pycamera.ImageDimension s_imageDim
@@ -86,37 +79,26 @@ cdef class PyCamera:
     def __dealloc__(self):
         self.stop()
         self.shutdown()
+        self.updates
         self.buffer
+        self.real_cam
+        self.name
+        self.s_imageDim
+        self.s_expProp
+        self.s_readProp
+        self.s_timingProp
+        self.s_shutterProp
+        self.s_tempProp
+        self.s_gainx
+        self.s_gainy
+        self.pycam
 
-    # def start(self, loopCond = 0):
-        # self.pycam.startCamera(loopCond)
-    def start(self, servo = False):
-        self.pycam.startCamera(servo)
+    #
+    # General camera methods
+    def start(self, loopCond, filename = ""):
+        print(filename)
+        self.pycam.startCamera(<int>loopCond, <string>filename.encode('utf-8'))
         return self.running()
-
-    def arm(self, arm_state):
-        if (arm_state):
-            self.s_expProp.ext_trig = True
-            self.pycam.setExposureParams(self.s_expProp)
-        else:
-            # Software trigger
-            self.s_expProp.ext_trig = False
-            self.pycam.setExposureParams(self.s_expProp)
-        return self.getExposureProp()
-
-
-    def startExpMeter(self, f):
-        self.pycam.startCamera(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*>f)
-        return self.running()
-
-    def singleShot(self, f):
-        self.pycam.singleShot(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*> f)
-
-    @staticmethod
-    cdef void expmfunction(np.uint16_t *buff, int buff_len, void *f) with gil:
-        for i in range(0,buff_len):
-            buffer[i] = buff[i]
-        (<object>f)(<object>buffer, <object>buff_len)
 
     def stop(self):
         # Stop camera acquisition and delete data array
@@ -133,8 +115,34 @@ cdef class PyCamera:
         self.pycam.getCameraData(self.buffer)
         return np.asarray(self.buffer, dtype=np.uint16)
 
-    # def setCallback(self):
-    #     self.pycam.setCallbackFunc(cbFunc)
+    def servoData(self):
+        self.pycam.getServoData(self.updates)
+        return np.asarray(self.updates, dtype=np.float)
+
+    #
+    # Exposure meter methods
+    def arm(self, arm_state):
+        if (arm_state):
+            self.s_expProp.ext_trig = True
+            self.pycam.setExposureParams(self.s_expProp)
+        else:
+            # Software trigger
+            self.s_expProp.ext_trig = False
+            self.pycam.setExposureParams(self.s_expProp)
+        return self.getExposureProp()
+
+    def startExpMeter(self, f):
+        self.pycam.startCamera(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*>f)
+        return self.running()
+
+    def singleShot(self, f):
+        self.pycam.singleShot(<pycamera.cb_cam_func> PyCamera.expmfunction, <void*> f)
+
+    @staticmethod
+    cdef void expmfunction(np.uint16_t *buff, int buff_len, void *f) with gil:
+        for i in range(0,buff_len):
+            buffer[i] = buff[i]
+        (<object>f)(<object>buffer, <object>buff_len)
 
     #
     # Image dimension getter/setter
@@ -256,4 +264,7 @@ cdef class PyCamera:
     def setTargetCoords(self, x, y):
         self.pycam.setTargetCoords(x, y)
         return self.getTargetCoords()
+
+    def setServoState(self, state):
+        return self.pycam.setServoState(state)
 
