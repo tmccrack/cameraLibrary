@@ -18,9 +18,11 @@ cdef class SClient:
 
     def __cinit__(self, conn_type="Single"):
         self.port = 6666
-        self.host = "172.28.139.109".encode('utf-8')
-        self.client = pycamera.SocketClient(self.port, self.host)
+        self.host = "172.28.139.52".encode('utf-8')
+        # self.client = pycamera.SocketClient(self.port, self.host)
+        self.client = pycamera.SocketClient()
         self.conn_type = conn_type.encode('utf-8')
+        print("pyclient created")
 
     def sendData(self, x, y):
         if self.conn_type == 'Single':
@@ -59,7 +61,7 @@ cdef class PyCamera:
     cdef np.uint16_t buffer[262144]
     cdef float updates[2]
 
-    # These are 'public' attributes
+    # Declarations for used by camera library
     cdef pycamera.ImageDimension s_imageDim
     cdef pycamera.ExposureProperties s_expProp
     cdef pycamera.ReadProperties s_readProp

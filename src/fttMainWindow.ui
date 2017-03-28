@@ -58,8 +58,8 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
-         <widget class="QRadioButton" name="radioButton">
+        <item row="4" column="1">
+         <widget class="QRadioButton" name="rad_ToggleServo">
           <property name="text">
            <string>Servo</string>
           </property>

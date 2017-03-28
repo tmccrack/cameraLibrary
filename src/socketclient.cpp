@@ -12,6 +12,7 @@ SocketClient::SocketClient()
     socket = new QTcpSocket;
     data = new QByteArray;
     connected = false;
+    qDebug() << "Client created";
 }
 
 SocketClient::SocketClient(int pport, string hhost)
@@ -21,6 +22,7 @@ SocketClient::SocketClient(int pport, string hhost)
     socket = new QTcpSocket;
     data = new QByteArray;
     connected = false;
+    qDebug() << "Client created";
 }
 
 
