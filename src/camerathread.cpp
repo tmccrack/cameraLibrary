@@ -340,6 +340,7 @@ void CameraThread::servoLoop()
     // Setup the image logger
     if (b_log)
     {
+        qDebug() << "Creating logger";
         logger = new ImageLogger(log_file);
     }
 
@@ -349,9 +350,10 @@ void CameraThread::servoLoop()
     updates[1] = 0;
 
     // Prep the client
-    client->openConnection("Closed");
     if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
+    client->openConnection("Closed");
+
 //    client->openConnection("Values");
 //    client->getData(&updates[0], &updates[1]);  // Assign starting values
 //    client->closeConnection();

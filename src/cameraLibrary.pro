@@ -45,4 +45,5 @@ INCLUDEPATH += $$PWD/../include
 DEPENDPATH += $$PWD/../include
 
 FORMS += \
-    fttMainWindow.ui
+    fttMainWindow.ui \
+    fttgainwindow.ui
