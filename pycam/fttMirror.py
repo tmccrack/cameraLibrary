@@ -32,17 +32,12 @@ class SClient():
         self.client
 
     def sendUpdates(self, x, y):
-        # mess = b'02'.encode('utf-8')
-        # mess = b'02'
-        # suc = self.client.sendall(mess)
-        # print(suc)
-        # mess = 'Single'.encode('utf-8')
-        
         data = (str(x) + ';' + str(y)).encode('utf-8')
-        mess = len(data)
         # Server expects two bytes
         if len(str(len(data)).encode('utf-8')) < 2:
-            mess = ('0' + str(mess)).encode('utf-8')
+            mess = ('0' + str(len(data))).encode('utf-8')
+        else:
+            mess = str(len(data)).encode('utf-8')
 
         suc = self.client.sendall(mess)
         suc = self.client.sendall(data)
