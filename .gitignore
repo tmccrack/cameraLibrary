@@ -5,3 +5,4 @@ pycam/build*
 pycam/*.pyd
 log*/
 data*/
+pycam/__pycache__*
