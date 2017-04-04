@@ -227,7 +227,7 @@ class AppWindow(Ui_MainWindow):
 			self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
 			self.btn_ToggleCam.setText('Start')
 		elif not self.camera.running():
-			log_file = image_path+time.strftime(self.timeFormat, time.gmtime())+"-ftt.dat"
+			log_file = image_path+time.strftime(self.timeFormat, time.gmtime())
 			self.camera.start(1, log_file)
 			self.cam_timer.start()
 			self.logUpdate("Exposure sequence started {}".format(time.strftime(self.timeFormat,time.gmtime())))
