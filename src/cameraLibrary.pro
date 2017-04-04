@@ -21,7 +21,7 @@ SOURCES += \
     socketclient.cpp \
     imageservo.cpp \
     servo.cpp \
-    imagelogger.cpp
+    datalogger.cpp
 
 HEADERS +=\
     camera.h \
@@ -29,7 +29,7 @@ HEADERS +=\
     socketclient.h \
     imageservo.h \
     servo.h \
-    imagelogger.h
+    datalogger.h
 
 unix {
     target.path = /usr/lib
