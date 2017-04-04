@@ -43,7 +43,7 @@ CameraThread::~CameraThread()
     if (servo) delete servo;
     if (x_err) delete x_err;
     if (y_err) delete y_err;
-    if (logger) delete logger;
+    if (i_logger) delete i_logger;
 }
 
 
@@ -64,7 +64,8 @@ void CameraThread::startThread(int x, int y, bool r_cam, string filename)
     }
     else
     {
-        log_file = filename;
+        i_log_file = filename + "-ftt.dat";
+        s_log_file = filename + "-servo.dat";
         setLogState(true);
     }
 
@@ -295,7 +296,7 @@ void CameraThread::openLoop()
             ResetEvent(cam_event);
             and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
             checkError(and_error, "GetMostRecentImage16");
-            if (b_log) logger->append(cam_data, image_size);
+            if (b_log) i_logger->append(cam_data, image_size);
             std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();
         }
@@ -319,8 +320,8 @@ void CameraThread::openLoop()
             printf("Error in image acquisition\n");
         }
     }
-    logger->closeFile();
-    delete logger;
+    i_logger->closeFile();
+    delete i_logger;
 }
 
 
@@ -337,11 +338,12 @@ void CameraThread::servoLoop()
     getServoTargetCoords(&xd, &yd);
     servo->setBuffer(cam_data);
 
-    // Setup the image logger
+    // Setup the loggers
     if (b_log)
     {
-        qDebug() << "Creating logger";
-        logger = new ImageLogger(log_file);
+        qDebug() << "Creating loggers";
+        i_logger = new DataLogger(i_log_file);  // Image logger
+        s_logger = new DataLogger(s_log_file);  // Servo logger
     }
 
     // ImageServo passed updates pointer, need to get starting value for servo
@@ -353,7 +355,6 @@ void CameraThread::servoLoop()
     if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
     client->openConnection("Closed");
-
 //    client->openConnection("Values");
 //    client->getData(&updates[0], &updates[1]);  // Assign starting values
 //    client->closeConnection();
@@ -389,8 +390,8 @@ void CameraThread::servoLoop()
                 }
                 if (b_log)
                 {
-                    logger->append(cam_data, image_size);
-                    qDebug() << "Logging data";
+                    i_logger->append(cam_data, image_size);
+                    s_logger->appendFloat(updates, 2);
                 }
                 std::copy(cam_data, cam_data + image_size, copy_data);
                 mutex.unlock();
@@ -439,7 +440,8 @@ void CameraThread::servoLoop()
             }
             if (b_log)
             {
-                logger->append(cam_data, image_size);
+                i_logger->append(cam_data, image_size);
+                s_logger->appendFloat(updates, 2);
             }
             mutex.unlock();
             Sleep(100);
@@ -449,8 +451,10 @@ void CameraThread::servoLoop()
     client->closeConnection();
     delete client;
 
-    logger->closeFile();
-    delete logger;
+    i_logger->closeFile();
+    s_logger->closeFile();
+    delete i_logger;
+    delete s_logger;
 }
 
 void CameraThread::callbackLoop()

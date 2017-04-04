@@ -15,7 +15,7 @@
 #include <iostream>
 #include "socketclient.h"
 #include "imageservo.h"
-#include "imagelogger.h"
+#include "datalogger.h"
 #include "ATMCD32D.h"
 
 #define PI 3.14159265
@@ -78,7 +78,8 @@ private:
     bool b_closed;
     bool b_log;
     bool real_cam;
-    std::string log_file;
+    std::string i_log_file;  // image log file
+    std::string s_log_file;  // servo log file
     int i_loopCond = 0;
     uint16_t *cam_data;
     uint16_t *copy_data;
@@ -96,7 +97,8 @@ private:
     Error *y_err;
 
     ImageServo *servo;
-    ImageLogger *logger;
+    DataLogger *i_logger;
+    DataLogger *s_logger;
     SocketClient *client;
 
 };
