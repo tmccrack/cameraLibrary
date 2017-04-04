@@ -6,3 +6,4 @@ pycam/*.pyd
 log*/
 data*/
 pycam/__pycache__*
+reduce*/
