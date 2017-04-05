@@ -417,8 +417,8 @@ void Camera::_initializeCamera(int temp)
         s_readProp.track_height = 50;
 
         // Set timing parameters
-        s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
-        s_timingProp.v_shift = 0;  // Fastest vertical shift speed
+        s_timingProp.h_shift = 3;  // Slowest horizontal shift speed
+        s_timingProp.v_shift = 4;  // Slowest vertical shift speed
         s_timingProp.dma_images = 1;  // Maximum number of images in DMA buffer
         s_timingProp.dma_accum_time = float(0.001);  // Minimum time between hardware interrupts
 

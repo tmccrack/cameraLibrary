@@ -175,7 +175,7 @@ class AppWindow(Ui_MainWindow):
 
 		# Initialize camera, data buffer, and data timer
 		name = "FTT"
-		self.camera = pycamera.PyCamera(name, False, temp=17)
+		self.camera = pycamera.PyCamera(name, True, temp=17)
 		self.imageDim = self.camera.getImageDimension()
 		self.expProp = self.camera.getExposureProp()
 		self.readProp = self.camera.getReadProp()
