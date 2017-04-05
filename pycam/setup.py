@@ -19,7 +19,7 @@ ext = [
                   "./../src/socketclient.cpp",
                   "./../src/servo.cpp",
                   "./../src/imageservo.cpp",
-                  "./../src/imagelogger.cpp"],
+                  "./../src/datalogger.cpp"],
                  include_dirs = ["C:/Qt/5.7/msvc2015/include", "./../src", "./../include", numpy.get_include()],
                  library_dirs = ["C:/Users/admin/Anaconda3/Library/lib", "./../lib"],
                  libraries = ["Qt5Core", "Qt5Network", "atmcd32m"],

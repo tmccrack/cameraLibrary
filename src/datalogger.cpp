@@ -1,7 +1,7 @@
-#include "imagelogger.h"
+#include "datalogger.h"
 
 using namespace std;
-ImageLogger::ImageLogger(string filename)
+DataLogger::DataLogger(string filename)
 {
     file = new QFile(QString::fromStdString(filename));
     file->open(QIODevice::WriteOnly);
@@ -10,14 +10,14 @@ ImageLogger::ImageLogger(string filename)
 
 }
 
-ImageLogger::~ImageLogger()
+DataLogger::~DataLogger()
 {
     if (d_out) delete d_out;
     if (file->isOpen()) file->close();
     if (file) delete file;
 }
 
-void ImageLogger::newFile(string filename)
+void DataLogger::newFile(string filename)
 {
     file = new QFile(QString::fromStdString(filename));
     file->open(QIODevice::WriteOnly);
@@ -25,21 +25,28 @@ void ImageLogger::newFile(string filename)
     qDebug() << "Opened: " << file->fileName();
 }
 
-void ImageLogger::closeFile()
+void DataLogger::closeFile()
 {
     if (file->isOpen()) file->close();
     qDebug() << "Closed: " << file->fileName();
 }
 
-void ImageLogger::header(string head)
+void DataLogger::header(string head)
 {
     if (!file->isOpen()) file->open(QIODevice::WriteOnly);
     d_out->writeBytes(QString::fromStdString(head).toUtf8(), sizeof(QString::fromStdString(head).toUtf8()));
 }
 
-void ImageLogger::append(uint16_t *data, int sized)
+void DataLogger::append(uint16_t *data, int sized)
 {
     if (!file->isOpen()) file->open(QIODevice::WriteOnly);
     d_out->writeRawData((char *) data, d_size * sized);
+}
+
+void DataLogger::appendFloat(float *data, int sized)
+{
+    if (!file->isOpen()) file->open(QIODevice::WriteOnly);
+    d_out->setFloatingPointPrecision(QDataStream::SinglePrecision);
+    d_out->writeRawData((char *) data, f_size * sized);
 }
 
