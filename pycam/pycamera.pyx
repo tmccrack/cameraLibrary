@@ -9,50 +9,6 @@ cimport pycamera
 cimport numpy as np
 import numpy as np
 
-cdef class SClient:
-    cdef pycamera.SocketClient client
-    cdef string conn_type
-    cdef int port
-    cdef string host
-
-
-    def __cinit__(self, conn_type="Single"):
-        self.port = 6666
-        self.host = "172.28.139.52".encode('utf-8')
-        # self.client = pycamera.SocketClient(self.port, self.host)
-        self.client = pycamera.SocketClient()
-        self.conn_type = conn_type.encode('utf-8')
-        print("pyclient created")
-
-    def sendData(self, x, y):
-        if self.conn_type == 'Single':
-            if (self.client.openConnection(self.conn_type)):
-                self.client.sendData(x, y)
-                self.client.closeConnection()
-                return True
-            else:
-                 return False
-        else:
-            print("Connection type not supported")
-        return False
-
-    cdef _getData(self):
-        cdef float *x
-        cdef float *y
-        self.client.openConnection("Values".encode('utf-8'))
-        if self.client.isConnected():
-            self.client.getData(x, y)
-            self.client.closeConnection()
-            print("X: {}\tY: {}".format(x[0], y[0]))
-        else:
-            pass
-        		
-        return np.asarray([x[0], y[0]], dtype=np.float32)
-
-    def getData(self):
-        arr = self._getData()
-        return arr
-
 cdef np.uint16_t buffer[262144]
 cdef class PyCamera:
     cdef pycamera.Camera pycam
