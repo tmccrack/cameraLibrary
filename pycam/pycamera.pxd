@@ -13,17 +13,6 @@ from libcpp cimport float
 from libc.stdint cimport uint16_t
 from libcpp.string cimport string
 
-cdef extern from "./../src/socketclient.h":
-    cdef cppclass SocketClient:
-        SocketClient() except + 
-        SocketClient(int port, string host) except +
-        bool openConnection(string conn_type)
-        bool isConnected()
-        void closeConnection()
-        void sendData(float x, float y)
-        void getData(float *x, float *y)
-
-
 cdef extern from "./../src/camera.h":
     ctypedef void (*cb_cam_func)(uint16_t *buffer, int size, void *user_data)
     cdef cppclass Camera:
