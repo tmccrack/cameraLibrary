@@ -393,13 +393,13 @@ void Camera::_initializeCamera(int temp)
 
         // Set exposure properties
         s_expProp.em_gain = 1;
-        s_expProp.exp_time = 0.1;
+        s_expProp.exp_time = float(0.1);
         s_expProp.ext_trig = false;
 
         // Set gain
-        s_gainxProp.kp = 0.01;
-        s_gainxProp.ki = 0.0;
-        s_gainxProp.kd = 0.0;
+        s_gainxProp.kp = float(0.01);
+        s_gainxProp.ki = float(0.0);
+        s_gainxProp.kd = float(0.0);
         s_gainxProp.dt = s_expProp.exp_time;
         s_gainyProp = s_gainxProp;
         setGain(s_gainxProp, s_gainyProp);
@@ -417,8 +417,8 @@ void Camera::_initializeCamera(int temp)
         s_readProp.track_height = 50;
 
         // Set timing parameters
-        s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
-        s_timingProp.v_shift = 0;  // Fastest vertical shift speed
+        s_timingProp.h_shift = 3;  // Fastest horizontal shift speed
+        s_timingProp.v_shift = 4;  // Fastest vertical shift speed
         s_timingProp.dma_images = 1;  // Maximum number of images in DMA buffer
         s_timingProp.dma_accum_time = float(0.001);  // Minimum time between hardware interrupts
 
