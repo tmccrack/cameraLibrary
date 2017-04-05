@@ -214,8 +214,8 @@ cdef class PyCamera:
     #
     # Servo setpoint getter/setter
     def getTargetCoords(self):
-        cdef float *x
-        cdef float *y
+        cdef float x[1]
+        cdef float y[1]
         self.pycam.getTargetCoords(x, y)
         return (x[0], y[0])
 

@@ -472,7 +472,7 @@ void Camera::_initializeCamera(int temp)
 
         // Set exposure properties
         s_expProp.em_gain = 1;
-        s_expProp.exp_time = 0.01;
+        s_expProp.exp_time = float(0.01);
         s_expProp.ext_trig = false;
 
     }
