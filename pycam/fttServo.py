@@ -10,6 +10,7 @@ class Servo(QtWidgets.QDialog, servoWindow):
     # rot = 0.0
     def __init__(self, parent=None, gain_dict=None, rot=None):
         super(Servo, self).__init__()
+        self.setupUi(self)
         if gain_dict is None:
             gain_dict = {'kp': 0.0,
                          'ki': 0.0,
@@ -18,7 +19,6 @@ class Servo(QtWidgets.QDialog, servoWindow):
         if rot is None: rot = 0.0
         self.gains = gain_dict
         self.rot = rot
-        self.setupUi(self)
         # Initialize values
         self.spb_P.setValue(self.gains['kp'])
         self.spb_I.setValue(self.gains['ki'])
