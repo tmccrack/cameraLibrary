@@ -2,6 +2,7 @@ import sys
 import socket
 from PyQt5 import QtCore, QtWidgets
 import numpy as np
+import struct
 
 import time
 
@@ -42,17 +43,22 @@ class SClient():
         suc = self.client.sendall(mess)
         suc = self.client.sendall(data)
 
+
+
+
 class Mirror(QtWidgets.QDialog):
     """
     Dialog window for manually moving mirror
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, mpl_window=None):
         super(Mirror, self).__init__()
         self.host = 'localhost'
         self.port = 6666
+        self.mpl_window = mpl_window
 
         # Set up the window
         self.setWindowTitle("Mirror control")
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.lbl_Ch0 = QtWidgets.QLabel("Ch. 0", parent=self)
         self.lbl_Ch0.setAlignment(QtCore.Qt.AlignCenter)
         self.btn_Ch0Plus = QtWidgets.QPushButton("+", parent=self)
@@ -67,7 +73,9 @@ class Mirror(QtWidgets.QDialog):
         self.spb_Ch1 = QtWidgets.QDoubleSpinBox(self)
         self.spb_Ch1.setRange(0.0, 5.0)
         self.spb_Ch1.setDecimals(3)
-        gl = QtWidgets.QGridLayout(self)
+        self.btn_OnFiber = QtWidgets.QPushButton("Move to fiber", parent=self)
+        vl = QtWidgets.QVBoxLayout(self)
+        gl = QtWidgets.QGridLayout()
         gl.addWidget(self.spb_Ch0, 0, 0)
         gl.addWidget(self.spb_Ch1, 0, 1)
         gl.addWidget(self.btn_Ch0Plus, 1, 0)
@@ -76,8 +84,11 @@ class Mirror(QtWidgets.QDialog):
         gl.addWidget(self.btn_Ch1Plus, 1, 1)
         gl.addWidget(self.lbl_Ch1, 2, 1)
         gl.addWidget(self.btn_Ch1Minus, 3, 1)
-
+        vl.addLayout(gl)
+        # vl.addWidget(QtCore.QLine(1, 0, 1, 2))
+        vl.addWidget(self.btn_OnFiber)
         self.connectSlots()
+        self.getValues()
 
     def connectSlots(self):
         self.spb_Ch0.valueChanged.connect(self.moveMirror)
@@ -86,6 +97,16 @@ class Mirror(QtWidgets.QDialog):
         self.btn_Ch0Minus.clicked.connect(self.jogDownCh0)
         self.btn_Ch1Plus.clicked.connect(self.jogUpCh1)
         self.btn_Ch1Minus.clicked.connect(self.jogDownCh1)
+        # self.btn_OnFiber.clicked.connect(self.onFiber)
+
+    # def onFiber(self):
+    #     if self.mpl_window is None:
+    #         pass
+    #     else:
+    #         print("Click star"
+    def keyPressEvent(self, qKeyEvent):
+        if qKeyEvent.key() == QtCore.Qt.Key_Return:
+            pass
 
     def moveMirror(self):
         self.sendSingleUpdate(self.spb_Ch0.value(), self.spb_Ch1.value())
@@ -127,6 +148,22 @@ class Mirror(QtWidgets.QDialog):
         suc = client.sendall(mess)
         suc = client.sendall(data)
         client.close()
+
+    def getValues(self):
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((self.host, self.port))
+        mess = b'Values'
+        suc = client.sendall(b'06')
+        suc = client.sendall(mess)
+        data = client.recv(2)
+        data = client.recv(int.from_bytes(data, byteorder='little')).decode('utf-8').split(';')
+        client.close()
+        self.spb_Ch0.setValue(float(data[0]))
+        self.spb_Ch1.setValue(float(data[1]))
+
+
+    # def closeEvent(self, event):
+    #     print("closing")
 
 
 if __name__ == '__main__':

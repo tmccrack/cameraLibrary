@@ -211,6 +211,9 @@ cdef class PyCamera:
         self.pycam.setRotation(rotation)
         return self.getGainX()
 
+    def getRotation(self):
+        return self.pycam.getRotation()
+
     #
     # Servo setpoint getter/setter
     def getTargetCoords(self):

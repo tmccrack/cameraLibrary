@@ -152,6 +152,7 @@ bool CameraThread::setLogState(bool state)
 {
     mutex.lock();
     b_log = state;
+    qDebug() << "Log state: " << b_log;
     mutex.unlock();
     return b_log;
 }
@@ -451,10 +452,13 @@ void CameraThread::servoLoop()
     client->closeConnection();
     delete client;
 
-    i_logger->closeFile();
-    s_logger->closeFile();
-    delete i_logger;
-    delete s_logger;
+    if (b_log)
+    {
+        i_logger->closeFile();
+        s_logger->closeFile();
+        delete i_logger;
+        delete s_logger;
+    }
 }
 
 void CameraThread::callbackLoop()
