@@ -216,8 +216,6 @@ class AppWindow(Ui_MainWindow):
         self.servo_win.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.acceptGain)
 
     def acceptGain(self):
-        print("accepted")
-        print(self.servo_win.gains)
         self.camera.setGain(self.servo_win.gains, self.servo_win.rot)
         self.logUpdate("Setting gain parameters: {} {}".format(self.gain, time.strftime(self.timeFormat,time.gmtime())))
         # self.logUpdate("Target coordinates set to: [{}, {}] {}".format(self.coords[0],self.coords[1],
