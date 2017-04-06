@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './../src/fttgainwindow.ui'
+# Form implementation generated from reading ui file './../src/fttServoWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -11,9 +11,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(320, 261)
+        Dialog.resize(280, 260)
+        Dialog.setMinimumSize(QtCore.QSize(280, 260))
         self.verticalLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 301, 241))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 261, 241))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -24,6 +25,8 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.groupBoxControls.sizePolicy().hasHeightForWidth())
         self.groupBoxControls.setSizePolicy(sizePolicy)
+        self.groupBoxControls.setTitle("")
+        self.groupBoxControls.setFlat(True)
         self.groupBoxControls.setObjectName("groupBoxControls")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.groupBoxControls)
         self.gridLayout_3.setObjectName("gridLayout_3")
@@ -102,8 +105,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Control parameters"))
-        self.groupBoxControls.setTitle(_translate("Dialog", "Control Parameters"))
+        Dialog.setWindowTitle(_translate("Dialog", "Servo parameters"))
         self.label_I.setText(_translate("Dialog", "I"))
         self.label_P.setText(_translate("Dialog", "P"))
         self.label_D.setText(_translate("Dialog", "D"))
