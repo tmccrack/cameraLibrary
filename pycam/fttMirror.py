@@ -1,8 +1,9 @@
-import sys
 import socket
 from PyQt5 import QtCore, QtWidgets
 import numpy as np
 import struct
+from fttMirrorWindow import Ui_Dialog as mirrorWindow  ## pyuic5 generated file
+
 
 import time
 
@@ -44,49 +45,48 @@ class SClient():
         suc = self.client.sendall(data)
 
 
-
-
-class Mirror(QtWidgets.QDialog):
+class Mirror(QtWidgets.QDialog, mirrorWindow):
     """
     Dialog window for manually moving mirror
     """
     def __init__(self, parent=None, mpl_window=None):
         super(Mirror, self).__init__()
+        self.setupUi(self)
         self.host = 'localhost'
         self.port = 6666
         self.mpl_window = mpl_window
 
-        # Set up the window
-        self.setWindowTitle("Mirror control")
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.lbl_Ch0 = QtWidgets.QLabel("Ch. 0", parent=self)
-        self.lbl_Ch0.setAlignment(QtCore.Qt.AlignCenter)
-        self.btn_Ch0Plus = QtWidgets.QPushButton("+", parent=self)
-        self.btn_Ch0Minus = QtWidgets.QPushButton("-", parent=self)
-        self.lbl_Ch1 = QtWidgets.QLabel("Ch. 1", parent=self)
-        self.lbl_Ch1.setAlignment(QtCore.Qt.AlignCenter)
-        self.btn_Ch1Plus = QtWidgets.QPushButton("+", parent=self)
-        self.btn_Ch1Minus = QtWidgets.QPushButton("-", parent=self)
-        self.spb_Ch0 = QtWidgets.QDoubleSpinBox(self)
-        self.spb_Ch0.setRange(0.0, 5.0)
-        self.spb_Ch0.setDecimals(3)
-        self.spb_Ch1 = QtWidgets.QDoubleSpinBox(self)
-        self.spb_Ch1.setRange(0.0, 5.0)
-        self.spb_Ch1.setDecimals(3)
-        self.btn_OnFiber = QtWidgets.QPushButton("Move to fiber", parent=self)
-        vl = QtWidgets.QVBoxLayout(self)
-        gl = QtWidgets.QGridLayout()
-        gl.addWidget(self.spb_Ch0, 0, 0)
-        gl.addWidget(self.spb_Ch1, 0, 1)
-        gl.addWidget(self.btn_Ch0Plus, 1, 0)
-        gl.addWidget(self.lbl_Ch0, 2, 0)
-        gl.addWidget(self.btn_Ch0Minus, 3, 0)
-        gl.addWidget(self.btn_Ch1Plus, 1, 1)
-        gl.addWidget(self.lbl_Ch1, 2, 1)
-        gl.addWidget(self.btn_Ch1Minus, 3, 1)
-        vl.addLayout(gl)
-        # vl.addWidget(QtCore.QLine(1, 0, 1, 2))
-        vl.addWidget(self.btn_OnFiber)
+        # # Set up the window
+        # self.setWindowTitle("Mirror control")
+        # self.setFocusPolicy(QtCore.Qt.NoFocus)
+        # self.lbl_Ch0 = QtWidgets.QLabel("Ch. 0", parent=self)
+        # self.lbl_Ch0.setAlignment(QtCore.Qt.AlignCenter)
+        # self.btn_Ch0Plus = QtWidgets.QPushButton("+", parent=self)
+        # self.btn_Ch0Minus = QtWidgets.QPushButton("-", parent=self)
+        # self.lbl_Ch1 = QtWidgets.QLabel("Ch. 1", parent=self)
+        # self.lbl_Ch1.setAlignment(QtCore.Qt.AlignCenter)
+        # self.btn_Ch1Plus = QtWidgets.QPushButton("+", parent=self)
+        # self.btn_Ch1Minus = QtWidgets.QPushButton("-", parent=self)
+        # self.spb_Ch0 = QtWidgets.QDoubleSpinBox(self)
+        # self.spb_Ch0.setRange(0.0, 5.0)
+        # self.spb_Ch0.setDecimals(3)
+        # self.spb_Ch1 = QtWidgets.QDoubleSpinBox(self)
+        # self.spb_Ch1.setRange(0.0, 5.0)
+        # self.spb_Ch1.setDecimals(3)
+        # self.btn_OnFiber = QtWidgets.QPushButton("Move to fiber", parent=self)
+        # vl = QtWidgets.QVBoxLayout(self)
+        # gl = QtWidgets.QGridLayout()
+        # gl.addWidget(self.spb_Ch0, 0, 0)
+        # gl.addWidget(self.spb_Ch1, 0, 1)
+        # gl.addWidget(self.btn_Ch0Plus, 1, 0)
+        # gl.addWidget(self.lbl_Ch0, 2, 0)
+        # gl.addWidget(self.btn_Ch0Minus, 3, 0)
+        # gl.addWidget(self.btn_Ch1Plus, 1, 1)
+        # gl.addWidget(self.lbl_Ch1, 2, 1)
+        # gl.addWidget(self.btn_Ch1Minus, 3, 1)
+        # vl.addLayout(gl)
+        # # vl.addWidget(QtCore.QLine(1, 0, 1, 2))
+        # vl.addWidget(self.btn_OnFiber)
         self.connectSlots()
         self.getValues()
 
@@ -167,6 +167,7 @@ class Mirror(QtWidgets.QDialog):
 
 
 if __name__ == '__main__':
+    import sys
     app = QtWidgets.QApplication(sys.argv)
     mir = Mirror()
     mir.show()
