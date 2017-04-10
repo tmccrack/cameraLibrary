@@ -5,10 +5,11 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import numpy as np
 from matplotlib.backends.backend_qt5agg import (
-FigureCanvasQTAgg as FigureCanvas,
-NavigationToolbar2QT as NavigationToolbar)
+            FigureCanvasQTAgg as FigureCanvas,
+            NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
+import matplotlib.lines as mlines
 
 from fttMainWindow import Ui_MainWindow  # pyuic5 generated file
 from fttServo import Servo as servo
@@ -19,6 +20,10 @@ import logging
 
 logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
 image_path = "./../data/"
+
+fiber_loc = (256,256)
+def setFiberLoc(self, x, y):
+        fiber_loc = (x, y)
 
 class ImageCanvas(FigureCanvas):
     """
@@ -63,8 +68,33 @@ class ImageCanvas(FigureCanvas):
         self.xerr_lines, = self.axes_err.plot(self.errlims, self.errs[:,0], color='r') 
         self.yerr_lines, = self.axes_err.plot(self.errlims, self.errs[:,1], color='y')
 
+        # Initialize fiber marker list and add to axes
+        self.marker_lines = []
+        ratio = (512/12.0, 512/12.0)
+        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fiber_loc
+        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fiber_loc
+
+        for ind in range(len(x)):
+            self.marker_lines.append(mlines.Line2D(x[ind], y[ind], color='g', linewidth=2.0)) #.set_data(x[ind], y[ind])
+
+        for line in self.marker_lines:
+            self.axes_ftt.add_line(line)
+
         cid = self.mpl_connect('button_press_event', self.on_press)
 
+
+    #
+    # Update fiber markers for new array size
+    def setFiberMarker(self):
+        # Settings for updated fiber markers
+        # Markers are 1/12 the dimension, offset by half that ratio
+        ratio = (ImageCanvas.iDims['h_dim']/12.0, ImageCanvas.iDims['v_dim']/12.0)
+
+        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fiber_loc
+        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fiber_loc
+
+        for ind in range(len(x)):
+            self.marker_lines[ind].set_data(x[ind], y[ind])
 
     #
     # Image click event
@@ -75,6 +105,7 @@ class ImageCanvas(FigureCanvas):
     # Update the figure
     def updateFig(self, buffer, vals=None):
         """
+        Update the figure with the supplied buffer and values if provided
         Reshape the linear buffer, show image and summations
         """
         self.ftt_image.set_data(buffer.reshape(ImageCanvas.iDims['v_dim'], ImageCanvas.iDims['h_dim']))
@@ -103,6 +134,7 @@ class ImageCanvas(FigureCanvas):
             self.axes_err.relim()
             self.axes_err.autoscale_view()
 
+        # self.axes_ftt.add_line(self.fiber_marker)
         self.draw()
 
     def setDimensions(self, iDims):
@@ -111,6 +143,7 @@ class ImageCanvas(FigureCanvas):
         """
         ImageCanvas.iDims = iDims
         self.setAxes()
+        self.setFiberMarker()
 
     def setAxes(self):
         """
@@ -121,7 +154,9 @@ class ImageCanvas(FigureCanvas):
 
         # self.axes_ftt.set_xbound(0, ImageCanvas.iDims['h_dim']-1)
         # self.axes_ftt.set_ybound(0, ImageCanvas.iDims['v_dim']-1)
-        extent = (0, ImageCanvas.iDims['h_dim'] - 1, ImageCanvas.iDims['v_dim'] - 1, 0)
+        # extent = (0, ImageCanvas.iDims['h_dim'] - 1, ImageCanvas.iDims['v_dim'] - 1, 0)
+        extent = (ImageCanvas.iDims['h_start'], ImageCanvas.iDims['h_end'], 
+                  ImageCanvas.iDims['v_start'], ImageCanvas.iDims['v_end'], )
         self.ftt_image.set_extent(extent)
 
         self.axes_hsum.set_ylim(0, ImageCanvas.iDims['v_dim'] - 1)
@@ -134,6 +169,28 @@ class ImageCanvas(FigureCanvas):
         self.axes_vsum.set_xticks([])
         self.axes_vsum.set_xticklabels([], visible=False)
 
+
+class Worker(QtCore.QThread):
+    
+    def __init__(self, imageDisp, parent=None):
+        super(Worker, self).__init__()
+        imageDisp.imageClick.connect(self.imageClicked)
+
+        self.timeout = QtCore.QTimer()
+        self.timeout.setSingleShot(True)
+        self.counter = 0
+
+    def run(self):
+        self.counter = 0
+        print("Click star")
+        print("Click fiber")
+
+    def imageClicked(self, x, y):
+        self.counter += 1
+        print("X: {}\tY: {}".format(x, y))
+        if self.counter > 1:
+            print("quitting")
+            self.exit()
 
 
 class AppWindow(Ui_MainWindow):
@@ -193,6 +250,10 @@ class AppWindow(Ui_MainWindow):
         self.btn_SetFrame.click()
         self.temp_timer.start()
 
+    def onFiberClicked(self):
+        a = Worker(self.imageDisp, self.mir_win)
+        a.start()
+
 
     def connectSlots(self):
         self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
@@ -225,10 +286,6 @@ class AppWindow(Ui_MainWindow):
         self.servo_win.reInitVals(self.camera.getGainX(), self.camera.getRotation())
         self.servo_win.show()
         # self.coords = self.camera.setTargetCoords(self.coords[0], self.coords[1])
-        
-
-    def onFiberClicked(self):
-        print("center on fiber")
 
 
     def btnToggleCamClicked(self):
@@ -274,15 +331,6 @@ class AppWindow(Ui_MainWindow):
 
         self.logUpdate("Setting frame parameters: {} {}".format(self.imageDim, 
                                                             time.strftime(self.timeFormat,time.gmtime())))
-
-
-    
-
-
-
-    def btnMirrorClicked(self):
-        # mirror.show()
-        pass
 
 
     def imageClicked(self, targx, targy):
@@ -338,13 +386,13 @@ class AppWindow(Ui_MainWindow):
         logging.info(value)
 
     
-    def closeEvent(self, event):
-        event.ignore()
-        self.close_application()
+    # def closeEvent(self, event):
+    #     event.ignore()
+    #     self.close_application()
 
     
-    def close_application(self):
-        print("closing")
+    # def close_application(self):
+    #     print("closing")
 
 
 if __name__ == '__main__':
