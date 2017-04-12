@@ -65,13 +65,7 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
         self.btn_Ch0Minus.clicked.connect(self.jogDownCh0)
         self.btn_Ch1Plus.clicked.connect(self.jogUpCh1)
         self.btn_Ch1Minus.clicked.connect(self.jogDownCh1)
-        # self.btn_OnFiber.clicked.connect(self.onFiber)
-
-    # def onFiber(self):
-    #     if self.mpl_window is None:
-    #         pass
-    #     else:
-    #         print("Click star"
+        
     def keyPressEvent(self, qKeyEvent):
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             pass

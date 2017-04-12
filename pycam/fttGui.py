@@ -170,27 +170,54 @@ class ImageCanvas(FigureCanvas):
         self.axes_vsum.set_xticklabels([], visible=False)
 
 
-class Worker(QtCore.QThread):
+class Worker(QtCore.QObject):
     
-    def __init__(self, imageDisp, parent=None):
+    def __init__(self, image, mirror, rot, parent=None):
         super(Worker, self).__init__()
-        imageDisp.imageClick.connect(self.imageClicked)
-
-        self.timeout = QtCore.QTimer()
-        self.timeout.setSingleShot(True)
+        self.image = image
+        self.mirror = mirror
+        self.rot = (np.cos(np.pi * rot / 180.0), np.sin(np.pi * rot / 180.0))
+        self.timer = QtCore.QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(10000)
+        self.timer.timeout.connect(self.timedOut)
+        self.timer.start()
+        self.image.imageClick.connect(self.imageClicked)
         self.counter = 0
-
-    def run(self):
-        self.counter = 0
-        print("Click star")
-        print("Click fiber")
+        self.dims = np.zeros((2,2))
 
     def imageClicked(self, x, y):
+        self.dims[self.counter , 0] = x
+        self.dims[self.counter, 1] = y
         self.counter += 1
-        print("X: {}\tY: {}".format(x, y))
         if self.counter > 1:
-            print("quitting")
-            self.exit()
+            self.moveMirror()
+    
+    def moveMirror(self):
+        motion = self.dims[0,:]-self.dims[1,:]
+        # ~20" total motion over 5V --> 5V/20" = 0.25 V/"
+        # 0.1596"/pixel --> 0.25V/" * 0.1596"/pixel = 0.03975 V/pixel
+        trans_motion = np.array((motion[0]*self.rot[0] - motion[1]*self.rot[1],
+                        motion[1]*self.rot[1] + motion[0]*self.rot[0])) * 0.03975
+        print(self.dims)
+        print("Motion: {}".format(motion))
+        print("Transformed: {}".format(trans_motion))
+        # Update the current mirror values
+        self.mirror.getValues()
+        self.mirror.sendSingleUpdate(
+                    self.mirror.spb_Ch0.value() + trans_motion[0],
+                    self.mirror.spb_Ch1.value() + trans_motion[1]
+                    )
+        self.quit()
+
+    def timedOut(self):
+        print("fiber center timed out")
+        self.quit()
+
+    def quit(self):
+        self.timer.stop()
+        self.image.imageClick.disconnect(self.imageClicked)
+        print("done with worker")
 
 
 class AppWindow(Ui_MainWindow):
@@ -251,8 +278,7 @@ class AppWindow(Ui_MainWindow):
         self.temp_timer.start()
 
     def onFiberClicked(self):
-        a = Worker(self.imageDisp, self.mir_win)
-        a.start()
+        self.a = Worker(self.imageDisp, self.mir_win, self.camera.getRotation())
 
 
     def connectSlots(self):
@@ -268,7 +294,7 @@ class AppWindow(Ui_MainWindow):
         #
         # Buttons in the mirror window
         self.btn_Mirror.clicked.connect(self.mir_win.show)
-        self.mir_win.btn_OnFiber.clicked.connect(self.onFiberClicked)
+        self.btn_OnFiber.clicked.connect(self.onFiberClicked)
 
         #
         # Buttons in the servo window
@@ -276,11 +302,13 @@ class AppWindow(Ui_MainWindow):
         self.servo_win.buttonBox.accepted.connect(self.acceptGain)
         self.servo_win.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.acceptGain)
 
+
     def acceptGain(self):
         self.camera.setGain(self.servo_win.gains, self.servo_win.rot)
         self.logUpdate("Setting gain parameters: {} {}".format(self.gain, time.strftime(self.timeFormat,time.gmtime())))
         # self.logUpdate("Target coordinates set to: [{}, {}] {}".format(self.coords[0],self.coords[1],
         #                                                     time.strftime(self.timeFormat,time.gmtime())))
+
 
     def btnGainClicked(self):
         self.servo_win.reInitVals(self.camera.getGainX(), self.camera.getRotation())
@@ -312,6 +340,7 @@ class AppWindow(Ui_MainWindow):
     def radToggleServoClicked(self):
         servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
         self.logUpdate("Servo state set {} {}".format(servoState, time.strftime(self.timeFormat,time.gmtime())))
+
         	
     def btnSetFrameClicked(self):
         # Update internal dimension dict
@@ -335,8 +364,8 @@ class AppWindow(Ui_MainWindow):
 
     def imageClicked(self, targx, targy):
         self.coords = (targx, targy)
-        self.spb_XFib.setValue(targx)
-        self.spb_YFib.setValue(targy)
+        # self.spb_XFib.setValue(targx)
+        # self.spb_YFib.setValue(targy)
 
 
     def updateFig(self):

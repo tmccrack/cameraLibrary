@@ -11,9 +11,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(190, 170)
+        Dialog.resize(190, 130)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
         self.verticalLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 171, 151))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 171, 111))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -57,18 +62,6 @@ class Ui_Dialog(object):
         self.spb_Ch0.setObjectName("spb_Ch0")
         self.gridLayout.addWidget(self.spb_Ch0, 0, 0, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
-        self.line = QtWidgets.QFrame(self.verticalLayoutWidget)
-        self.line.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.verticalLayout.addWidget(self.line)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem1)
-        self.btn_OnFiber = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btn_OnFiber.setObjectName("btn_OnFiber")
-        self.verticalLayout.addWidget(self.btn_OnFiber)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -82,7 +75,6 @@ class Ui_Dialog(object):
         self.btn_Ch1Plus.setText(_translate("Dialog", "+"))
         self.lbl_Ch0.setText(_translate("Dialog", "Ch. 0"))
         self.btn_Ch0Plus.setText(_translate("Dialog", "+"))
-        self.btn_OnFiber.setText(_translate("Dialog", "Center"))
 
 
 if __name__ == "__main__":

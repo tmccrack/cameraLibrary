@@ -44,6 +44,7 @@ CameraThread::~CameraThread()
     if (x_err) delete x_err;
     if (y_err) delete y_err;
     if (i_logger) delete i_logger;
+    if (s_logger) delete s_logger;
 }
 
 

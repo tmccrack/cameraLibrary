@@ -455,66 +455,16 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBoxControls">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QPushButton" name="btn_Gain">
+        <property name="text">
+         <string>Gain</string>
         </property>
-        <property name="title">
-         <string>Control Parameters</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_FiberLoc">
-           <property name="text">
-            <string>Fiber loc.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="spb_XFib">
-           <property name="toolTip">
-            <string>Target horizontal location for control algorithm</string>
-           </property>
-           <property name="buttonSymbols">
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="maximum">
-            <double>512.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QDoubleSpinBox" name="spb_YFib">
-           <property name="toolTip">
-            <string>Target vertical location for control algorithm</string>
-           </property>
-           <property name="buttonSymbols">
-            <enum>QAbstractSpinBox::NoButtons</enum>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="maximum">
-            <double>512.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_Gain">
+       <widget class="QPushButton" name="btn_OnFiber">
         <property name="text">
-         <string>Set Gain</string>
+         <string>Center</string>
         </property>
        </widget>
       </item>
