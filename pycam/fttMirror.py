@@ -67,6 +67,7 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
         self.btn_Ch1Minus.clicked.connect(self.jogDownCh1)
         
     def keyPressEvent(self, qKeyEvent):
+        # Ignore enters so they do not increment channels
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             pass
 
@@ -75,20 +76,15 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
 
     def jogUpCh0(self):
         self.spb_Ch0.setValue(self.spb_Ch0.value() + 0.01)
-        # self.moveMirror()
 
     def jogUpCh1(self):
         self.spb_Ch1.setValue(self.spb_Ch1.value() + 0.01)
-        # self.moveMirror()
-        # sendSingle('localhost', 6666, self.spb_Ch1.value(), self.spb_Ch1.value())
 
     def jogDownCh0(self):
         self.spb_Ch0.setValue(self.spb_Ch0.value() - 0.01)
-        # self.moveMirror()
 
     def jogDownCh1(self):
         self.spb_Ch1.setValue(self.spb_Ch1.value() - 0.01)
-        # self.moveMirror()
 
     def sendSingleUpdate(self, x, y):
         """
