@@ -44,6 +44,44 @@
        <bool>true</bool>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="spb_XFib">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Target horizontal location for control algorithm</string>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>512.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QDoubleSpinBox" name="spb_YFib">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Target vertical location for control algorithm</string>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>512.000000000000000</double>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="2">
         <widget class="QDoubleSpinBox" name="spb_D">
          <property name="enabled">
@@ -161,41 +199,10 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QDoubleSpinBox" name="spb_XFib">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="toolTip">
-          <string>Target horizontal location for control algorithm</string>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>512.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
-        <widget class="QDoubleSpinBox" name="spb_YFib">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="toolTip">
-          <string>Target vertical location for control algorithm</string>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>512.000000000000000</double>
+       <item row="5" column="1" colspan="2">
+        <widget class="QComboBox" name="combo_Alg">
+         <property name="currentText">
+          <string/>
          </property>
         </widget>
        </item>
@@ -214,8 +221,6 @@
     </item>
    </layout>
   </widget>
-  <zorder>verticalLayoutWidget</zorder>
-  <zorder>groupBoxControls</zorder>
  </widget>
  <resources/>
  <connections/>
