@@ -24,6 +24,7 @@ class Servo(QtWidgets.QDialog, servoWindow):
         self.spb_I.setValue(self.gains['ki'])
         self.spb_D.setValue(self.gains['kd'])
         self.spb_Rotation.setValue(self.rot)
+        self.combo_Alg.addItems(["Center-of-Mass", "Quadrant", "Guassian"])
         # Connect slots
         self.buttonBox.rejected.connect(self.close)
         self.buttonBox.accepted.connect(self.updateVals)
