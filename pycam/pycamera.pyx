@@ -157,6 +157,7 @@ cdef class PyCamera:
     def setTimingProp(self, timingProp):
         self.s_timingProp.h_shift = timingProp['h_shift']
         self.s_timingProp.v_shift = timingProp['v_shift']
+        self.s_timingProp.v_amp = timingProp['v_amp']
         self.s_timingProp.dma_images = timingProp['dma_images']
         self.s_timingProp.dma_accum_time = timingProp['dma_accum_time']
         self.pycam.setTimingParams(self.s_timingProp)
@@ -228,4 +229,15 @@ cdef class PyCamera:
 
     def setServoState(self, state):
         return self.pycam.setServoState(state)
+
+    #
+    # Logging
+    def getLogInterval(self):
+        return self.pycam.getLogInterval()
+        
+    def setLogInterval(self, frames):
+        return self.pycam.setLogInterval(<np.npy_uint32>frames)
+
+    def setLogState(self, state):
+        return self.pycam.setLogState(<bool> state)
 

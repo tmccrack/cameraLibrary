@@ -40,7 +40,10 @@ public:
 
     bool setLoopCond(int loopCond = 0);
     bool setServoState(bool state);
+
     bool setLogState(bool state);
+    unsigned int getLogInveral();
+    unsigned int setLogInterval(unsigned int frames);
 
     Gain getServoGainX();
     Gain getServoGainY();
@@ -61,10 +64,11 @@ protected:
 private:
     bool checkError(unsigned int _ui_error, const char* _cp_func);
 
-    void openLoop();
-    void servoLoop();
+    void openLoop(DataLogger *logger, unsigned int log_counter);
+    void servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigned int log_counter);
     void callbackLoop();
     void singleShot();
+    uint checkLogCounter(uint counter);
 
     bool b_gblerrorFlag;
     unsigned int and_error; // Andor error
@@ -77,10 +81,11 @@ private:
     bool b_abort;
     bool b_closed;
     bool b_log;
+    unsigned int i_log_interval = 0;
     bool real_cam;
     std::string i_log_file;  // image log file
     std::string s_log_file;  // servo log file
-    int i_loopCond = 0;
+    int i_loop_cond = 0;
     uint16_t *cam_data;
     uint16_t *copy_data;
     int *status;

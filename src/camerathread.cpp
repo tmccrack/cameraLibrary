@@ -61,13 +61,12 @@ void CameraThread::startThread(int x, int y, bool r_cam, string filename)
     real_cam = r_cam;
     if (filename.empty())
     {
-        setLogState(false);
+        setLogInterval(0);
     }
     else
     {
         i_log_file = filename + "-ftt.dat";
         s_log_file = filename + "-servo.dat";
-        setLogState(true);
     }
 
     if (isRunning())
@@ -97,8 +96,8 @@ void CameraThread::startThread(cb_cam_func cb, void *user_data, int x, int y, bo
     real_cam = r_cam;
 
     // Set to appropriate callback thread function
-    if (s_shot) i_loopCond = 3;
-    else i_loopCond = 2;
+    if (s_shot) i_loop_cond = 3;
+    else i_loop_cond = 2;
     callback = cb;
     ud = user_data;
 
@@ -129,15 +128,14 @@ void CameraThread::abortThread()
 
 bool CameraThread::setLoopCond(int loopCond)
 {
-    i_loopCond = loopCond;
-    return i_loopCond;
+    i_loop_cond = loopCond;
+    return i_loop_cond;
 }
 
 bool CameraThread::setServoState(bool state)
 {
     mutex.lock();
     b_closed = state;
-    mutex.unlock();
     // Closing loop, zero the servo error structures
     // Zero updates value as server knows current position
     if (b_closed)
@@ -145,6 +143,12 @@ bool CameraThread::setServoState(bool state)
         servo->zeroErrors();
         updates[0] = 0;
         updates[1] = 0;
+//        if (client)
+//        {
+//            if (!client->connected)
+//                client->openConnection("Closed");
+
+//        }
     }
     return b_closed;
 }
@@ -153,9 +157,24 @@ bool CameraThread::setLogState(bool state)
 {
     mutex.lock();
     b_log = state;
-    qDebug() << "Log state: " << b_log;
     mutex.unlock();
+    qDebug() << "Log state: " << b_log;
     return b_log;
+}
+
+unsigned int CameraThread::getLogInveral()
+{
+    return i_log_interval;
+}
+
+
+unsigned int CameraThread::setLogInterval(unsigned int frames)
+{
+    mutex.lock();
+    i_log_interval = frames;
+    mutex.unlock();
+    qDebug() << "Logging every " << frames << "frames";
+    return i_log_interval;
 }
 
 /*
@@ -228,27 +247,37 @@ void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
 
 /*
  * Main function for camera thread.
- * Retrieves camera data when event set.
+ * Instatiate objects associated with camera read here
+ * or in called functions to match thread affinity
+ * Otherwise use moveToThread() if to be called from
+ * camera thread.
  */
 void CameraThread::run()
 {
+    // Setup the loggers
+    qDebug() << "Creating loggers";
+    i_logger = new DataLogger(i_log_file);  // Image logger
+    s_logger = new DataLogger(s_log_file);  // Servo logger
+    uint i_log_counter = 1;
+
     if(real_cam)
     {
-        // Pass Andor API event handle and start acquistion
+        // Pass Andor API event handle
         and_error = SetDriverEvent(cam_event);
         checkError(and_error, "SetDriverEvent");
     }
 
-    switch(i_loopCond)
+    // Select camera function
+    switch(i_loop_cond)
     {
         case 0 :
             qDebug() << "Starting open loop";
-            openLoop();
+            openLoop(i_logger, i_log_counter);
             break;
 
         case 1 :
             qDebug() << "Starting servo loop";
-            servoLoop();
+            servoLoop(i_logger, s_logger, i_log_counter);
             break;
 
         case 2 :
@@ -273,80 +302,108 @@ void CameraThread::run()
     }
 
     printf("Acquistion ended\n");
+
+    // Close loggers
+    i_logger->closeFile();
+    s_logger->closeFile();
+    delete i_logger;
+    delete s_logger;
 }
 
 
 /*
  * Function to acquire camera data in video
  */
-void CameraThread::openLoop()
+void CameraThread::openLoop(DataLogger *logger, uint log_counter)
 {
-    qDebug() << "Starting camera acquistion";
-
-    and_error = StartAcquisition();
-    checkError(and_error, "StartAcquisition");
-
-    while (!b_abort)
+    if (real_cam)
     {
-        win_error = WaitForSingleObject(cam_event, 2500);
+        and_error = StartAcquisition();
+        checkError(and_error, "StartAcquisition");
 
-        // Object triggered, check what happened
-        if (win_error == WAIT_OBJECT_0)
+        while (!b_abort)
         {
-            // Camera triggered event, get data
-            mutex.lock();
-            ResetEvent(cam_event);
-            and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
-            checkError(and_error, "GetMostRecentImage16");
-            if (b_log) i_logger->append(cam_data, image_size);
-            std::copy(cam_data, cam_data + image_size, copy_data);
-            mutex.unlock();
-        }
-        else if (win_error == WAIT_TIMEOUT)
-        {
-            // Timeout, do nothing
-            qDebug() << "Camera thread timed out waiting for event";
-            /*
-            GetStatus(status);
-            qDebug() << "Camera status: " << *status;
-            checkError(and_error, "GetStatus");
-            */
-            ResetEvent(cam_event);
-        }
-        else
-        {
-            // Error, abort acquisition loop
-            mutex.lock();
-            b_abort = true;
-            mutex.unlock();
-            printf("Error in image acquisition\n");
+            win_error = WaitForSingleObject(cam_event, 2500);
+
+            // Object triggered, check what happened
+            if (win_error == WAIT_OBJECT_0)
+            {
+                // Camera triggered event, get data
+                mutex.lock();
+                ResetEvent(cam_event);
+                and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
+                checkError(and_error, "GetMostRecentImage16");
+                std::copy(cam_data, cam_data + image_size, copy_data);
+                if (b_log)
+                {
+                    log_counter = checkLogCounter(log_counter);
+                    if (log_counter == i_log_interval)
+                    {
+                        logger->append(cam_data, image_size);
+                    }
+                }
+
+                mutex.unlock();
+            }
+            else if (win_error == WAIT_TIMEOUT)
+            {
+                // Timeout, do nothing
+                qDebug() << "Camera thread timed out waiting for event";
+                and_error = GetStatus(status);
+                qDebug() << "Camera status: " << *status;
+                checkError(and_error, "GetStatus");
+                ResetEvent(cam_event);
+            }
+            else
+            {
+                // Error, abort acquisition loop
+                mutex.lock();
+                b_abort = true;
+                mutex.unlock();
+                printf("Error in image acquisition\n");
+            }
         }
     }
-    i_logger->closeFile();
-    delete i_logger;
+
+    else
+    {
+        while(!b_abort)
+        {
+            mutex.lock();
+            for (int i=0; i<image_size; i++)
+            {
+                cam_data[i] = (uint16_t) rand() % 100;
+
+            }
+            if (b_log)
+            {
+                log_counter = checkLogCounter(log_counter);
+                if (log_counter == i_log_interval)
+                {
+                    i_logger->append(cam_data, image_size);
+                    s_logger->appendFloat(updates, 2);
+                }
+                qDebug() << "Log counter: " << log_counter;
+            }
+            std::copy(cam_data, cam_data + image_size, copy_data);
+            mutex.unlock();
+            Sleep(100);
+        }
+    }
+
 }
 
 
 /*
  * Function to implement servo
  */
-void CameraThread::servoLoop()
+void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigned int log_counter)
 {
-    qDebug() << "Starting camera servo";
-
     // Setup servo
     setServoDim(xd, yd);
     setServoTargetCoords(xd/2.0, yd/2.0);
     getServoTargetCoords(&xd, &yd);
     servo->setBuffer(cam_data);
-
-    // Setup the loggers
-    if (b_log)
-    {
-        qDebug() << "Creating loggers";
-        i_logger = new DataLogger(i_log_file);  // Image logger
-        s_logger = new DataLogger(s_log_file);  // Servo logger
-    }
 
     // ImageServo passed updates pointer, need to get starting value for servo
     // Server retains the current value, set to zero
@@ -366,6 +423,8 @@ void CameraThread::servoLoop()
     {
         and_error = StartAcquisition();
         checkError(and_error, "StartAcquisition");
+
+
 
         while (!b_abort)
         {
@@ -392,8 +451,12 @@ void CameraThread::servoLoop()
                 }
                 if (b_log)
                 {
-                    i_logger->append(cam_data, image_size);
-                    s_logger->appendFloat(updates, 2);
+                    log_counter = checkLogCounter(log_counter);
+                    if (log_counter == i_log_interval)
+                    {
+                        i_logger->append(cam_data, image_size);
+                        s_logger->appendFloat(updates, 2);
+                    }
                 }
                 std::copy(cam_data, cam_data + image_size, copy_data);
                 mutex.unlock();
@@ -402,11 +465,9 @@ void CameraThread::servoLoop()
             {
                 // Timeout, do nothing
                 qDebug() << "Camera thread timed out waiting for event";
-                /*
-                GetStatus(status);
+                and_error = GetStatus(status);
                 qDebug() << "Camera status: " << *status;
                 checkError(and_error, "GetStatus");
-                */
                 ResetEvent(cam_event);
             }
             else
@@ -431,7 +492,6 @@ void CameraThread::servoLoop()
                 cam_data[i] = (uint16_t) rand() % 100;
 
             }
-            std::copy(cam_data, cam_data + image_size, copy_data);
             if(b_closed)
             {
                 servo->getUpdate();
@@ -442,24 +502,22 @@ void CameraThread::servoLoop()
             }
             if (b_log)
             {
-                i_logger->append(cam_data, image_size);
-                s_logger->appendFloat(updates, 2);
+                log_counter = checkLogCounter(log_counter);
+                if (log_counter == i_log_interval)
+                {
+                    i_logger->append(cam_data, image_size);
+                    s_logger->appendFloat(updates, 2);
+                }
+                qDebug() << "Log counter: " << log_counter;
             }
+            std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();
             Sleep(100);
         }
     }
-//    client->sendData(5.0,5.0);
+//    client->sendData(2.5, 2.5);
     client->closeConnection();
-    delete client;
 
-    if (b_log)
-    {
-        i_logger->closeFile();
-        s_logger->closeFile();
-        delete i_logger;
-        delete s_logger;
-    }
 }
 
 void CameraThread::callbackLoop()
@@ -557,6 +615,15 @@ void CameraThread::singleShot()
         callback(cam_data, image_size, ud);
     }
 }
+
+uint CameraThread::checkLogCounter(uint counter)
+{
+    if (counter >= i_log_interval) return counter = 1;
+
+    else return counter += 1;
+}
+
+
 
 /*
  * Check Andor error code

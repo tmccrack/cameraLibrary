@@ -27,8 +27,23 @@ void DataLogger::newFile(string filename)
 
 void DataLogger::closeFile()
 {
-    if (file->isOpen()) file->close();
+    // Delete if empty, close if not
+    if (!isFileEmpty())
+    {
+        file->close();
+    }
     qDebug() << "Closed: " << file->fileName();
+}
+
+bool DataLogger::isFileEmpty()
+{
+    // Check if file is empty and delete
+    if (file->size() == 0)
+    {
+        qDebug() << "Deleting file: " << file->fileName();
+        return file->remove();
+    }
+    else return false;
 }
 
 void DataLogger::header(string head)

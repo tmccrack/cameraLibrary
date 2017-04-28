@@ -14,6 +14,7 @@ import matplotlib.lines as mlines
 from fttMainWindow import Ui_MainWindow  # pyuic5 generated file
 from fttServo import Servo as servo
 from fttMirror import Mirror as mirror
+from fttLogging import Logger as logger
 
 import time
 import logging
@@ -231,7 +232,8 @@ class AppWindow(Ui_MainWindow):
       '20040': 'Drift',
       '20072': 'Acquiring',
       '0': 'Fake cam'}
-    def __init__(self, mainwindow, camera, mir_win, servo_win):
+
+    def __init__(self, mainwindow, camera, mir_win, servo_win, log_win):
         super(AppWindow, self).__init__()
         self.setupUi(mainwindow)
         self.camera = camera
@@ -239,6 +241,7 @@ class AppWindow(Ui_MainWindow):
         self.servo_win = servo_win
         self.servo_win.reInitVals(self.camera.getGainX(), 
                                   self.camera.getRotation())
+        self.log_win = log_win
 
         # Initialize logger
         self.logger = logging.getLogger('')
@@ -302,44 +305,66 @@ class AppWindow(Ui_MainWindow):
         self.servo_win.buttonBox.accepted.connect(self.acceptGain)
         self.servo_win.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.acceptGain)
 
+        #
+        # Logging actions and buttons
+        self.actionLogEnable.changed.connect(lambda:
+                            self.camera.setLogState(self.actionLogEnable.isChecked()))
+        self.actionLogIntv.triggered.connect(lambda:
+                            self.log_win.initVals(self.camera.getLogInterval()))
+        self.actionLogIntv.triggered.connect(lambda:
+                            self.log_win.show())
+        self.log_win.buttonBox.accepted.connect(lambda:
+                            self.camera.setLogInterval(self.log_win.spb_Interval.value()))
+
 
     def acceptGain(self):
         self.camera.setGain(self.servo_win.gains, self.servo_win.rot)
-        self.logUpdate("Setting gain parameters: {} {}".format(self.gain, time.strftime(self.timeFormat,time.gmtime())))
-        # self.logUpdate("Target coordinates set to: [{}, {}] {}".format(self.coords[0],self.coords[1],
-        #                                                     time.strftime(self.timeFormat,time.gmtime())))
+        self.logUpdate(
+            """
+            Setting gain parameters: {} {}
+            """.format(self.gain, time.strftime(
+                                        self.timeFormat,time.gmtime())))
 
 
     def btnGainClicked(self):
-        self.servo_win.reInitVals(self.camera.getGainX(), self.camera.getRotation())
+        self.servo_win.reInitVals(self.camera.getGainX(), 
+                                    self.camera.getRotation())
         self.servo_win.show()
-        # self.coords = self.camera.setTargetCoords(self.coords[0], self.coords[1])
 
 
     def btnToggleCamClicked(self):
         if  self.camera.running(): 
             self.camera.stop()
             self.cam_timer.stop()
-            self.logUpdate("Exposure sequence stopped {}".format(time.strftime(self.timeFormat,time.gmtime())))
+            self.logUpdate(
+                """
+                Exposure sequence stopped {}
+                """.format(time.strftime(self.timeFormat,time.gmtime())))
             self.btn_ToggleCam.setText('Start')
         elif not self.camera.running():
-            if self.logging: 
-                log_file = image_path+time.strftime(self.timeFormat, time.gmtime())
-                self.camera.start(1, log_file)
-                self.logUpdate("Data log at {} with image dim {},{}".format(log_file, self.imageDim['h_dim'],
-                                                                                      self.imageDim['v_dim']))
-            else:
-                self.camera.start(1)
-
+            log_file = image_path+time.strftime(self.timeFormat, time.gmtime())
+            self.camera.start(0, log_file)
+            self.logUpdate(
+                """
+                Data log at {} with image dim {},{}
+                """.format(log_file, self.imageDim['h_dim'], 
+                                    self.imageDim['v_dim']))
             self.cam_timer.start()
-            self.logUpdate("Exposure sequence started {}".format(time.strftime(self.timeFormat,time.gmtime())))
+            self.logUpdate(
+                """
+                Exposure sequence started {}
+                """.format(time.strftime(self.timeFormat,time.gmtime())))
 
             self.btn_ToggleCam.setText('Stop')
 
 
     def radToggleServoClicked(self):
         servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
-        self.logUpdate("Servo state set {} {}".format(servoState, time.strftime(self.timeFormat,time.gmtime())))
+        self.logUpdate(
+            """
+            Servo state set {} {}
+            """.format(servoState, time.strftime(self.timeFormat,
+                                                    time.gmtime())))
 
         	
     def btnSetFrameClicked(self):
@@ -431,8 +456,9 @@ if __name__ == '__main__':
     camera = pycamera.PyCamera(name, False, temp=17)
     serv = servo(MainWindow)
     mir = mirror(MainWindow)
+    log = logger(MainWindow)
     # imageDisp = ImageCanvas(MainWindow)
-    ui = AppWindow(MainWindow, camera, mir, serv)
+    ui = AppWindow(MainWindow, camera, mir, serv, log)
     MainWindow.show()
     sys.exit(app.exec_())
 

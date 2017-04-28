@@ -22,6 +22,7 @@ private:
     QDataStream *d_out;
     int d_size = sizeof(uint16_t);
     int f_size = sizeof(float);
+    bool isFileEmpty();
 };
 
 #endif // DATALOGGER_H

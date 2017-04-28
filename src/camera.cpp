@@ -352,6 +352,21 @@ bool Camera::setServoState(bool state)
     return t_cam_thread->setServoState(state);
 }
 
+unsigned int Camera::getLogInterval()
+{
+    return t_cam_thread->getLogInveral();
+}
+
+bool Camera::setLogState(bool state)
+{
+    return t_cam_thread->setLogState(state);
+}
+
+unsigned int Camera::setLogInterval(unsigned int frames)
+{
+    return t_cam_thread->setLogInterval(frames);
+}
+
 
 /*
  * Camera initialization
@@ -374,6 +389,7 @@ void Camera::_initializeCamera(int temp)
         // Set timing parameters
         s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
         s_timingProp.v_shift = 0;  // Fastest vertical shift speed
+        s_timingProp.v_amp = 1;  // Vertical clock voltage level, 0-4
         s_timingProp.dma_images = 1;  // Maximum number of images in DMA buffer
         s_timingProp.dma_accum_time = float(0.001);  // Minimum time between hardware interrupts
 
@@ -680,6 +696,9 @@ void Camera::_setTimingParams()
 
         ui_error = SetHSSpeed(0, s_timingProp.h_shift);  // Fastest horizontal shift speed
         checkError(ui_error, "SetHSSpeed");
+
+        ui_error = SetVSAmplitude(s_timingProp.v_amp);  // Set vertical clock voltage level
+        checkError(ui_error, "SetVSAmp");
 
         //ui_error = SetNumberAccumulations(s_timingProp.dma_images);  // Do not accumulate images onboard camera
         //checkError(ui_error, "SetNumberAccumulations");

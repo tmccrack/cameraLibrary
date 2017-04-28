@@ -58,8 +58,13 @@ cdef extern from "./../src/camera.h":
         void getTargetCoords(float *x, float *y)
         void setTargetCoords(float x, float y)
         bool setServoState(bool state)
-        bool setLogState(bool state)
 
+        #
+        # Log properties
+        unsigned int getLogInterval()
+        bool setLogState(bool state)
+        unsigned int setLogInterval(unsigned int frames)
+        
     cdef struct ImageDimension:
         int h_start
         int h_end
@@ -90,6 +95,7 @@ cdef extern from "./../src/camera.h":
     cdef struct TimingProperties:
         int h_shift
         int v_shift
+        int v_amp
         int dma_images
         float dma_accum_time
 

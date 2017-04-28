@@ -43,6 +43,7 @@ struct ReadProperties{
 struct TimingProperties{
     int h_shift;
     int v_shift;
+    int v_amp;
     int dma_images;
     float dma_accum_time;
 };
@@ -114,7 +115,10 @@ public:
     float getRotation();
     void setRotation(float rot);
     bool setServoState(bool state);
+
+    unsigned int getLogInterval();
     bool setLogState(bool state);
+    unsigned int setLogInterval(unsigned int frames);
 
 
 private:
