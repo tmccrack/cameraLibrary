@@ -13,7 +13,7 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     x_servo = new Servo(this);
     y_servo = new Servo(this);
 
-    setRotation(315);
+    setRotation(225);
     setTargetCoords(256, 256);
 }
 

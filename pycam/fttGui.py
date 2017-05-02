@@ -198,7 +198,7 @@ class MoveSpot(QtCore.QObject):
             self.moveMirror()
     
     def moveMirror(self):
-        motion = self.dims[0,:]-self.dims[1,:]
+        motion = self.dims[1,:]-self.dims[0,:]
         # ~20" total motion over 5V --> 5V/20" = 0.25 V/"
         # 0.1596"/pixel --> 0.25V/" * 0.1596"/pixel = 0.03975 V/pixel
         trans_motion = np.array((motion[0]*self.rot[0] - motion[1]*self.rot[1],
@@ -209,8 +209,8 @@ class MoveSpot(QtCore.QObject):
         # Update the current mirror values
         self.mirror.getValues()
         self.mirror.sendSingleUpdate(
-                    self.mirror.spb_Ch0.value() + trans_motion[0],
-                    self.mirror.spb_Ch1.value() + trans_motion[1]
+                    self.mirror.spb_Ch1.value() + trans_motion[1],
+                    self.mirror.spb_Ch0.value() + trans_motion[0],                    
                     )
         self.quit()
 
@@ -512,7 +512,7 @@ if __name__ == '__main__':
     MainWindow = QtWidgets.QMainWindow()
     name = "FTT"
     camera = pycamera.PyCamera(name, options.realcam, temp=17)
-    serv = servo(MainWindow)
+    serv = servo(MainWindow, camera.getGainX(), camera.getRotation())
     mir = mirror(MainWindow)
     log = logger(MainWindow)
     ui = AppWindow(MainWindow, camera, mir, serv, log)
