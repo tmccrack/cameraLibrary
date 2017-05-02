@@ -395,7 +395,10 @@ class AppWindow(Ui_MainWindow):
 
 
     def radToggleServoClicked(self):
-        pass
+        if (self.rad_ToggleServo.isChecked()):
+            self.btn_OnFiber.setEnabled(False)
+        else: self.btn_OnFiber.setEnabled(True)
+
         # servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
         # self.logUpdate(
         #     """
@@ -504,7 +507,6 @@ if __name__ == '__main__':
                 help="Use a fake camera for debugging purposes")
 
     (options, args) = parser.parse_args()
-    print(options)
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
