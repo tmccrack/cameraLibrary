@@ -24,7 +24,6 @@ image_path = "./../data/"
 
 fiber_loc = (250, 300)
 def setFiberLoc(x, y):
-    print("Fiber loc: {} {}".format(x, y))
     global fiber_loc
     fiber_loc = (x, y)
 
@@ -216,13 +215,11 @@ class Worker(QtCore.QObject):
         self.quit()
 
     def timedOut(self):
-        print("fiber center timed out")
         self.quit()
 
     def quit(self):
         self.timer.stop()
         self.image.imageClick.disconnect(self.imageClicked)
-        print("done with worker")
 
 
 class FiberLocator(QtCore.QObject):
@@ -238,18 +235,15 @@ class FiberLocator(QtCore.QObject):
 
     def imageClicked(self, x, y):
         setFiberLoc(x, y)
-        print("From fiber locator class: {}".format(fiber_loc))
         self.image.setFiberMarker((fiber_loc))
         self.quit()
 
     def timedOut(self):
-        print("Fiber locator timed out")
         self.quit()
 
     def quit(self):
         self.timer.stop()
         self.image.imageClick.disconnect(self.imageClicked)
-        print("Done with fiber locator")
 
 
 class AppWindow(Ui_MainWindow):
@@ -494,10 +488,23 @@ class AppWindow(Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    import optparse
+
+    usage = """%prog [options]
+    Open the FTT camera gui.
+    """
+    parser = optparse.OptionParser(usage=usage)
+
+    parser.add_option("-f", action="store_false", dest="realcam", default=True,
+                help="Use a fake camera for debugging purposes")
+
+    (options, args) = parser.parse_args()
+    print(options)
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     name = "FTT"
-    camera = pycamera.PyCamera(name, False, temp=17)
+    camera = pycamera.PyCamera(name, options.realcam, temp=17)
     serv = servo(MainWindow)
     mir = mirror(MainWindow)
     log = logger(MainWindow)
