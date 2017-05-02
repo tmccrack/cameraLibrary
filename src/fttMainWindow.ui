@@ -520,6 +520,7 @@
     </property>
     <addaction name="actionRead_mode"/>
     <addaction name="actionTiming_2"/>
+    <addaction name="actionFiberLocation"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
@@ -585,6 +586,11 @@
   <action name="actionLogIntv">
    <property name="text">
     <string>Interval</string>
+   </property>
+  </action>
+  <action name="actionFiberLocation">
+   <property name="text">
+    <string>Fiber location</string>
    </property>
   </action>
  </widget>

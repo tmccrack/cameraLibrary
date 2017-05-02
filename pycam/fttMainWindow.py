@@ -265,6 +265,8 @@ class Ui_MainWindow(object):
         self.actionLogEnable.setObjectName("actionLogEnable")
         self.actionLogIntv = QtWidgets.QAction(MainWindow)
         self.actionLogIntv.setObjectName("actionLogIntv")
+        self.actionFiberLocation = QtWidgets.QAction(MainWindow)
+        self.actionFiberLocation.setObjectName("actionFiberLocation")
         self.menuFile.addAction(self.actionClose)
         self.menuLogging.addAction(self.actionLogEnable)
         self.menuLogging.addAction(self.actionLogIntv)
@@ -275,6 +277,7 @@ class Ui_MainWindow(object):
         self.menuSettings.addAction(self.actionMirror)
         self.menuAdvanced.addAction(self.actionRead_mode)
         self.menuAdvanced.addAction(self.actionTiming_2)
+        self.menuAdvanced.addAction(self.actionFiberLocation)
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuSettings.menuAction())
         self.menuBar.addAction(self.menuAdvanced.menuAction())
@@ -332,6 +335,7 @@ class Ui_MainWindow(object):
         self.actionTiming_2.setText(_translate("MainWindow", "Timing"))
         self.actionLogEnable.setText(_translate("MainWindow", "On"))
         self.actionLogIntv.setText(_translate("MainWindow", "Interval"))
+        self.actionFiberLocation.setText(_translate("MainWindow", "Fiber location"))
 
 
 if __name__ == "__main__":

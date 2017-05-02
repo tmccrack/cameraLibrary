@@ -383,7 +383,6 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
                     i_logger->append(cam_data, image_size);
                     s_logger->appendFloat(updates, 2);
                 }
-                qDebug() << "Log counter: " << log_counter;
             }
             std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();
@@ -508,7 +507,6 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
                     i_logger->append(cam_data, image_size);
                     s_logger->appendFloat(updates, 2);
                 }
-                qDebug() << "Log counter: " << log_counter;
             }
             std::copy(cam_data, cam_data + image_size, copy_data);
             mutex.unlock();

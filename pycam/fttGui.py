@@ -22,9 +22,11 @@ import logging
 logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
 image_path = "./../data/"
 
-fiber_loc = (256,256)
-def setFiberLoc(self, x, y):
-        fiber_loc = (x, y)
+fiber_loc = (250, 300)
+def setFiberLoc(x, y):
+    print("Fiber loc: {} {}".format(x, y))
+    global fiber_loc
+    fiber_loc = (x, y)
 
 class ImageCanvas(FigureCanvas):
     """
@@ -72,8 +74,8 @@ class ImageCanvas(FigureCanvas):
         # Initialize fiber marker list and add to axes
         self.marker_lines = []
         ratio = (512/12.0, 512/12.0)
-        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fiber_loc
-        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fiber_loc
+        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fiber_loc[0]
+        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fiber_loc[1]
 
         for ind in range(len(x)):
             self.marker_lines.append(mlines.Line2D(x[ind], y[ind], color='g', linewidth=2.0)) #.set_data(x[ind], y[ind])
@@ -86,16 +88,19 @@ class ImageCanvas(FigureCanvas):
 
     #
     # Update fiber markers for new array size
-    def setFiberMarker(self):
+    def setFiberMarker(self, fib_loc):
         # Settings for updated fiber markers
         # Markers are 1/12 the dimension, offset by half that ratio
         ratio = (ImageCanvas.iDims['h_dim']/12.0, ImageCanvas.iDims['v_dim']/12.0)
-
-        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fiber_loc
-        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fiber_loc
+        
+        x = np.array([[-ratio[0]*1.5, -ratio[0]*0.5], [ratio[0]*0.5, ratio[0]*1.5], [0.0, 0.0], [0.0, 0.0]]) + fib_loc[0]
+        y = np.array([[0.0, 0.0], [0.0, 0.0], [-ratio[1]*1.5, -ratio[1]*0.5], [ratio[1]*0.5, ratio[1]*1.5]]) + fib_loc[1]
 
         for ind in range(len(x)):
             self.marker_lines[ind].set_data(x[ind], y[ind])
+
+        self.draw()
+
 
     #
     # Image click event
@@ -135,7 +140,6 @@ class ImageCanvas(FigureCanvas):
             self.axes_err.relim()
             self.axes_err.autoscale_view()
 
-        # self.axes_ftt.add_line(self.fiber_marker)
         self.draw()
 
     def setDimensions(self, iDims):
@@ -144,7 +148,7 @@ class ImageCanvas(FigureCanvas):
         """
         ImageCanvas.iDims = iDims
         self.setAxes()
-        self.setFiberMarker()
+        self.setFiberMarker(fiber_loc)
 
     def setAxes(self):
         """
@@ -221,6 +225,33 @@ class Worker(QtCore.QObject):
         print("done with worker")
 
 
+class FiberLocator(QtCore.QObject):
+    def __init__(self, image, parent=None):
+        super(FiberLocator, self).__init__()
+        self.image = image
+        self.timer = QtCore.QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(10000)
+        self.timer.timeout.connect(self.timedOut)
+        self.timer.start()
+        self.image.imageClick.connect(self.imageClicked)
+
+    def imageClicked(self, x, y):
+        setFiberLoc(x, y)
+        print("From fiber locator class: {}".format(fiber_loc))
+        self.image.setFiberMarker((fiber_loc))
+        self.quit()
+
+    def timedOut(self):
+        print("Fiber locator timed out")
+        self.quit()
+
+    def quit(self):
+        self.timer.stop()
+        self.image.imageClick.disconnect(self.imageClicked)
+        print("Done with fiber locator")
+
+
 class AppWindow(Ui_MainWindow):
     """
     Main window class, inherits Ui
@@ -283,6 +314,8 @@ class AppWindow(Ui_MainWindow):
     def onFiberClicked(self):
         self.a = Worker(self.imageDisp, self.mir_win, self.camera.getRotation())
 
+    def onFiberLocatorClicked(self):
+        self.a = FiberLocator(self.imageDisp)
 
     def connectSlots(self):
         self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
@@ -293,6 +326,10 @@ class AppWindow(Ui_MainWindow):
         self.imageDisp.imageClick.connect(self.imageClicked)
         self.cam_timer.timeout.connect(self.updateFig)
         self.temp_timer.timeout.connect(self.updateTemp)
+
+        #
+        # Fiber location action
+        self.actionFiberLocation.triggered.connect(self.onFiberLocatorClicked)
 
         #
         # Buttons in the mirror window
@@ -315,6 +352,8 @@ class AppWindow(Ui_MainWindow):
                             self.log_win.show())
         self.log_win.buttonBox.accepted.connect(lambda:
                             self.camera.setLogInterval(self.log_win.spb_Interval.value()))
+        self.imageDisp.imageClick.connect(self.imageClicked)
+
 
 
     def acceptGain(self):
@@ -324,7 +363,6 @@ class AppWindow(Ui_MainWindow):
             Setting gain parameters: {} {}
             """.format(self.gain, time.strftime(
                                         self.timeFormat,time.gmtime())))
-
 
     def btnGainClicked(self):
         self.servo_win.reInitVals(self.camera.getGainX(), 
@@ -389,6 +427,12 @@ class AppWindow(Ui_MainWindow):
 
     def imageClicked(self, targx, targy):
         self.coords = (targx, targy)
+        # print(np.floor(targx))
+        # self.imageDim['h_start'] = np.floor(targx) - self.imageDim['h_dim'] / 2
+        # self.imageDim['v_start'] = np.floor(targy) - self.imageDim['v_dim'] / 2
+        # self.spb_XOffs.setValue(self.imageDim['h_start'])
+        # self.spb_YOffs.setValue(self.imageDim['v_start'])
+        # print(self.imageDim)
         # self.spb_XFib.setValue(targx)
         # self.spb_YFib.setValue(targy)
 
@@ -457,7 +501,6 @@ if __name__ == '__main__':
     serv = servo(MainWindow)
     mir = mirror(MainWindow)
     log = logger(MainWindow)
-    # imageDisp = ImageCanvas(MainWindow)
     ui = AppWindow(MainWindow, camera, mir, serv, log)
     MainWindow.show()
     sys.exit(app.exec_())
