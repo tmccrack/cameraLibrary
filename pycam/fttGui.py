@@ -174,10 +174,10 @@ class ImageCanvas(FigureCanvas):
         self.axes_vsum.set_xticklabels([], visible=False)
 
 
-class Worker(QtCore.QObject):
+class MoveSpot(QtCore.QObject):
     
     def __init__(self, image, mirror, rot, parent=None):
-        super(Worker, self).__init__()
+        super(MoveSpot, self).__init__()
         self.image = image
         self.mirror = mirror
         self.rot = (np.cos(np.pi * rot / 180.0), np.sin(np.pi * rot / 180.0))
@@ -306,7 +306,7 @@ class AppWindow(Ui_MainWindow):
         self.temp_timer.start()
 
     def onFiberClicked(self):
-        self.a = Worker(self.imageDisp, self.mir_win, self.camera.getRotation())
+        self.a = MoveSpot(self.imageDisp, self.mir_win, self.camera.getRotation())
 
     def onFiberLocatorClicked(self):
         self.a = FiberLocator(self.imageDisp)
@@ -373,9 +373,12 @@ class AppWindow(Ui_MainWindow):
                 Exposure sequence stopped {}
                 """.format(time.strftime(self.timeFormat,time.gmtime())))
             self.btn_ToggleCam.setText('Start')
+            self.rad_ToggleServo.setEnabled(True)
         elif not self.camera.running():
             log_file = image_path+time.strftime(self.timeFormat, time.gmtime())
-            self.camera.start(0, log_file)
+            if (self.rad_ToggleServo.isChecked()):
+                self.camera.start(1, log_file)
+            else: self.camera.start(0, log_file)
             self.logUpdate(
                 """
                 Data log at {} with image dim {},{}
@@ -388,15 +391,17 @@ class AppWindow(Ui_MainWindow):
                 """.format(time.strftime(self.timeFormat,time.gmtime())))
 
             self.btn_ToggleCam.setText('Stop')
+            self.rad_ToggleServo.setEnabled(False)
 
 
     def radToggleServoClicked(self):
-        servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
-        self.logUpdate(
-            """
-            Servo state set {} {}
-            """.format(servoState, time.strftime(self.timeFormat,
-                                                    time.gmtime())))
+        pass
+        # servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
+        # self.logUpdate(
+        #     """
+        #     Servo state set {} {}
+        #     """.format(servoState, time.strftime(self.timeFormat,
+        #                                             time.gmtime())))
 
         	
     def btnSetFrameClicked(self):

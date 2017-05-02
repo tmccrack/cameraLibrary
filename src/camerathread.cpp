@@ -143,13 +143,23 @@ bool CameraThread::setServoState(bool state)
         servo->zeroErrors();
         updates[0] = 0;
         updates[1] = 0;
-//        if (client)
-//        {
-//            if (!client->connected)
-//                client->openConnection("Closed");
+        if (client)
+        {
+            if (!client->isConnected())
+                client->openConnection("Closed");
 
-//        }
+        }
     }
+    else
+    {
+        if (client)
+        {
+            if (client->isConnected())
+                client->closeConnection();
+        }
+
+    }
+    mutex.unlock();
     return b_closed;
 }
 
@@ -413,17 +423,12 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
     if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
     client->openConnection("Closed");
-//    client->openConnection("Values");
-//    client->getData(&updates[0], &updates[1]);  // Assign starting values
-//    client->closeConnection();
 
 
     if(real_cam)
     {
         and_error = StartAcquisition();
         checkError(and_error, "StartAcquisition");
-
-
 
         while (!b_abort)
         {
@@ -513,7 +518,6 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
             Sleep(100);
         }
     }
-//    client->sendData(2.5, 2.5);
     client->closeConnection();
 
 }

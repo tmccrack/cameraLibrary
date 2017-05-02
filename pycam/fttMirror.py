@@ -115,6 +115,7 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
         suc = client.sendall(mess)
         data = client.recv(2)
         data = client.recv(int.from_bytes(data, byteorder='little')).decode('utf-8').split(';')
+        print(data)
         client.close()
         self.spb_Ch0.setValue(float(data[0]))
         self.spb_Ch1.setValue(float(data[1]))
