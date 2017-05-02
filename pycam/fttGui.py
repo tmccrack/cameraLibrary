@@ -513,7 +513,9 @@ if __name__ == '__main__':
     name = "FTT"
     camera = pycamera.PyCamera(name, options.realcam, temp=17)
     serv = servo(MainWindow, camera.getGainX(), camera.getRotation())
-    mir = mirror(MainWindow)
+    if options.realcam:
+    	mir = mirror('172.28.139.52', MainWindow)
+    else: mir = mirror('localhost', MainWindow)
     log = logger(MainWindow)
     ui = AppWindow(MainWindow, camera, mir, serv, log)
     MainWindow.show()

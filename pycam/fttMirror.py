@@ -49,10 +49,10 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
     """
     Dialog window for manually moving mirror
     """
-    def __init__(self, parent=None, mpl_window=None):
+    def __init__(self, host, parent=None, mpl_window=None):
         super(Mirror, self).__init__()
         self.setupUi(self)
-        self.host = 'localhost'
+        self.host = host
         self.port = 6666
         self.mpl_window = mpl_window
         self.connectSlots()
