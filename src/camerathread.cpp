@@ -150,15 +150,6 @@ bool CameraThread::setServoState(bool state)
 
         }
     }
-    else
-    {
-        if (client)
-        {
-            if (client->isConnected())
-                client->closeConnection();
-        }
-
-    }
     mutex.unlock();
     return b_closed;
 }
@@ -240,6 +231,16 @@ void CameraThread::setServoDim(int x, int y)
     servo->setImageDim(x, y);
 }
 
+float CameraThread::getBackground()
+{
+    return servo->getBackground();
+}
+
+void CameraThread::setBackground(float background)
+{
+    servo->setBackground(background);
+}
+
 
 /*
  * Getter and setter for servo target coordinates
@@ -265,7 +266,6 @@ void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
 void CameraThread::run()
 {
     // Setup the loggers
-    qDebug() << "Creating loggers";
     i_logger = new DataLogger(i_log_file);  // Image logger
     s_logger = new DataLogger(s_log_file);  // Servo logger
     uint i_log_counter = 1;
@@ -359,10 +359,13 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
             {
                 // Timeout, do nothing
                 qDebug() << "Camera thread timed out waiting for event";
-                and_error = GetStatus(status);
-                qDebug() << "Camera status: " << *status;
-                checkError(and_error, "GetStatus");
-                ResetEvent(cam_event);
+                b_abort = true;
+                break;
+//                and_error = GetStatus(status);
+//                checkError(and_error, "GetStatus");
+//                qDebug() << "Camera status: " << status;
+//                ResetEvent(cam_event);
+
             }
             else
             {
@@ -399,7 +402,6 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
             Sleep(100);
         }
     }
-
 }
 
 
@@ -410,18 +412,19 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
 {
     // Setup servo
     setServoDim(xd, yd);
-    setServoTargetCoords(xd/2.0, yd/2.0);
     getServoTargetCoords(&xd, &yd);
     servo->setBuffer(cam_data);
-
-    // ImageServo passed updates pointer, need to get starting value for servo
-    // Server retains the current value, set to zero
-    updates[0] = 0;
-    updates[1] = 0;
 
     // Prep the client
     if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
+
+    // ImageServo passed updates pointer, need to get starting value for servo
+    // Switch axes, based on experiment
+    client->openConnection("Values");
+    client->getData(&updates[1], &updates[0]);
+    client->closeConnection();
+
     client->openConnection("Closed");
 
 
@@ -445,14 +448,11 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
 
                 // Pass current data to servo
                 // Servo updates pointers passed to constructor
-                if(b_closed)
-                {
-                    servo->getUpdate();
-                    servo->getErrors(x_err, y_err);
-                    client->sendData(updates[1], updates[0]);
-//                    qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
+                servo->getUpdate();
+                servo->getErrors(x_err, y_err);
+                client->sendData(updates[1], updates[0]);
+//              qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
 //                             << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
-                }
                 if (b_log)
                 {
                     log_counter = checkLogCounter(log_counter);
@@ -469,10 +469,8 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
             {
                 // Timeout, do nothing
                 qDebug() << "Camera thread timed out waiting for event";
-                and_error = GetStatus(status);
-                qDebug() << "Camera status: " << *status;
-                checkError(and_error, "GetStatus");
-                ResetEvent(cam_event);
+                b_abort = true;
+                break;
             }
             else
             {

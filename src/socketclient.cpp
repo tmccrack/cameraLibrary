@@ -22,7 +22,6 @@ SocketClient::SocketClient(int pport, string hhost)
     socket = new QTcpSocket;
     data = new QByteArray;
     connected = false;
-    qDebug() << "Client created";
 }
 
 
@@ -46,7 +45,6 @@ bool SocketClient::openConnection(string conn_type)
 
     if(socket->waitForConnected(3000))
     {
-        qDebug() << "Connected";
         QByteArray temp;
         temp.append(QString::fromStdString(conn_type));
         socket->write(QByteArray::number(temp.size()), 2);

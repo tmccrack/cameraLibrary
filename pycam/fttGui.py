@@ -22,7 +22,7 @@ import logging
 logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
 image_path = "./../data/"
 
-fiber_loc = (250, 300)
+fiber_loc = (270.0, 266.0)
 def setFiberLoc(x, y):
     global fiber_loc
     fiber_loc = (x, y)
@@ -40,15 +40,18 @@ class ImageCanvas(FigureCanvas):
         matplotlib.rcParams.update({'font.size': 10})
 
         # Generate axes on the figure
-        self.axes_err = fig.add_axes([0.075, 0.05, 0.775, 0.1], axis_bgcolor='k') # error plot
+        self.axes_err = fig.add_axes([0.075, 0.05, 0.775, 0.1], facecolor='k') # error plot
         self.axes_ftt = fig.add_axes([0.075, 0.175, 0.775, 0.675], frame_on=True)  # FTT image frame
-        self.axes_vsum = fig.add_axes([0.075, 0.875, 0.775, 0.1], axis_bgcolor='k')  # vertical summaiton
-        self.axes_hsum = fig.add_axes([0.875, 0.175, 0.1, 0.675], axis_bgcolor='k')  # horizontal summation
+        self.axes_vsum = fig.add_axes([0.075, 0.875, 0.775, 0.1], facecolor='k')  # vertical summaiton
+        self.axes_hsum = fig.add_axes([0.875, 0.175, 0.1, 0.675], facecolor='k')  # horizontal summation
         # The image, plot random data for initialization
-        self.ftt_image = self.axes_ftt.imshow(np.random.rand(512,512), cmap='gray', interpolation='none')
+        self.ftt_image = self.axes_ftt.imshow(np.random.rand(512,512), 
+        						cmap='gray',
+        						interpolation='none',
+        						extent=(1,512, 512,1)
+        					)
         self.axes_ftt.set_axis_off()
         self.axes_ftt.set_aspect('auto')
-        self.axes_ftt.hold(False)
 
         # Summation plots, generate axes and plot random data for initialization
         self.xlims = np.linspace(0, 511, 512)
@@ -156,11 +159,10 @@ class ImageCanvas(FigureCanvas):
         self.xlims = np.linspace(0, ImageCanvas.iDims['h_dim'] - 1,ImageCanvas.iDims['h_dim'])
         self.ylims = np.linspace(0, ImageCanvas.iDims['v_dim'] - 1,ImageCanvas.iDims['v_dim'])
 
-        # self.axes_ftt.set_xbound(0, ImageCanvas.iDims['h_dim']-1)
-        # self.axes_ftt.set_ybound(0, ImageCanvas.iDims['v_dim']-1)
-        # extent = (0, ImageCanvas.iDims['h_dim'] - 1, ImageCanvas.iDims['v_dim'] - 1, 0)
+        # Reset extent based on new image dimension
+        # Reverse vertical indices so display matches camera coordinates
         extent = (ImageCanvas.iDims['h_start'], ImageCanvas.iDims['h_end'], 
-                  ImageCanvas.iDims['v_start'], ImageCanvas.iDims['v_end'], )
+                  ImageCanvas.iDims['v_end'], ImageCanvas.iDims['v_start'], )
         self.ftt_image.set_extent(extent)
 
         self.axes_hsum.set_ylim(0, ImageCanvas.iDims['v_dim'] - 1)
@@ -175,7 +177,12 @@ class ImageCanvas(FigureCanvas):
 
 
 class MoveSpot(QtCore.QObject):
-    
+    """
+    Allow for manual positioning of the mirror by clicking on a
+    spot and clicking the target location. Movement performed in
+    open loop with scaling arguements, does not attempt to servo 
+    the spot to the clicked position. Class times out after 10s.
+    """    
     def __init__(self, image, mirror, rot, parent=None):
         super(MoveSpot, self).__init__()
         self.image = image
@@ -201,17 +208,16 @@ class MoveSpot(QtCore.QObject):
         motion = self.dims[1,:]-self.dims[0,:]
         # ~20" total motion over 5V --> 5V/20" = 0.25 V/"
         # 0.1596"/pixel --> 0.25V/" * 0.1596"/pixel = 0.03975 V/pixel
+        # Dial it back a bit though...
         trans_motion = np.array((motion[0]*self.rot[0] - motion[1]*self.rot[1],
-                        motion[1]*self.rot[1] + motion[0]*self.rot[0])) * 0.03975
-        print(self.dims)
-        print("Motion: {}".format(motion))
-        print("Transformed: {}".format(trans_motion))
-        # Update the current mirror values
+                        motion[1]*self.rot[1] + motion[0]*self.rot[0])) * 0.038
+        # Update the current mirror values, send new values, update mirror window
         self.mirror.getValues()
         self.mirror.sendSingleUpdate(
-                    self.mirror.spb_Ch1.value() + trans_motion[1],
-                    self.mirror.spb_Ch0.value() + trans_motion[0],                    
+                    self.mirror.spb_Ch0.value() + trans_motion[1],                    
+                    self.mirror.spb_Ch1.value() + trans_motion[0],
                     )
+        self.mirror.getValues()
         self.quit()
 
     def timedOut(self):
@@ -223,9 +229,15 @@ class MoveSpot(QtCore.QObject):
 
 
 class FiberLocator(QtCore.QObject):
-    def __init__(self, image, parent=None):
+    def __init__(self, image, updateFunc, imageDim, servo, logFunc, parent=None):
         super(FiberLocator, self).__init__()
+        # Time format for logging purposes
+        self.timeFormat = '%Y-%m-%dz%H-%M-%S'
         self.image = image
+        self.func = updateFunc
+        self.imageDim = imageDim
+        self.servo = servo 
+        self.logFunc = logFunc
         self.timer = QtCore.QTimer()
         self.timer.setSingleShot(True)
         self.timer.setInterval(10000)
@@ -236,6 +248,16 @@ class FiberLocator(QtCore.QObject):
     def imageClicked(self, x, y):
         setFiberLoc(x, y)
         self.image.setFiberMarker((fiber_loc))
+        self.func(fiber_loc[0] - self.imageDim['h_start'], 
+        			fiber_loc[1] - self.imageDim['v_start'])
+        self.servo.spb_XTarg.setValue(fiber_loc[0] - self.imageDim['h_start'])
+        self.servo.spb_YTarg.setValue(fiber_loc[1] - self.imageDim['v_start'])
+        self.logFunc(
+            """
+            Setting fiber location: {} {} {}
+            """.format(fiber_loc[0] - self.imageDim['h_start'],
+                       fiber_loc[1] - self.imageDim['v_start'], 
+                       time.strftime(self.timeFormat,time.gmtime())))
         self.quit()
 
     def timedOut(self):
@@ -306,10 +328,11 @@ class AppWindow(Ui_MainWindow):
         self.temp_timer.start()
 
     def onFiberClicked(self):
-        self.a = MoveSpot(self.imageDisp, self.mir_win, self.camera.getRotation())
+        self.mover = MoveSpot(self.imageDisp, self.mir_win, self.camera.getRotation())
 
     def onFiberLocatorClicked(self):
-        self.a = FiberLocator(self.imageDisp)
+        self.locator = FiberLocator(self.imageDisp, self.camera.setTargetCoords, self.imageDim,
+        				self.servo_win, self.logUpdate)
 
     def connectSlots(self):
         self.btn_ToggleCam.clicked.connect(self.btnToggleCamClicked)
@@ -327,6 +350,7 @@ class AppWindow(Ui_MainWindow):
 
         #
         # Buttons in the mirror window
+        self.btn_Mirror.clicked.connect(self.mir_win.getValues)
         self.btn_Mirror.clicked.connect(self.mir_win.show)
         self.btn_OnFiber.clicked.connect(self.onFiberClicked)
 
@@ -346,21 +370,31 @@ class AppWindow(Ui_MainWindow):
                             self.log_win.show())
         self.log_win.buttonBox.accepted.connect(lambda:
                             self.camera.setLogInterval(self.log_win.spb_Interval.value()))
-        self.imageDisp.imageClick.connect(self.imageClicked)
 
 
 
     def acceptGain(self):
         self.camera.setGain(self.servo_win.gains, self.servo_win.rot)
+        self.gain = self.servo_win.gains
+        self.camera.setTargetCoords(self.servo_win.targ[0], self.servo_win.targ[1])
+        print(self.servo_win.spb_Background.value())
+        self.camera.setBackground(self.servo_win.spb_Background.value())
         self.logUpdate(
             """
             Setting gain parameters: {} {}
             """.format(self.gain, time.strftime(
                                         self.timeFormat,time.gmtime())))
+        self.logUpdate(
+            """
+            Setting background level: {} {}
+            """.format(self.servo_win.spb_Background.value(),
+                            time.strftime(self.timeFormat,time.gmtime())))
 
     def btnGainClicked(self):
         self.servo_win.reInitVals(self.camera.getGainX(), 
-                                    self.camera.getRotation())
+                                    self.camera.getRotation(),
+                                    self.camera.getTargetCoords(),
+                                    self.camera.getBackground())
         self.servo_win.show()
 
 
@@ -397,7 +431,10 @@ class AppWindow(Ui_MainWindow):
     def radToggleServoClicked(self):
         if (self.rad_ToggleServo.isChecked()):
             self.btn_OnFiber.setEnabled(False)
-        else: self.btn_OnFiber.setEnabled(True)
+            # self.camera.setServoState(True)
+        else: 
+        	self.btn_OnFiber.setEnabled(True)
+        	# self.camera.setServoState(False)
 
         # servoState = self.camera.setServoState(self.rad_ToggleServo.isChecked())
         # self.logUpdate(
@@ -441,10 +478,13 @@ class AppWindow(Ui_MainWindow):
 
     def updateFig(self):
         # Update image dispaly with newest data array, fires with timer timeout
-        if self.rad_ToggleServo.isChecked():
-            self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']], self.camera.servoData())
+        if self.camera.running():
+            if self.rad_ToggleServo.isChecked():
+                self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']], self.camera.servoData())
+            else:
+                self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
         else:
-            self.imageDisp.updateFig(self.camera.data()[0:self.imageDim['size']])
+            self.btn_ToggleCam.setText('Start')
 
 
     def setTempProp(self):
@@ -483,7 +523,8 @@ class AppWindow(Ui_MainWindow):
     def logTemp(self, value):
         #
         # TODO: replace logging with appropriate database call
-        logging.info(value)
+        # logging.info(value)
+        pass
 
     
     # def closeEvent(self, event):
@@ -512,7 +553,9 @@ if __name__ == '__main__':
     MainWindow = QtWidgets.QMainWindow()
     name = "FTT"
     camera = pycamera.PyCamera(name, options.realcam, temp=17)
-    serv = servo(MainWindow, camera.getGainX(), camera.getRotation())
+    serv = servo(MainWindow, camera.getGainX(), 
+    						camera.getRotation(), 
+    						camera.getTargetCoords())
     if options.realcam:
     	mir = mirror('172.28.139.52', MainWindow)
     else: mir = mirror('localhost', MainWindow)

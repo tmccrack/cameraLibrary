@@ -47,7 +47,9 @@ class SClient():
 
 class Mirror(QtWidgets.QDialog, mirrorWindow):
     """
-    Dialog window for manually moving mirror
+    Dialog window for manually moving mirror.
+    Sends single updates to server, no streaming.
+    Cannot be used in conjuction with servo.
     """
     def __init__(self, host, parent=None, mpl_window=None):
         super(Mirror, self).__init__()
@@ -55,8 +57,8 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
         self.host = host
         self.port = 6666
         self.mpl_window = mpl_window
-        self.connectSlots()
         self.getValues()
+        self.connectSlots()
 
     def connectSlots(self):
         self.spb_Ch0.valueChanged.connect(self.moveMirror)
@@ -109,16 +111,21 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
 
     def getValues(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((self.host, self.port))
-        mess = b'Values'
-        suc = client.sendall(b'06')
-        suc = client.sendall(mess)
-        data = client.recv(2)
-        data = client.recv(int.from_bytes(data, byteorder='little')).decode('utf-8').split(';')
-        print(data)
-        client.close()
-        self.spb_Ch0.setValue(float(data[0]))
-        self.spb_Ch1.setValue(float(data[1]))
+        client.settimeout(5)  
+        try:
+            client.connect((self.host, self.port))
+            mess = b'Values'
+            suc = client.sendall(b'06')
+            suc = client.sendall(mess)
+            data = client.recv(2)
+            data = client.recv(int.from_bytes(data, byteorder='little')).decode('utf-8').split(';')
+            client.close()
+            self.spb_Ch0.setValue(float(data[0]))
+            self.spb_Ch1.setValue(float(data[1]))
+            
+        except socket.timeout:
+            print("Cannot connect with mirror server:")
+            return
 
 
     # def closeEvent(self, event):

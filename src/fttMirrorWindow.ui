@@ -122,6 +122,14 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>spb_Ch0</tabstop>
+  <tabstop>spb_Ch1</tabstop>
+  <tabstop>btn_Ch0Plus</tabstop>
+  <tabstop>btn_Ch1Plus</tabstop>
+  <tabstop>btn_Ch0Minus</tabstop>
+  <tabstop>btn_Ch1Minus</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

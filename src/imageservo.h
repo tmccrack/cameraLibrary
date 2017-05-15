@@ -34,6 +34,8 @@ public:
     Gain getGainsY();
     void setGainsX(Gain gain);
     void setGainsY(Gain gain);
+    float getBackground();
+    void setBackground(float background);
 
 private:
     void centroid();
@@ -47,6 +49,7 @@ private:
     float rot_deg;
     uint16_t *buffer;
     float *errs;
+    float bg;
 
     Servo *x_servo;
     Servo *y_servo;

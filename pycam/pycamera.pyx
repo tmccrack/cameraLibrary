@@ -192,8 +192,9 @@ cdef class PyCamera:
         self.pycam.setTempParams(self.s_tempProp)
         return self.getTempProp()
 
+ 
     #
-    # Gain properties getter/setter
+    # Servo properties getter/setter
     def getGainX(self):
         self.s_gainx = self.pycam.getGainX()
         return self.s_gainx
@@ -215,8 +216,6 @@ cdef class PyCamera:
     def getRotation(self):
         return self.pycam.getRotation()
 
-    #
-    # Servo setpoint getter/setter
     def getTargetCoords(self):
         cdef float x[1]
         cdef float y[1]
@@ -230,6 +229,14 @@ cdef class PyCamera:
     def setServoState(self, state):
         return self.pycam.setServoState(state)
 
+    def getBackground(self):
+        return self.pycam.getBackground()
+
+    def setBackground(self, background):
+        self.pycam.setBackground(background)
+        return self.getBackground()
+
+ 
     #
     # Logging
     def getLogInterval(self):

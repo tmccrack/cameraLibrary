@@ -23,7 +23,6 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
     cam_data = new uint16_t[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
     real_cam = r_cam;
-    qDebug() << "Real cam: " << real_cam;
     if (!real_cam)
     {
         // Generate fake data
@@ -35,7 +34,6 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
     }
     _initializeCamera(temp);
     b_gblerrorFlag = false;  // Clear error flag
-    qDebug() << "Done initializing";
 }
 
 
@@ -57,8 +55,6 @@ void Camera::startCamera(int loopCond, string filename)
     {
         // Update servo variables
         int st = t_cam_thread->setLoopCond(loopCond);
-        qDebug() << "Loop status: " << st;
-//            t_cam_thread->setServoDim(s_imageDim.h_dim, s_imageDim.v_dim);
         t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim, real_cam, filename);
     }
 }
@@ -352,6 +348,16 @@ bool Camera::setServoState(bool state)
     return t_cam_thread->setServoState(state);
 }
 
+float Camera::getBackground()
+{
+    return t_cam_thread->getBackground();
+}
+
+void Camera::setBackground(float background)
+{
+    t_cam_thread->setBackground(background);
+}
+
 unsigned int Camera::getLogInterval()
 {
     return t_cam_thread->getLogInveral();
@@ -374,12 +380,10 @@ unsigned int Camera::setLogInterval(unsigned int frames)
 void Camera::_initializeCamera(int temp)
 {
 
-    //if ((camera_name == "FTT") || (camera_name == "NULL") || (camera_name == ""))
     t_cam_thread = new CameraThread(0, cam_data);
 
     if (camera_name == "FTT")
     {
-        qDebug() << "Setting to default FTT values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
         s_readProp.acq_mode = 5;  // Run till abort
@@ -389,7 +393,7 @@ void Camera::_initializeCamera(int temp)
         // Set timing parameters
         s_timingProp.h_shift = 0;  // Fastest horizontal shift speed
         s_timingProp.v_shift = 0;  // Fastest vertical shift speed
-        s_timingProp.v_amp = 1;  // Vertical clock voltage level, 0-4
+        s_timingProp.v_amp = 3;  // Vertical clock voltage level, 0-4
         s_timingProp.dma_images = 1;  // Maximum number of images in DMA buffer
         s_timingProp.dma_accum_time = float(0.001);  // Minimum time between hardware interrupts
 
@@ -413,7 +417,7 @@ void Camera::_initializeCamera(int temp)
         s_expProp.ext_trig = false;
 
         // Set gain
-        s_gainxProp.kp = float(0.01);
+        s_gainxProp.kp = float(-0.001);
         s_gainxProp.ki = float(0.0);
         s_gainxProp.kd = float(0.0);
         s_gainxProp.dt = s_expProp.exp_time;
@@ -423,7 +427,6 @@ void Camera::_initializeCamera(int temp)
     }
     else if (camera_name == "ExpM")
     {
-        qDebug() << "Setting to default ExpM values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
         s_readProp.acq_mode = 5;  // Run till abort
@@ -459,7 +462,6 @@ void Camera::_initializeCamera(int temp)
     }
     else
     {
-        qDebug() << "Setting to full image mode values";
         // Set read parameters
         s_readProp.read_mode = 4; //Image
         s_readProp.acq_mode = 5;  // Run till abort
@@ -540,12 +542,10 @@ void Camera::_initializeCamera(int temp)
  */
 void Camera::_setImageDims()
 {
-    qDebug() << "Setting image properties";
     // Calculate frame size
     s_imageDim.h_dim = s_imageDim.h_end - s_imageDim.h_start + 1;
     s_imageDim.v_dim = s_imageDim.v_end - s_imageDim.v_start + 1;
 
-    qDebug() << "Checking horizontal dimension";
     // Horizontal
     if ((s_imageDim.h_dim > 512) ||
             (s_imageDim.h_start < 1) || (s_imageDim.h_start > 512) ||
@@ -553,34 +553,28 @@ void Camera::_setImageDims()
         )
     {
         qDebug() << "Reseting horizontal";
-        qDebug() << "HStart: " << s_imageDim.h_start << "    VStart: " << s_imageDim.v_start << endl
-                 << "HBin: " << s_imageDim.h_bin << "    VBin: " << s_imageDim.v_bin << endl
-                 << "HEnd: " << s_imageDim.h_end << "    VEnd: " << s_imageDim.v_end;
         s_imageDim.h_start = 1;
         s_imageDim.h_end = 512;
         s_imageDim.h_dim = (s_imageDim.h_end - s_imageDim.h_start + 1) / s_imageDim.h_bin;
     }
 
-    qDebug() << "Checking vertical dimension";
     // Vertical
     if ((s_imageDim.v_dim > 512) ||
             (s_imageDim.v_start < 1) || (s_imageDim.v_start > 512) ||
             (s_imageDim.v_end < 1) || (s_imageDim.v_end > 512)
         )
     {
+        qDebug() << "Reseting horizontal";
         s_imageDim.v_start = 1;
         s_imageDim.v_end = 512;
         s_imageDim.v_dim = (s_imageDim.v_end - s_imageDim.v_start + 1) / s_imageDim.v_bin;
     }
 
-    qDebug() << "Recalculating total size";
     // Recalculate total size and set flag
     s_imageDim.size = s_imageDim.h_dim * s_imageDim.v_dim;
 
-
     if (real_cam)
     {
-        qDebug() << "Programming camera";
         ui_error = SetImage(s_imageDim.h_bin,
                             s_imageDim.v_bin,
                             s_imageDim.h_start,
@@ -589,12 +583,10 @@ void Camera::_setImageDims()
                             s_imageDim.v_end);
         checkError(ui_error, "SetImage");
     }
-    qDebug() << "Done!";
 }
 
 void Camera::_setExposureParams()
 {
-    qDebug() << "Setting read properties";
     // Program exposure properites
     if (real_cam)
     {
@@ -638,17 +630,14 @@ void Camera::_setExposureParams()
                                          &s_expProp.kinetic_time);
         checkError(ui_error, "GetAcquisitionTime");
         qDebug() << "Exposure time set to: " << s_expProp.exp_time << endl
-                 << "Total accumulation time: " << s_expProp.accum_time << endl
-                 << "Kinetic time: " << s_expProp.kinetic_time;
+                 << "Total accumulation time: " << s_expProp.accum_time;
 
     }
-    qDebug() << "Done!";
 }
 
 
 void Camera::_setReadParams()
 {
-    qDebug() << "Setting read properties";
     // Check if FVB or single track
     if ((s_readProp.read_mode == 3) || (s_readProp.read_mode == 0))
     {
@@ -681,13 +670,11 @@ void Camera::_setReadParams()
         ui_error = SetOutputAmplifier(s_readProp.output_amp);
         checkError(ui_error, "SetOutputAmplifier");
     }
-    qDebug() << "Done!";
 
 }
 
 void Camera::_setTimingParams()
 {
-    qDebug() << "Setting timing properties";
     // Program camera timing properties
     if (real_cam)
     {
@@ -706,12 +693,10 @@ void Camera::_setTimingParams()
         ui_error = SetDMAParameters(s_timingProp.dma_images, s_timingProp.dma_accum_time);
         checkError(ui_error, "SetDMAParameters");
     }
-    qDebug() << "Done!";
 }
 
 void Camera::_setShutterParams()
 {
-    qDebug() << "Setting shutter properties";
     // Program shutter properties
     if (real_cam)
     {
@@ -721,12 +706,10 @@ void Camera::_setShutterParams()
                               s_shutterProp.open_time);
         checkError(ui_error, "SetShutter");
     }
-    qDebug() << "Done!";
 }
 
 void Camera::_setTempParams()
 {
-    qDebug() << "Setting temperature properties";
     if (real_cam)
     {
         // Set point
@@ -760,7 +743,6 @@ void Camera::_setTempParams()
 
     _getTempArray();
     qDebug() << "Array temperaturea at " << s_tempProp.array_temp;
-    qDebug() << "Done!";
 }
 
 void Camera::_getTempArray()

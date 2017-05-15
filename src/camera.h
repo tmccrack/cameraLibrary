@@ -107,15 +107,25 @@ public:
     void setTempParams(int set_point, bool state);
     void setTempParams(TemperatureProperties tempParameters);
 
+
+    // Servo getters and setters
     Gain getGainX();
     Gain getGainY();
     void setGain(Gain gainx, Gain gainy);
+
     void getTargetCoords(float *x, float *y);
     void setTargetCoords(float x, float y);
+
     float getRotation();
     void setRotation(float rot);
+
     bool setServoState(bool state);
 
+    float getBackground();
+    void setBackground(float background);
+
+
+    // Logger getters and setters
     unsigned int getLogInterval();
     bool setLogState(bool state);
     unsigned int setLogInterval(unsigned int frames);

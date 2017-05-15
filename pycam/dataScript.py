@@ -12,8 +12,10 @@ files = listdir(data_dir)
 log_sheet = './../log/example.log'
 
 def fttWrite(fd, file):
+    print("Starting a FTT write")
     for line in fd:
         if re.search(file.split('-ftt')[0], line):
+            print(line)
             if re.search('image dim ', line):
                 im_size = line.split('image dim ')[1].split(',')
                 im_size = [int(im_size[0]), int(im_size[1])]
@@ -48,7 +50,6 @@ def servoWrite(fd, file):
             # data[0,i] = float.from_bytes(bdata[i*4:(i+1)*4], byteorder='little')
             data[0,i] = struct.unpack('f', bdata[i*4:(i+1)*4])[0]
 
-        print(data)
         data = data.reshape( 2, int(data.size/2), order='F')
         hdu = fits.PrimaryHDU(data)
         hdulist = fits.HDUList([hdu])
@@ -65,8 +66,6 @@ def servoWrite(fd, file):
 fd = open(log_sheet, 'r')
 for file in files:
     # search log sheet for image size
-    print(file)
-
     if (file.find('-ftt') is not -1):
         fttWrite(fd, file)
     elif (file.find('-servo') is not -1):

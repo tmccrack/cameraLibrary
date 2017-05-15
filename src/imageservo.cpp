@@ -8,6 +8,7 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     cent = centroids;
     update = updates;
     errs = new float[2];  // For transformed errors
+    bg = 0;  // Background
 
     // Set up servos
     x_servo = new Servo(this);
@@ -84,6 +85,7 @@ void ImageServo::setImageDim(int x_dim, int y_dim)
     dim[0] = x_dim;
     dim[1] = y_dim;
     dim[2] = x_dim * y_dim;
+    qDebug() << "ImageServo: imagedim: " << dim[0] << " " << dim[1] << " " << dim[2];
 }
 
 
@@ -114,6 +116,7 @@ void ImageServo::getTargetCoords(float *x, float *y)
 
 void ImageServo::setTargetCoords(float x, float y)
 {
+    qDebug() << "ImageServo: targetcoords: " << x << " " << y;
     x_servo->setTarget(x);
     y_servo->setTarget(y);
 }
@@ -142,6 +145,16 @@ void ImageServo::setGainsY(Gain gain)
     y_servo->setGain(gain);
 }
 
+float ImageServo::getBackground()
+{
+    return bg;
+}
+
+void ImageServo::setBackground(float background)
+{
+    bg = background;
+}
+
 
 /*
  * Barycenter algorithm
@@ -162,9 +175,9 @@ void ImageServo::centroid()
         for (int j = 0; j < dim[1]; j++)
         {
             offs = i * dim[0];
-            sum += buffer[offs + j];
-            row_x += buffer[i + j*dim[1]];
-            row_y += buffer[offs + j];
+            sum += buffer[offs + j] - bg;
+            row_x += buffer[i + j*dim[1]] - bg;
+            row_y += buffer[offs + j] - bg;
         }
 
         sum_x += (i+1) * row_x;
@@ -174,3 +187,5 @@ void ImageServo::centroid()
     cent[0] = sum_x / sum;
     cent[1] = sum_y / sum;
 }
+
+

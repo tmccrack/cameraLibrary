@@ -58,6 +58,8 @@ cdef extern from "./../src/camera.h":
         void getTargetCoords(float *x, float *y)
         void setTargetCoords(float x, float y)
         bool setServoState(bool state)
+        float getBackground()
+        void setBackground(float background)
 
         #
         # Log properties

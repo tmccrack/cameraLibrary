@@ -44,8 +44,84 @@
        <bool>true</bool>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="4" column="1">
-        <widget class="QDoubleSpinBox" name="spb_XFib">
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_P">
+         <property name="text">
+          <string>P</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_D">
+         <property name="text">
+          <string>D</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QDoubleSpinBox" name="spb_I">
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="lbl_Rotation">
+         <property name="text">
+          <string>Rot.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QDoubleSpinBox" name="spb_Rotation">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="decimals">
+          <number>1</number>
+         </property>
+         <property name="minimum">
+          <double>-360.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>360.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_TargetrLoc">
+         <property name="text">
+          <string>Target loc.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" colspan="2">
+        <widget class="QComboBox" name="combo_Alg">
+         <property name="currentText">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="spb_XTarg">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -63,8 +139,8 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="2">
-        <widget class="QDoubleSpinBox" name="spb_YFib">
+       <item row="5" column="2">
+        <widget class="QDoubleSpinBox" name="spb_YTarg">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -130,79 +206,26 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_P">
+       <item row="4" column="1">
+        <widget class="QLabel" name="lbl_Background">
          <property name="text">
-          <string>P</string>
+          <string>Background</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="label_D">
-         <property name="text">
-          <string>D</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QDoubleSpinBox" name="spb_I">
-         <property name="decimals">
-          <number>4</number>
-         </property>
-         <property name="minimum">
-          <double>-100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.010000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="lbl_Rotation">
-         <property name="text">
-          <string>Rot.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
-        <widget class="QDoubleSpinBox" name="spb_Rotation">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
+       <item row="4" column="2">
+        <widget class="QDoubleSpinBox" name="spb_Background">
          <property name="decimals">
           <number>1</number>
          </property>
-         <property name="minimum">
-          <double>-360.000000000000000</double>
-         </property>
          <property name="maximum">
-          <double>360.000000000000000</double>
+          <double>1000.000000000000000</double>
          </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_FiberLoc">
-         <property name="text">
-          <string>Fiber loc.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" colspan="2">
-        <widget class="QComboBox" name="combo_Alg">
-         <property name="currentText">
-          <string/>
+         <property name="singleStep">
+          <double>5.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -222,6 +245,15 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>spb_P</tabstop>
+  <tabstop>spb_I</tabstop>
+  <tabstop>spb_D</tabstop>
+  <tabstop>spb_Rotation</tabstop>
+  <tabstop>spb_YTarg</tabstop>
+  <tabstop>spb_XTarg</tabstop>
+  <tabstop>combo_Alg</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

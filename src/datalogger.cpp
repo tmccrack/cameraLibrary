@@ -22,7 +22,7 @@ void DataLogger::newFile(string filename)
     file = new QFile(QString::fromStdString(filename));
     file->open(QIODevice::WriteOnly);
     d_out = new QDataStream(file);
-    qDebug() << "Opened: " << file->fileName();
+//    qDebug() << "Opened: " << file->fileName();
 }
 
 void DataLogger::closeFile()
@@ -32,7 +32,7 @@ void DataLogger::closeFile()
     {
         file->close();
     }
-    qDebug() << "Closed: " << file->fileName();
+//    qDebug() << "Closed: " << file->fileName();
 }
 
 bool DataLogger::isFileEmpty()
@@ -40,7 +40,7 @@ bool DataLogger::isFileEmpty()
     // Check if file is empty and delete
     if (file->size() == 0)
     {
-        qDebug() << "Deleting file: " << file->fileName();
+//        qDebug() << "Deleting file: " << file->fileName();
         return file->remove();
     }
     else return false;

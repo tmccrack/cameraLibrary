@@ -45,11 +45,14 @@ public:
     unsigned int getLogInveral();
     unsigned int setLogInterval(unsigned int frames);
 
+    // Servo getters and setters
     Gain getServoGainX();
     Gain getServoGainY();
     void setServoGain(Gain gainx, Gain gainy);
+
     float getServoRotation();
     void setServoRotation(float rotation);
+
     void getServoData(float *update);
 
     void getServoTargetCoords(float *tar_x, float *tar_y);
@@ -57,6 +60,9 @@ public:
 
     void getServoDim(int *x, int *y);
     void setServoDim(int x = 32, int y = 32);
+
+    float getBackground();
+    void setBackground(float background);
 
 protected:
     void run() Q_DECL_OVERRIDE;

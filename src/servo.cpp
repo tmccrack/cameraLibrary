@@ -54,22 +54,18 @@ void Servo::zeroError()
 
 
 /*
- * Gain accessor
+ * Gain getter/setter
  */
 Gain Servo::getGain()
 {
     return s_gain;
 }
 
-
 void Servo::setGain(Gain gain)
 {
     s_gain = gain;
 }
 
-/*
- * Gain setter
- */
 void Servo::setGain(float kp, float ki, float kd, float dt)
 {
     s_gain.kp = kp;
