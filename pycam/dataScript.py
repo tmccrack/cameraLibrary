@@ -66,6 +66,7 @@ def servoWrite(fd, file):
 fd = open(log_sheet, 'r')
 for file in files:
     # search log sheet for image size
+    fd.seek(0)
     if (file.find('-ftt') is not -1):
         fttWrite(fd, file)
     elif (file.find('-servo') is not -1):
