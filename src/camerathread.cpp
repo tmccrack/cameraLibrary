@@ -416,7 +416,7 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
     servo->setBuffer(cam_data);
 
     // Prep the client
-    if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
+    if (real_cam) client = new SocketClient(6666, "fem-rt.lowell.edu");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
 
     // ImageServo passed updates pointer, need to get starting value for servo

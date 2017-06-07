@@ -14,7 +14,7 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     x_servo = new Servo(this);
     y_servo = new Servo(this);
 
-    setRotation(225);
+    setRotation(45);
     setTargetCoords(256, 256);
 }
 

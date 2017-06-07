@@ -135,7 +135,7 @@ class Mirror(QtWidgets.QDialog, mirrorWindow):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    mir = Mirror()
+    mir = Mirror('fem-rt.lowell.edu')
     mir.show()
     sys.exit(app.exec_())
     
