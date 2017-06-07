@@ -194,8 +194,25 @@
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <layout class="QGridLayout" name="glFrame">
-           <item row="1" column="1">
-            <widget class="QSpinBox" name="spb_XDim">
+           <item row="2" column="0">
+            <widget class="QLabel" name="lbl_Offset">
+             <property name="text">
+              <string>Offset</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="lbl_Y">
+             <property name="text">
+              <string>Y</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="2">
+            <widget class="QSpinBox" name="spb_Dim">
              <property name="toolTip">
               <string>Horizontal dimension</string>
              </property>
@@ -217,13 +234,6 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="lbl_Binning">
-             <property name="text">
-              <string>Binning</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <widget class="QLabel" name="lbl_X">
              <property name="text">
@@ -231,22 +241,6 @@
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QSpinBox" name="spb_YDim">
-             <property name="toolTip">
-              <string>Vertical dimension</string>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>512</number>
-             </property>
-             <property name="value">
-              <number>512</number>
              </property>
             </widget>
            </item>
@@ -267,49 +261,6 @@
             <widget class="QSpinBox" name="spb_YOffs">
              <property name="toolTip">
               <string>ROI vertical offset</string>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>512</number>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QSpinBox" name="spb_XBin">
-             <property name="toolTip">
-              <string>Horizontal pixel binning</string>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>512</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="lbl_Offset">
-             <property name="text">
-              <string>Offset</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="lbl_Y">
-             <property name="text">
-              <string>Y</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QSpinBox" name="spb_YBin">
-             <property name="toolTip">
-              <string>Vertical pixel binning</string>
              </property>
              <property name="minimum">
               <number>1</number>
