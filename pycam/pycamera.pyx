@@ -27,11 +27,11 @@ cdef class PyCamera:
     cdef pycamera.Gain s_gainx
     cdef pycamera.Gain s_gainy
 
-    def __cinit__(self, name = "", real_cam = False, temp=-65):
+    def __cinit__(self, name = "", real_cam = False):
         self.pycam = pycamera.Camera()
         self.name = name.encode('utf-8')
         self.real_cam = <bint> real_cam
-        self.pycam.initializeCamera(self.name, self.real_cam, temp)
+        self.pycam.initializeCamera(self.name, self.real_cam)
         self.buffer = np.ascontiguousarray(np.empty(shape=262144, dtype=np.uint16))
 
     def __dealloc__(self):

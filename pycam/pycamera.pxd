@@ -17,7 +17,7 @@ cdef extern from "./../src/camera.h":
     ctypedef void (*cb_cam_func)(uint16_t *buffer, int size, void *user_data)
     cdef cppclass Camera:
         Camera() except +
-        void initializeCamera(string cam_name, bool real_cam, int temp)
+        void initializeCamera(string cam_name, bool real_cam)
         void startCamera(int loopCond, string filename)
         void startCamera(cb_cam_func cb, void *user_data)
         void singleShot(cb_cam_func cb, void *user_data)

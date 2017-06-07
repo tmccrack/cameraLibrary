@@ -22,7 +22,7 @@ import logging
 logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
 image_path = "./../data/"
 
-fiber_loc = (270.0, 266.0)
+fiber_loc = (300.0, 272.0)
 def setFiberLoc(x, y):
     global fiber_loc
     fiber_loc = (x, y)
@@ -299,7 +299,13 @@ class AppWindow(Ui_MainWindow):
         self.readProp = self.camera.getReadProp()
         self.timingProp = self.camera.getTimingProp()
         self.shutterProp = self.camera.getShutterProp()
+
+        # Get current temp settings, set set point at current temp, turn on cooler
         self.tempProp = self.camera.getTempProp()
+        self.tempProp['set_point'] = self.tempProp['array_temp']
+        self.tempProp['power_state'] = True  # for updates
+        self.tempProp = self.camera.setTempProp(self.tempProp)
+
         self.gain = self.camera.getGainX()
         self.coords = self.camera.getTargetCoords()
 
@@ -448,10 +454,10 @@ class AppWindow(Ui_MainWindow):
         # Update internal dimension dict
         self.imageDim['h_start'] = self.spb_XOffs.value()
         self.imageDim['v_start'] = self.spb_YOffs.value()
-        self.imageDim['h_end'] = self.spb_XOffs.value() + self.spb_XDim.value() - 1
-        self.imageDim['v_end'] = self.spb_YOffs.value() + self.spb_YDim.value() - 1
-        self.imageDim['v_bin'] = self.spb_XBin.value()
-        self.imageDim['h_bin'] = self.spb_YBin.value()
+        self.imageDim['h_end'] = self.spb_XOffs.value() + self.spb_Dim.value() - 1
+        self.imageDim['v_end'] = self.spb_YOffs.value() + self.spb_Dim.value() - 1
+        self.imageDim['v_bin'] = 1  # self.spb_XBin.value()
+        self.imageDim['h_bin'] = 1  # self.spb_YBin.value()
         #
         # TODO: Check binning
         #
@@ -490,6 +496,7 @@ class AppWindow(Ui_MainWindow):
     def setTempProp(self):
         # Set internal temp dict, pass to camera, camera return actual values
         self.tempProp['set_point'] = self.spb_SetPoint.value()
+        if not self.tempProp['power_state']: self.tempProp['power_state'] = True
         self.tempProp = self.camera.setTempProp(self.tempProp)
         self.logUpdate("Temp setpoint: {} {}".format(self.tempProp['set_point'],time.strftime(self.timeFormat,time.gmtime())))
 
@@ -552,12 +559,12 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     name = "FTT"
-    camera = pycamera.PyCamera(name, options.realcam, temp=17)
+    camera = pycamera.PyCamera(name, options.realcam)
     serv = servo(MainWindow, camera.getGainX(), 
     						camera.getRotation(), 
     						camera.getTargetCoords())
     if options.realcam:
-    	mir = mirror('172.28.139.52', MainWindow)
+    	mir = mirror('fem-rt.lowell.edu', MainWindow)
     else: mir = mirror('localhost', MainWindow)
     log = logger(MainWindow)
     ui = AppWindow(MainWindow, camera, mir, serv, log)

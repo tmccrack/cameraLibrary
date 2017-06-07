@@ -72,7 +72,7 @@ class Camera
 public:
     Camera();
     ~Camera();
-    void initializeCamera(std::string cam_name, bool r_cam, int temp=-65);
+    void initializeCamera(std::string cam_name, bool r_cam);
     void shutdownCamera();
     void startCamera(int loopCond, std::string filename=NULL);
     void startCamera(cb_cam_func cb, void *user_data);
@@ -132,7 +132,7 @@ public:
 
 
 private:
-    void _initializeCamera(int temp);
+    void _initializeCamera();
     void _setImageDims();
     void _setExposureParams();
     void _setReadParams();

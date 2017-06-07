@@ -18,7 +18,7 @@ Camera::~Camera()
     if (t_cam_thread) delete t_cam_thread;
 }
 
-void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
+void Camera::initializeCamera(string cam_name, bool r_cam)
 {
     cam_data = new uint16_t[262144];  // Initialize camera data buffer
     camera_name = QString::fromStdString(cam_name);
@@ -32,7 +32,7 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
         }
         qDebug() << "Fake camera initialized";
     }
-    _initializeCamera(temp);
+    _initializeCamera();
     b_gblerrorFlag = false;  // Clear error flag
 }
 
@@ -377,7 +377,7 @@ unsigned int Camera::setLogInterval(unsigned int frames)
 /*
  * Camera initialization
  */
-void Camera::_initializeCamera(int temp)
+void Camera::_initializeCamera()
 {
 
     t_cam_thread = new CameraThread(0, cam_data);
@@ -511,6 +511,9 @@ void Camera::_initializeCamera(int temp)
 
         ui_error = GetTemperatureRange(&s_tempProp.temp_low, &s_tempProp.temp_high);
         checkError(ui_error, "GetTemperatureRange");
+        _getTempArray();
+        ui_error = CoolerON();
+        checkError(ui_error, "CoolerON");
 
 
     }
@@ -521,17 +524,13 @@ void Camera::_initializeCamera(int temp)
         s_tempProp.temp_high = 200;
     }
 
-    // Set cooling point and power on cooler
-    s_tempProp.set_point = temp;
-    s_tempProp.power_state = true;
-
     _setReadParams();
     _setReadParams();
     _setTimingParams();
     _setShutterParams();
     _setImageDims();
     _setExposureParams();
-    _setTempParams();
+//    _setTempParams();
 
     qDebug() << "Intialized" << camera_name << "camera";
 }
@@ -753,7 +752,7 @@ void Camera::_getTempArray()
         ui_error = GetTemperature(&s_tempProp.array_temp);
         if (ui_error == DRV_TEMPERATURE_OFF)
         {
-            s_tempProp.array_temp = 15;
+//            s_tempProp.array_temp = 15;
             s_tempProp.cooler_state = ui_error;
         }
         else if ((ui_error == DRV_TEMPERATURE_DRIFT) ||
