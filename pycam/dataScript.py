@@ -4,6 +4,7 @@ import pathlib
 import struct
 import numpy as np
 from os import listdir
+from os import remove
 from astropy.io import fits
 
 data_dir = './../data/'
@@ -12,10 +13,8 @@ files = listdir(data_dir)
 log_sheet = './../log/example.log'
 
 def fttWrite(fd, file):
-    print("Starting a FTT write")
     for line in fd:
         if re.search(file.split('-ftt')[0], line):
-            print(line)
             if re.search('image dim ', line):
                 im_size = line.split('image dim ')[1].split(',')
                 im_size = [int(im_size[0]), int(im_size[1])]
@@ -24,9 +23,13 @@ def fttWrite(fd, file):
                 with open(data_dir + file, 'rb') as binary_file:
                     bdata = binary_file.read()
                 # convert the data
-                data = np.zeros((1, int(len(bdata)/2)))
-                for i in range(0, int(len(bdata)/2)):
-                    data[0,i] = int.from_bytes(bdata[i*2:(i+1)*2], byteorder='little')
+                try:
+                    data = np.zeros((1, int(len(bdata)/2)))
+                    for i in range(0, int(len(bdata)/2)):
+                        data[0,i] = int.from_bytes(bdata[i*2:(i+1)*2], byteorder='little')
+                except MemoryError:
+                    print("File {} is to big, still need to fix that".format(file))
+                    return 1
 
                 # reshape data and save as fits
                 data = data.reshape( int(data.size/(im_size[0]*im_size[1])), im_size[0], im_size[1] )
@@ -36,8 +39,15 @@ def fttWrite(fd, file):
                 try:
                     hdulist.writeto(reduced_dir + filename)
                     print("{} written".format(filename))
+                    remove(file)
                 except OSError:
-                    print("{} already exsists".format(filename))
+                    print("{} already exsists, deleting {}".format(filename, data_dir+file))
+                    remove(data_dir + file)
+                except MemoryError:
+                    print("Cannot write such a big file: {} is {}x{} and {} deep".format(filename, im_size[0], im_size[1], data.shape[0]))
+
+def writeFitsFile(data, filename):
+    pass
 
 def servoWrite(fd, file):
     try:
@@ -58,7 +68,8 @@ def servoWrite(fd, file):
             hdulist.writeto(reduced_dir + filename)
             print("{} written".format(filename))
         except OSError:
-            print("{} already exsists".format(filename))
+            print("{} already exsists, deleting {}".format(filename, data_dir+file))
+            remove(data_dir + file)
     except OSError:
         print("Cannot open {}".format(file))
 
