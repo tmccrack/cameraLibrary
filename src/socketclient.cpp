@@ -86,7 +86,6 @@ void SocketClient::sendData(float x, float y)
         socket->write(*data, data->size());
         socket->flush();
         data->clear();
-        //qDebug() << "Data sent";
     }
     else
     {

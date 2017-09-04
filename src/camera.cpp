@@ -14,7 +14,7 @@ Camera::Camera()
  */
 Camera::~Camera()
 {
-    if (cam_data) delete[] cam_data;
+    if (cam_data) delete cam_data;
     if (t_cam_thread) delete t_cam_thread;
 }
 
@@ -28,9 +28,8 @@ void Camera::initializeCamera(string cam_name, bool r_cam, int temp)
         // Generate fake data
         for (int i = 0; i < 262144; i++)
         {
-            cam_data[i] = i;
+            cam_data[i] = 1;
         }
-        qDebug() << "Fake camera initialized";
     }
     _initializeCamera(temp);
     b_gblerrorFlag = false;  // Clear error flag
@@ -55,6 +54,7 @@ void Camera::startCamera(int loopCond, string filename)
     {
         // Update servo variables
         int st = t_cam_thread->setLoopCond(loopCond);
+        t_cam_thread->setHeaderData(s_expProp.exp_time, s_expProp.accum_time, s_expProp.em_gain);
         t_cam_thread->startThread(s_imageDim.h_dim, s_imageDim.v_dim, real_cam, filename);
     }
 }
@@ -138,18 +138,7 @@ void Camera::shutdownCamera()
  */
 void Camera::getCameraData(uint16_t *buffer)
 {
-    if (real_cam)
-    {
-        copy(cam_data, cam_data + s_imageDim.size, buffer);
-    }
-    else
-    {
-        for (int i = 0; i < 262144; i++)
-        {
-            cam_data[i] = qrand() % ((1000));
-        }
-        copy(cam_data, cam_data + s_imageDim.size, buffer);
-    }
+    copy(&cam_data[0], &cam_data[s_imageDim.size], buffer);
 }
 
 void Camera::getServoData(float *updates)
@@ -358,6 +347,11 @@ void Camera::setBackground(float background)
     t_cam_thread->setBackground(background);
 }
 
+bool Camera::getLogState()
+{
+    return t_cam_thread->getLogState();
+}
+
 unsigned int Camera::getLogInterval()
 {
     return t_cam_thread->getLogInveral();
@@ -533,7 +527,7 @@ void Camera::_initializeCamera(int temp)
     _setExposureParams();
     _setTempParams();
 
-    qDebug() << "Intialized" << camera_name << "camera";
+    qDebug() << "Initialized" << camera_name << "camera";
 }
 
 

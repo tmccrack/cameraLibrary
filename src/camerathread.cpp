@@ -10,13 +10,13 @@ using namespace std;
 /*
  * Constructor
  */
-CameraThread::CameraThread(QObject *parent, uint16_t *image_buffer) : QThread(parent)
+CameraThread::CameraThread(QObject *parent, std::uint16_t *buffer) : QThread(parent)
 {
     // Create copy data buffer and win32 event handle
     cam_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     //TODO: Ensure imageBuffer is correct size???
-    copy_data = image_buffer;
+    copy_data = buffer;
     b_abort = true;
     real_cam = false;
     centroids = new float[2];
@@ -65,7 +65,7 @@ void CameraThread::startThread(int x, int y, bool r_cam, string filename)
     }
     else
     {
-        i_log_file = filename + "-ftt.dat";
+        i_log_file = filename + "-ftt.fits";
         s_log_file = filename + "-servo.dat";
     }
 
@@ -154,6 +154,11 @@ bool CameraThread::setServoState(bool state)
     return b_closed;
 }
 
+bool CameraThread::getLogState()
+{
+    return b_log;
+}
+
 bool CameraThread::setLogState(bool state)
 {
     mutex.lock();
@@ -178,6 +183,31 @@ unsigned int CameraThread::setLogInterval(unsigned int frames)
     return i_log_interval;
 }
 
+void CameraThread::setHeaderData(float exp_time, float acc_time, int em_gain)
+{
+    s_h_data.exp_time = exp_time;
+    s_h_data.acc_time = acc_time;
+    s_h_data.em_gain = em_gain;
+}
+
+void CameraThread::setServoHeaderData()
+{
+    /*!
+      setServoHeaderData
+
+      private function to set the servo data in the FITS header
+      pull the data from the servo instance
+     */
+    Gain temp_gain = servo->getGainsX();
+    s_h_data.kp = temp_gain.kp;
+    s_h_data.ki = temp_gain.ki;
+    s_h_data.kd = temp_gain.kd;
+
+    s_h_data.rotation = servo->getRotation();
+    s_h_data.background = servo->getBackground();
+    servo->getTargetCoords(&s_h_data.targx, &s_h_data.targy);
+}
+
 /*
  * Getter and setter for servo gain
  */
@@ -195,6 +225,16 @@ void CameraThread::setServoGain(Gain gainx, Gain gainy)
 {
     servo->setGainsX(gainx);
     servo->setGainsY(gainy);
+}
+
+string CameraThread::getServoAlg()
+{
+    return servo->getAlgorithm();
+}
+
+void CameraThread::setServoAlg(string alg)
+{
+    servo->setAlgorithm(alg);
 }
 
 
@@ -256,18 +296,31 @@ void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
 }
 
 
-/*
- * Main function for camera thread.
- * Instatiate objects associated with camera read here
- * or in called functions to match thread affinity
- * Otherwise use moveToThread() if to be called from
- * camera thread.
- */
 void CameraThread::run()
 {
+    /*!
+      run()
+
+     * Camera thread method
+     * Instatiate objects associated with camera read here
+     * or in called functions to match thread affinity
+     * Otherwise use moveToThread() if to be called from
+     * camera thread.
+     */
+
     // Setup the loggers
-    i_logger = new DataLogger(i_log_file);  // Image logger
-    s_logger = new DataLogger(s_log_file);  // Servo logger
+    int axes[2] = {int(xd), int(yd)};
+    i_logger = new DataLogger(i_log_file, axes);  // Image logger
+
+    mutex.lock();
+    // A little weird, cam thread knows about servo params but not image acquisition
+    // Image params set before thread is started, servo params updated here
+    // Header then written here
+    setServoHeaderData();
+    i_logger->setHeaderData(s_h_data);
+//    i_logger->getFitsPointer();
+    mutex.unlock();
+
     uint i_log_counter = 1;
 
     if(real_cam)
@@ -287,7 +340,7 @@ void CameraThread::run()
 
         case 1 :
             qDebug() << "Starting servo loop";
-            servoLoop(i_logger, s_logger, i_log_counter);
+            servoLoop(i_logger, i_log_counter);
             break;
 
         case 2 :
@@ -311,21 +364,21 @@ void CameraThread::run()
         checkError(and_error, "AbortAcquisition");
     }
 
-    printf("Acquistion ended\n");
+    qDebug() << "Acquistion ended";
 
     // Close loggers
-    i_logger->closeFile();
-    s_logger->closeFile();
+    if (b_log) i_logger->writeFile();
     delete i_logger;
-    delete s_logger;
 }
 
 
-/*
- * Function to acquire camera data in video
- */
 void CameraThread::openLoop(DataLogger *logger, uint log_counter)
 {
+    /*!
+     openLoop()
+
+     Runs the camera in open loop
+     */
     if (real_cam)
     {
         and_error = StartAcquisition();
@@ -343,16 +396,8 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
                 ResetEvent(cam_event);
                 and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
                 checkError(and_error, "GetMostRecentImage16");
-                std::copy(cam_data, cam_data + image_size, copy_data);
-                if (b_log)
-                {
-                    log_counter = checkLogCounter(log_counter);
-                    if (log_counter == i_log_interval)
-                    {
-                        logger->append(cam_data, image_size);
-                    }
-                }
-
+                copy(&cam_data[0], &cam_data[image_size], copy_data);
+                log_counter = checkLog(log_counter, logger);
                 mutex.unlock();
             }
             else if (win_error == WAIT_TIMEOUT)
@@ -382,22 +427,17 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
     {
         while(!b_abort)
         {
+            // Fake camera, generate data, copy it, log it
             mutex.lock();
+            uint16_t r = rand();
             for (int i=0; i<image_size; i++)
             {
-                cam_data[i] = (uint16_t) rand() % 100;
+                cam_data[i] = (uint16_t) i + r;
+//                cam_data[i] = (uint16_t) rand() % 100;
 
             }
-            if (b_log)
-            {
-                log_counter = checkLogCounter(log_counter);
-                if (log_counter == i_log_interval)
-                {
-                    i_logger->append(cam_data, image_size);
-                    s_logger->appendFloat(updates, 2);
-                }
-            }
-            std::copy(cam_data, cam_data + image_size, copy_data);
+            copy(&cam_data[0], &cam_data[image_size], copy_data);
+            log_counter = checkLog(log_counter, logger);
             mutex.unlock();
             Sleep(100);
         }
@@ -408,7 +448,7 @@ void CameraThread::openLoop(DataLogger *logger, uint log_counter)
 /*
  * Function to implement servo
  */
-void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigned int log_counter)
+void CameraThread::servoLoop(DataLogger *logger, unsigned int log_counter)
 {
     // Setup servo
     setServoDim(xd, yd);
@@ -418,6 +458,7 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
     // Prep the client
     if (real_cam) client = new SocketClient(6666, "172.28.139.52");  // Real cam, assume remote server
     else client = new SocketClient();  // Defaults to localhost, 6666
+    qDebug() << "Client created";
 
     // ImageServo passed updates pointer, need to get starting value for servo
     // Switch axes, based on experiment
@@ -452,17 +493,10 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
                 servo->getErrors(x_err, y_err);
                 client->sendData(updates[1], updates[0]);
 //              qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
-//                             << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
-                if (b_log)
-                {
-                    log_counter = checkLogCounter(log_counter);
-                    if (log_counter == i_log_interval)
-                    {
-                        i_logger->append(cam_data, image_size);
-                        s_logger->appendFloat(updates, 2);
-                    }
-                }
-                std::copy(cam_data, cam_data + image_size, copy_data);
+//                             << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1]; copy(&cam_data[0], &cam_data[image_size], begin(cam_array));
+
+                copy(&cam_data[0], &cam_data[image_size], copy_data);
+                log_counter = checkLog(log_counter, logger);
                 mutex.unlock();
             }
             else if (win_error == WAIT_TIMEOUT)
@@ -492,26 +526,15 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
             for (int i=0; i<image_size; i++)
             {
                 cam_data[i] = (uint16_t) rand() % 100;
-
             }
-            if(b_closed)
-            {
-                servo->getUpdate();
-                servo->getErrors(x_err, y_err);
-                client->sendData(updates[1], updates[0]);
-//                qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
+            servo->getUpdate();
+            servo->getErrors(x_err, y_err);
+            client->sendData(updates[1], updates[0]);
+//            qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
 //                         << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
-            }
-            if (b_log)
-            {
-                log_counter = checkLogCounter(log_counter);
-                if (log_counter == i_log_interval)
-                {
-                    i_logger->append(cam_data, image_size);
-                    s_logger->appendFloat(updates, 2);
-                }
-            }
-            std::copy(cam_data, cam_data + image_size, copy_data);
+
+            copy(&cam_data[0], &cam_data[image_size], copy_data);
+            log_counter = checkLog(log_counter, logger);
             mutex.unlock();
             Sleep(100);
         }
@@ -616,13 +639,22 @@ void CameraThread::singleShot()
     }
 }
 
-uint CameraThread::checkLogCounter(uint counter)
+uint CameraThread::checkLog(uint counter, DataLogger *logger)
 {
-    if (counter >= i_log_interval) return counter = 1;
+    if (b_log)
+    {
+        if (counter >= i_log_interval){
+            i_logger->writeSlice(copy_data);
 
-    else return counter += 1;
+            //                    i_logger->append(cam_data, image_size);
+            //                    s_logger->appendFloat(updates, 2);
+            counter = 1;
+        }
+
+        else counter += 1;
+    }
+    return counter;
 }
-
 
 
 /*

@@ -1,5 +1,7 @@
 #include "imageservo.h"
 
+using namespace std;
+
 ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_dim, int y_dim)
 {
     dim[0] = x_dim;
@@ -9,6 +11,7 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     update = updates;
     errs = new float[2];  // For transformed errors
     bg = 0;  // Background
+    algorithm = "COM";
 
     // Set up servos
     x_servo = new Servo(this);
@@ -85,7 +88,6 @@ void ImageServo::setImageDim(int x_dim, int y_dim)
     dim[0] = x_dim;
     dim[1] = y_dim;
     dim[2] = x_dim * y_dim;
-    qDebug() << "ImageServo: imagedim: " << dim[0] << " " << dim[1] << " " << dim[2];
 }
 
 
@@ -119,6 +121,16 @@ void ImageServo::setTargetCoords(float x, float y)
     qDebug() << "ImageServo: targetcoords: " << x << " " << y;
     x_servo->setTarget(x);
     y_servo->setTarget(y);
+}
+
+std::string ImageServo::getAlgorithm()
+{
+    return algorithm;
+}
+
+void ImageServo::setAlgorithm(string alg)
+{
+    algorithm = alg;
 }
 
 
@@ -168,6 +180,12 @@ void ImageServo::centroid()
     sum_y = 0;
     int offs = 0;
 
+    if (bg < 0) {
+
+        b_ground = float(buffer[0] + buffer[dim[0]-1] + buffer[dim[2]] + buffer[dim[2]-dim[0]])/4.0;
+    }
+    else b_ground = bg;
+
     for (int i = 0; i < dim[0]; i++)
     {
         row_x = 0;
@@ -175,9 +193,9 @@ void ImageServo::centroid()
         for (int j = 0; j < dim[1]; j++)
         {
             offs = i * dim[0];
-            sum += buffer[offs + j] - bg;
-            row_x += buffer[i + j*dim[1]] - bg;
-            row_y += buffer[offs + j] - bg;
+            sum += buffer[offs + j] - b_ground;
+            row_x += buffer[i + j*dim[1]] - b_ground;
+            row_y += buffer[offs + j] - b_ground;
         }
 
         sum_x += (i+1) * row_x;
