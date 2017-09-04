@@ -63,6 +63,7 @@ cdef extern from "./../src/camera.h":
 
         #
         # Log properties
+        bool getLogState()
         unsigned int getLogInterval()
         bool setLogState(bool state)
         unsigned int setLogInterval(unsigned int frames)

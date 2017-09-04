@@ -242,6 +242,9 @@ cdef class PyCamera:
     def getLogInterval(self):
         return self.pycam.getLogInterval()
         
+    def getLogState(self):
+        return self.pycam.getLogState();
+
     def setLogInterval(self, frames):
         return self.pycam.setLogInterval(<np.npy_uint32>frames)
 
