@@ -30,6 +30,9 @@ public:
     void getTargetCoords(float *x, float *y);
     void setTargetCoords(float x, float y);
 
+    std::string getAlgorithm();
+    void setAlgorithm(std::string alg);
+
     Gain getGainsX();
     Gain getGainsY();
     void setGainsX(Gain gain);
@@ -47,9 +50,12 @@ private:
     float *update = new float[2];
     float *rotation = new float[2];
     float rot_deg;
-    uint16_t *buffer;
+    std::uint16_t *buffer;
+    float *leak_buffer;
     float *errs;
     float bg;
+    float b_ground;
+    std::string algorithm;
 
     Servo *x_servo;
     Servo *y_servo;

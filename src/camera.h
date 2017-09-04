@@ -126,6 +126,7 @@ public:
 
 
     // Logger getters and setters
+    bool getLogState();
     unsigned int getLogInterval();
     bool setLogState(bool state);
     unsigned int setLogInterval(unsigned int frames);
@@ -156,7 +157,7 @@ private:
     bool checkError(unsigned int _ui_err, const char* _cp_func);
 
     QString camera_name;
-    uint16_t *cam_data;
+    std::uint16_t *cam_data;
     unsigned int ui_error;
     bool b_gblerrorFlag;
     bool b_gblAcquireFlag;

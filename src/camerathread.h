@@ -10,6 +10,7 @@
 #include <QtCore/QMutex>
 #include <QtCore/QString>
 #include <QtCore/QDebug>
+#define NOMINMAX
 #include <windows.h>
 #include <math.h>
 #include <iostream>
@@ -30,25 +31,36 @@ class CameraThread : public QThread
 {
 
 public:
-    CameraThread(QObject *parent = 0, uint16_t *image_buffer = 0);
+    CameraThread(QObject *parent = 0, std::uint16_t *buffer = 0);
     ~CameraThread();
-    void startThread(int x = 0, int y = 0, bool r_cam = false, std::string filename = "");  // Must get data manually
+
+    void startThread(int x = 0, int y = 0,
+                     bool r_cam = false,
+                     std::string filename = "");  // Must get data manually
     void startThread(cb_cam_func cb = NULL,
                      void *user_data = NULL,
-                     int x = 0, int y = 0, bool r_cam = false, bool s_shot = false);  // Supplied callabck
+                     int x = 0, int y = 0,
+                     bool r_cam = false,
+                     bool s_shot = false);  // Supplied callabck
     void abortThread();
 
     bool setLoopCond(int loopCond = 0);
     bool setServoState(bool state);
 
+    bool getLogState();
     bool setLogState(bool state);
     unsigned int getLogInveral();
     unsigned int setLogInterval(unsigned int frames);
+    void setHeaderData(float exp_time, float acc_time, int em_gain);
+//    void setServoHeader(float kp, float ki, float kd)
 
     // Servo getters and setters
     Gain getServoGainX();
     Gain getServoGainY();
     void setServoGain(Gain gainx, Gain gainy);
+
+    std::string getServoAlg();
+    void setServoAlg(std::string alg);
 
     float getServoRotation();
     void setServoRotation(float rotation);
@@ -71,10 +83,13 @@ private:
     bool checkError(unsigned int _ui_error, const char* _cp_func);
 
     void openLoop(DataLogger *logger, unsigned int log_counter);
-    void servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigned int log_counter);
+    void servoLoop(DataLogger *logger, unsigned int log_counter);
     void callbackLoop();
     void singleShot();
+    uint checkLog(uint counter, DataLogger *logger);
     uint checkLogCounter(uint counter);
+
+    void setServoHeaderData();
 
     bool b_gblerrorFlag;
     unsigned int and_error; // Andor error
@@ -92,8 +107,8 @@ private:
     std::string i_log_file;  // image log file
     std::string s_log_file;  // servo log file
     int i_loop_cond = 0;
-    uint16_t *cam_data;
-    uint16_t *copy_data;
+    std::uint16_t *cam_data;
+    std::uint16_t *copy_data;
     int *status;
 
 
@@ -111,6 +126,7 @@ private:
     DataLogger *i_logger;
     DataLogger *s_logger;
     SocketClient *client;
+    HeaderData s_h_data;
 
 };
 
