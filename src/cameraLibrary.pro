@@ -36,15 +36,25 @@ unix {
     INSTALLS += target
 }
 
-unix|win32: LIBS += -L$$PWD/../lib/ -latmcd32m
+unix|win32: LIBS += -L$$PWD/../lib/
+
+#win32: LIBS += -lAdvapi32 -lgdi32 -luser32 -lshell32
+
+unix|win32: LIBS += -latmcd32m -lCCfits -lcfitsio
 
 win32: LIBS += -lAdvapi32 -lgdi32 -luser32 -lshell32
 #win32:CONFIG(release): DLLDESTDIR = "C:\Program Files (x86)\National Instruments\LabVIEW 2016\user.lib\cameraLibrary"
 
-INCLUDEPATH += $$PWD/../include
+INCLUDEPATH += \
+    $$PWD/../include\
+    $$PWD/../include/CCfits\
+    $$PWD/../include/cfitsio
+
 DEPENDPATH += $$PWD/../include
 
 FORMS += \
     fttMainWindow.ui \
     fttServoWindow.ui \
-    fttMirrorWindow.ui
+    fttMirrorWindow.ui \
+    fttTempWindow.ui \
+    fttLoggingWindow.ui
