@@ -28,7 +28,10 @@ def fttWrite(fd, file):
                     for i in range(0, int(len(bdata)/2)):
                         data[0,i] = int.from_bytes(bdata[i*2:(i+1)*2], byteorder='little')
                 except MemoryError:
-                    print("File {} is to big, still need to fix that".format(file))
+                    print("File {} is too big, still need to fix that".format(file))
+                    return 1
+                except ValueError:
+                    print("File {} is too big, cannot make array".format(file))
                     return 1
 
                 # reshape data and save as fits
@@ -39,7 +42,7 @@ def fttWrite(fd, file):
                 try:
                     hdulist.writeto(reduced_dir + filename)
                     print("{} written".format(filename))
-                    remove(file)
+                    #remove(file)
                 except OSError:
                     print("{} already exsists, deleting {}".format(filename, data_dir+file))
                     remove(data_dir + file)

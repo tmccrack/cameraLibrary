@@ -47,4 +47,5 @@ DEPENDPATH += $$PWD/../include
 FORMS += \
     fttMainWindow.ui \
     fttServoWindow.ui \
-    fttMirrorWindow.ui
+    fttMirrorWindow.ui \
+    fttLoggingWindow.ui
