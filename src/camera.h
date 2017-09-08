@@ -124,6 +124,9 @@ public:
     float getBackground();
     void setBackground(float background);
 
+    float getLeakyFactor();
+    void setLeakyFactor(float factor);
+
 
     // Logger getters and setters
     unsigned int getLogInterval();

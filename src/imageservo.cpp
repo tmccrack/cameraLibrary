@@ -1,6 +1,6 @@
 #include "imageservo.h"
 
-ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_dim, int y_dim)
+ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_dim, int y_dim, float factor)
 {
     dim[0] = x_dim;
     dim[1] = y_dim;
@@ -14,6 +14,12 @@ ImageServo::ImageServo(QObject *parent, float *centroids, float *updates, int x_
     x_servo = new Servo(this);
     y_servo = new Servo(this);
 
+    // Initialize leaky buffer
+    leaky_buffer = new uint16_t[dim[2]];
+    for (int i=0; i<dim[2]; i++) leaky_buffer[i] = 0;
+    leaky_factor = new float[1];
+    leaky_factor[0] = factor;
+
     setRotation(45);
     setTargetCoords(256, 256);
 }
@@ -23,6 +29,8 @@ ImageServo::~ImageServo()
     if (errs) delete errs;
     if (x_servo) delete x_servo;
     if (y_servo) delete y_servo;
+    if (leaky_buffer) delete leaky_buffer;
+    if (leaky_factor) delete leaky_factor;
 }
 
 
@@ -86,6 +94,11 @@ void ImageServo::setImageDim(int x_dim, int y_dim)
     dim[1] = y_dim;
     dim[2] = x_dim * y_dim;
     qDebug() << "ImageServo: imagedim: " << dim[0] << " " << dim[1] << " " << dim[2];
+
+    // Resize leaky buffer
+    if (leaky_buffer) delete leaky_buffer;
+    leaky_buffer = new uint16_t[dim[2]];
+    for (int i=0; i<dim[2]; i++) leaky_buffer[i] = 0;
 }
 
 
@@ -119,6 +132,30 @@ void ImageServo::setTargetCoords(float x, float y)
     qDebug() << "ImageServo: targetcoords: " << x << " " << y;
     x_servo->setTarget(x);
     y_servo->setTarget(y);
+}
+
+float ImageServo::getLeakyFactor()
+{
+    return leaky_factor[0];
+}
+
+void ImageServo::setLeakyFactor(float factor)
+{
+    if (factor > 1.0)
+    {
+        qDebug() << "Leaky factor too high, setting to zero";
+        leaky_factor = 0;
+        return;
+    }
+    else if (factor < 0.0)
+    {
+        qDebug() << "Leaky factor too low, setting to zero";
+        leaky_factor = 0;
+        return;
+    }
+
+    leaky_factor[0] = factor;
+    qDebug() << "Leaky factor set: " << leaky_factor[0];
 }
 
 
@@ -172,6 +209,10 @@ void ImageServo::centroid()
     if (bg < 0) b_ground = (buffer[0] + buffer[dim[0]-1] + +buffer[dim[2]-dim[0]] + buffer[dim[2]-1]) / 4.0;
     else b_ground = bg;
 
+    // Apply leaky factor
+    for (int i=0; i<dim[2]; i++) leaky_buffer[i] = buffer[i] + leaky_buffer[i]*leaky_factor[0];
+
+    // Centroid the image
     for (int i = 0; i < dim[0]; i++)
     {
         row_x = 0;
@@ -179,9 +220,9 @@ void ImageServo::centroid()
         for (int j = 0; j < dim[1]; j++)
         {
             offs = i * dim[0];
-            sum += buffer[offs + j] - b_ground;
-            row_x += buffer[i + j*dim[1]] - b_ground;
-            row_y += buffer[offs + j] - b_ground;
+            sum += leaky_buffer[offs + j] - b_ground;
+            row_x += leaky_buffer[i + j*dim[1]] - b_ground;
+            row_y += leaky_buffer[offs + j] - b_ground;
         }
 
         sum_x += (i+1) * row_x;

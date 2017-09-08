@@ -49,6 +49,8 @@ public:
     Gain getServoGainX();
     Gain getServoGainY();
     void setServoGain(Gain gainx, Gain gainy);
+    void getLeakyFactor(float *factor);
+    void setLeakyFactor(float factor);
 
     float getServoRotation();
     void setServoRotation(float rotation);

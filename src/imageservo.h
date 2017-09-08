@@ -12,7 +12,7 @@ class ImageServo : public QObject
 {
 
 public:
-    ImageServo(QObject *parent = 0, float *centroids=0, float *updates=0, int x_dim=32, int y_dim=32);
+    ImageServo(QObject *parent = 0, float *centroids=0, float *updates=0, int x_dim=32, int y_dim=32, float factor=0.0);
     ~ImageServo();
 
     void setBuffer(uint16_t *cont_buffer);
@@ -29,6 +29,9 @@ public:
 
     void getTargetCoords(float *x, float *y);
     void setTargetCoords(float x, float y);
+
+    float getLeakyFactor();
+    void setLeakyFactor(float factor);
 
     Gain getGainsX();
     Gain getGainsY();
@@ -47,7 +50,9 @@ private:
     float *update = new float[2];
     float *rotation = new float[2];
     float rot_deg;
+    float *leaky_factor;
     uint16_t *buffer;
+    uint16_t *leaky_buffer;
     float *errs;
     float bg;
 

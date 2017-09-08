@@ -358,6 +358,18 @@ void Camera::setBackground(float background)
     t_cam_thread->setBackground(background);
 }
 
+float Camera::getLeakyFactor()
+{
+    float factor[1];
+    t_cam_thread->getLeakyFactor(factor);
+    return factor[0];
+}
+
+void Camera::setLeakyFactor(float factor)
+{
+    t_cam_thread->setLeakyFactor(factor);
+}
+
 unsigned int Camera::getLogInterval()
 {
     return t_cam_thread->getLogInveral();

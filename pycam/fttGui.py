@@ -287,7 +287,10 @@ class AppWindow(Ui_MainWindow):
         self.mir_win = mir_win
         self.servo_win = servo_win
         self.servo_win.reInitVals(self.camera.getGainX(), 
-                                  self.camera.getRotation())
+                                  self.camera.getRotation(),
+                                  self.camera.getTargetCoords(),
+                                  self.camera.getBackground(),
+                                  self.camera.getLeakyFactor())
         self.log_win = log_win
 
         # Initialize logger
@@ -385,6 +388,7 @@ class AppWindow(Ui_MainWindow):
         self.camera.setTargetCoords(self.servo_win.targ[0], self.servo_win.targ[1])
         print(self.servo_win.spb_Background.value())
         self.camera.setBackground(self.servo_win.spb_Background.value())
+        self.camera.setLeakyFactor(self.servo_win.spb_LeakyFactor.value())
         self.logUpdate(
             """
             Setting gain parameters: {} {}
@@ -394,6 +398,11 @@ class AppWindow(Ui_MainWindow):
             """
             Setting background level: {} {}
             """.format(self.servo_win.spb_Background.value(),
+                            time.strftime(self.timeFormat,time.gmtime())))
+        self.logUpdate(
+            """
+            Setting leaky factor: {} {}
+            """.format(self.servo_win.spb_LeakyFactor.value(),
                             time.strftime(self.timeFormat,time.gmtime())))
 
     def btnGainClicked(self):
