@@ -60,6 +60,8 @@ cdef extern from "./../src/camera.h":
         bool setServoState(bool state)
         float getBackground()
         void setBackground(float background)
+        float getLeakyFactor()
+        void setLeakyFactor(float factor)
 
         #
         # Log properties

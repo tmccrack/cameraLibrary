@@ -236,6 +236,13 @@ cdef class PyCamera:
         self.pycam.setBackground(background)
         return self.getBackground()
 
+    def getLeakyFactor(self):
+        return self.pycam.getLeakyFactor()
+
+    def setLeakyFactor(self, factor):
+        self.pycam.setLeakyFactor(factor)
+        return self.getLeakyFactor()
+
  
     #
     # Logging
