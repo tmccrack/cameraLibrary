@@ -129,13 +129,16 @@
           <string>Target horizontal location for control algorithm</string>
          </property>
          <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
+          <enum>QAbstractSpinBox::UpDownArrows</enum>
          </property>
          <property name="decimals">
           <number>3</number>
          </property>
          <property name="maximum">
           <double>512.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
          </property>
         </widget>
        </item>
@@ -148,13 +151,16 @@
           <string>Target vertical location for control algorithm</string>
          </property>
          <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
+          <enum>QAbstractSpinBox::UpDownArrows</enum>
          </property>
          <property name="decimals">
           <number>3</number>
          </property>
          <property name="maximum">
           <double>512.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
          </property>
         </widget>
        </item>
@@ -196,13 +202,22 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="label_I">
-         <property name="text">
-          <string>I</string>
+       <item row="4" column="2">
+        <widget class="QDoubleSpinBox" name="spb_Background">
+         <property name="decimals">
+          <number>1</number>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+         <property name="minimum">
+          <double>-1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>1000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>5.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>-1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -216,16 +231,13 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="2">
-        <widget class="QDoubleSpinBox" name="spb_Background">
-         <property name="decimals">
-          <number>1</number>
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_I">
+         <property name="text">
+          <string>I</string>
          </property>
-         <property name="maximum">
-          <double>1000.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>5.000000000000000</double>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
