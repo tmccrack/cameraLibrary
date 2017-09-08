@@ -21,7 +21,7 @@ CameraThread::CameraThread(QObject *parent, uint16_t *image_buffer) : QThread(pa
     real_cam = false;
     centroids = new float[2];
     updates = new float[2];
-    servo = new ImageServo(this, centroids, updates, 512, 512);
+    servo = new ImageServo(this, centroids, updates, 512, 512, 0.0);
     x_err = new Error;
     y_err = new Error;
 }
@@ -229,6 +229,16 @@ void CameraThread::getServoDim(int *x, int *y)
 void CameraThread::setServoDim(int x, int y)
 {
     servo->setImageDim(x, y);
+}
+
+void CameraThread::getLeakyFactor(float *factor)
+{
+    factor[0] = servo->getLeakyFactor();
+}
+
+void CameraThread::setLeakyFactor(float factor)
+{
+    servo->setLeakyFactor(factor);
 }
 
 float CameraThread::getBackground()
@@ -494,14 +504,12 @@ void CameraThread::servoLoop(DataLogger *i_logger, DataLogger *s_logger, unsigne
                 cam_data[i] = (uint16_t) rand() % 100;
 
             }
-            if(b_closed)
-            {
-                servo->getUpdate();
-                servo->getErrors(x_err, y_err);
+            servo->getUpdate();
+            servo->getErrors(x_err, y_err);
                 client->sendData(updates[1], updates[0]);
 //                qDebug() << "X: " << centroids[0] << " " << x_err->error << " " << updates[0]
 //                         << "\tY: " << centroids[1] << " " << y_err->error << "" << updates[1];
-            }
+
             if (b_log)
             {
                 log_counter = checkLogCounter(log_counter);
