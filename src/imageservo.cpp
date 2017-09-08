@@ -167,6 +167,10 @@ void ImageServo::centroid()
     sum_x = 0;
     sum_y = 0;
     int offs = 0;
+    float b_ground = 0.0;
+
+    if (bg < 0) b_ground = (buffer[0] + buffer[dim[0]-1] + +buffer[dim[2]-dim[0]] + buffer[dim[2]-1]) / 4.0;
+    else b_ground = bg;
 
     for (int i = 0; i < dim[0]; i++)
     {
@@ -175,9 +179,9 @@ void ImageServo::centroid()
         for (int j = 0; j < dim[1]; j++)
         {
             offs = i * dim[0];
-            sum += buffer[offs + j] - bg;
-            row_x += buffer[i + j*dim[1]] - bg;
-            row_y += buffer[offs + j] - bg;
+            sum += buffer[offs + j] - b_ground;
+            row_x += buffer[i + j*dim[1]] - b_ground;
+            row_y += buffer[offs + j] - b_ground;
         }
 
         sum_x += (i+1) * row_x;
