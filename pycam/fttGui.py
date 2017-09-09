@@ -461,10 +461,17 @@ class AppWindow(Ui_MainWindow):
         	
     def btnSetFrameClicked(self):
         # Update internal dimension dict
-        self.imageDim['h_start'] = self.spb_XOffs.value()
-        self.imageDim['v_start'] = self.spb_YOffs.value()
-        self.imageDim['h_end'] = self.spb_XOffs.value() + self.spb_Dim.value() - 1
-        self.imageDim['v_end'] = self.spb_YOffs.value() + self.spb_Dim.value() - 1
+
+
+        self.imageDim['h_start'] = self.spb_XCnt.value() - np.floor(self.spb_Dim.value()/2) + 1
+        self.imageDim['v_start'] = self.spb_YCnt.value() - np.floor(self.spb_Dim.value()/2) + 1
+        self.imageDim['h_end'] = self.imageDim['h_start'] + self.spb_Dim.value() - 1
+        self.imageDim['v_end'] = self.imageDim['v_start'] + self.spb_Dim.value() - 1
+        
+        # self.imageDim['h_start'] = self.spb_XOffs.value()
+        # self.imageDim['v_start'] = self.spb_YOffs.value()
+        # self.imageDim['h_end'] = self.spb_XOffs.value() + self.spb_Dim.value() - 1
+        # self.imageDim['v_end'] = self.spb_YOffs.value() + self.spb_Dim.value() - 1
         self.imageDim['v_bin'] = 1  # self.spb_XBin.value()
         self.imageDim['h_bin'] = 1  # self.spb_YBin.value()
         #
