@@ -10,11 +10,13 @@ from matplotlib.backends.backend_qt5agg import (
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 import matplotlib.lines as mlines
+from astropy.io import fits
 
 from fttMainWindow import Ui_MainWindow  # pyuic5 generated file
 from fttServo import Servo as servo
 from fttMirror import Mirror as mirror
 from fttLogging import Logger as logger
+from fttFitsHeader import HeaderData
 
 import time
 import logging
@@ -268,6 +270,7 @@ class FiberLocator(QtCore.QObject):
         self.image.imageClick.disconnect(self.imageClicked)
 
 
+
 class AppWindow(Ui_MainWindow):
     """
     Main window class, inherits Ui
@@ -423,8 +426,17 @@ class AppWindow(Ui_MainWindow):
                 """.format(time.strftime(self.timeFormat,time.gmtime())))
             self.btn_ToggleCam.setText('Start')
             self.rad_ToggleServo.setEnabled(True)
+
         elif not self.camera.running():
             log_file = image_path+time.strftime(self.timeFormat, time.gmtime())
+            # Generate the stand-in fits file
+            HeaderData(log_file+'.fits', self.expProp, self.gain,
+                                         self.camera.getBackground(),
+                                         self.camera.getLeakyFactor(),
+                                         self.camera.getLogInterval(),
+                                         self.rad_ToggleServo.isChecked(),
+                                         self.camera.getTargetCoords()
+                                         )
             if (self.rad_ToggleServo.isChecked()):
                 self.camera.start(1, log_file)
             else: self.camera.start(0, log_file)
@@ -441,6 +453,7 @@ class AppWindow(Ui_MainWindow):
 
             self.btn_ToggleCam.setText('Stop')
             self.rad_ToggleServo.setEnabled(False)
+            
 
 
     def radToggleServoClicked(self):
@@ -467,7 +480,7 @@ class AppWindow(Ui_MainWindow):
         self.imageDim['v_start'] = self.spb_YCnt.value() - np.floor(self.spb_Dim.value()/2) + 1
         self.imageDim['h_end'] = self.imageDim['h_start'] + self.spb_Dim.value() - 1
         self.imageDim['v_end'] = self.imageDim['v_start'] + self.spb_Dim.value() - 1
-        
+
         # self.imageDim['h_start'] = self.spb_XOffs.value()
         # self.imageDim['v_start'] = self.spb_YOffs.value()
         # self.imageDim['h_end'] = self.spb_XOffs.value() + self.spb_Dim.value() - 1
