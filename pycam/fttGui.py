@@ -52,7 +52,7 @@ class ImageCanvas(FigureCanvas):
         						cmap='gray',
         						interpolation='none',
         						extent=(1,512, 512,1),
-                                norm=LogNorm(vmin=0.01, vmax=1)
+                                norm=LogNorm(vmin=0.001, vmax=1)
         					)
         self.axes_ftt.set_axis_off()
         self.axes_ftt.set_aspect('auto')
