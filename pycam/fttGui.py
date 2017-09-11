@@ -9,6 +9,7 @@ from matplotlib.backends.backend_qt5agg import (
             NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
+from matplotlib.colors import LogNorm
 import matplotlib.lines as mlines
 from astropy.io import fits
 
@@ -50,7 +51,8 @@ class ImageCanvas(FigureCanvas):
         self.ftt_image = self.axes_ftt.imshow(np.random.rand(512,512), 
         						cmap='gray',
         						interpolation='none',
-        						extent=(1,512, 512,1)
+        						extent=(1,512, 512,1),
+                                norm=LogNorm(vmin=0.01, vmax=1)
         					)
         self.axes_ftt.set_axis_off()
         self.axes_ftt.set_aspect('auto')
@@ -118,8 +120,11 @@ class ImageCanvas(FigureCanvas):
         Update the figure with the supplied buffer and values if provided
         Reshape the linear buffer, show image and summations
         """
-        self.ftt_image.set_data(buffer.reshape(ImageCanvas.iDims['v_dim'], ImageCanvas.iDims['h_dim']))
-        self.ftt_image.set_clim(vmin=buffer.min(), vmax=buffer.max())
+        self.ftt_image.set_data(buffer.reshape(ImageCanvas.iDims['v_dim'], ImageCanvas.iDims['h_dim']) / buffer.max())
+        # if (buffer.min() < 0): bmin = 0
+        # else: bmin = buffer.min()
+        # # self.ftt_image.set_clim()
+        # self.ftt_image.set_clim(vmin=bmin, vmax=buffer.max())
 
         # Mean in horizontal direction
         self.hsum_lines.set_data(np.mean(buffer.reshape(ImageCanvas.iDims['v_dim'],	
