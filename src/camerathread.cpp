@@ -548,7 +548,8 @@ void CameraThread::callbackLoop()
                 and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
                 checkError(and_error, "GetMostRecentImage16");
                 mutex.unlock();
-                callback(cam_data, image_size, ud);
+
+                if (!b_abort) callback(cam_data, image_size, ud);
             }
             else if (win_error == WAIT_TIMEOUT)
             {
