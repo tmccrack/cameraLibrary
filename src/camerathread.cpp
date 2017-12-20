@@ -276,8 +276,10 @@ void CameraThread::setServoTargetCoords(float tar_x, float tar_y)
 void CameraThread::run()
 {
     // Setup the loggers
-    i_logger = new DataLogger(i_log_file);  // Image logger
-    s_logger = new DataLogger(s_log_file);  // Servo logger
+    if (!i_log_file.empty())
+        i_logger = new DataLogger(i_log_file);  // Image logger
+    if (!s_log_file.empty())
+        s_logger = new DataLogger(s_log_file);  // Servo logger
     uint i_log_counter = 1;
 
     if(real_cam)
@@ -324,10 +326,15 @@ void CameraThread::run()
     printf("Acquistion ended\n");
 
     // Close loggers
-    i_logger->closeFile();
-    s_logger->closeFile();
-    delete i_logger;
-    delete s_logger;
+    if (!i_log_file.empty()) {
+        i_logger->closeFile();
+        delete i_logger;
+    }
+    if (!s_log_file.empty()) {
+        s_logger->closeFile();
+        delete s_logger;
+    }
+
 }
 
 
@@ -548,7 +555,8 @@ void CameraThread::callbackLoop()
                 and_error = GetMostRecentImage16((WORD*) cam_data, image_size);
                 checkError(and_error, "GetMostRecentImage16");
                 mutex.unlock();
-                callback(cam_data, image_size, ud);
+
+                if (!b_abort) callback(cam_data, image_size, ud);
             }
             else if (win_error == WAIT_TIMEOUT)
             {
