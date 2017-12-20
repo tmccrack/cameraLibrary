@@ -429,9 +429,9 @@ void Camera::_initializeCamera()
         s_expProp.ext_trig = false;
 
         // Set gain
-        s_gainxProp.kp = float(-0.001);
-        s_gainxProp.ki = float(0.0);
-        s_gainxProp.kd = float(0.0);
+        s_gainxProp.kp = float(0.01);
+        s_gainxProp.ki = float(0.001);
+        s_gainxProp.kd = float(0.001);
         s_gainxProp.dt = s_expProp.exp_time;
         s_gainyProp = s_gainxProp;
         setGain(s_gainxProp, s_gainyProp);
