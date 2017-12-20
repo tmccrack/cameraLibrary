@@ -25,7 +25,7 @@ import logging
 logging.basicConfig(filename='./../log/example.log',level=logging.DEBUG)
 image_path = "./../data/"
 
-fiber_loc = (300.0, 272.0)
+fiber_loc = (299.7, 249.0)
 def setFiberLoc(x, y):
     global fiber_loc
     fiber_loc = (x, y)
@@ -52,7 +52,7 @@ class ImageCanvas(FigureCanvas):
         						cmap='gray',
         						interpolation='none',
         						extent=(1,512, 512,1),
-                                norm=LogNorm(vmin=0.01, vmax=1)
+                                norm=LogNorm(vmin=0.001, vmax=1)
         					)
         self.axes_ftt.set_axis_off()
         self.axes_ftt.set_aspect('auto')
@@ -301,6 +301,10 @@ class AppWindow(Ui_MainWindow):
                                   self.camera.getLeakyFactor())
         self.log_win = log_win
 
+        # Set center to fiber loc
+        self.spb_XCnt.setValue(int(fiber_loc[0]))
+        self.spb_YCnt.setValue(int(fiber_loc[1]))
+
         # Initialize logger
         self.logger = logging.getLogger('')
         self.logging = False
@@ -499,6 +503,13 @@ class AppWindow(Ui_MainWindow):
         # Pass internal dimension dict to camera, camera returns actual image dimensions
         self.imageDim = self.camera.setImageDimension(self.imageDim)
         self.imageDisp.setDimensions(self.imageDim)
+
+        # Update target location and gains
+        self.servo_win.spb_XTarg.setValue(fiber_loc[0] - self.imageDim['h_start'])
+        self.servo_win.spb_YTarg.setValue(fiber_loc[1] - self.imageDim['v_start'])
+        self.servo_win.updateVals()
+
+        self.acceptGain()
 
         self.logUpdate("Setting frame parameters: {} {}".format(self.imageDim, 
                                                             time.strftime(self.timeFormat,time.gmtime())))
